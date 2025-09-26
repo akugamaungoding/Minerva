@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajemen Kontrak - Minerva</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+</head>
+<body data-theme="light" class="contracts-page">
+    <div class="dashboard-container">
+        <div id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <h3>Minerva</h3>
+                <button id="sidebarToggle" class="sidebar-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <nav class="sidebar-nav">
+                <ul id="sidebarNav" class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="contracts.html">
+                            <i class="fas fa-file-contract"></i>
+                            <span>Manajemen Kontrak</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#communication">
+                            <i class="fas fa-comments"></i>
+                            <span>Komunikasi</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#ai">
+                            <i class="fas fa-robot"></i>
+                            <span>AI Assistant</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+
+        <div id="mainContent" class="main-content">
+            <nav class="top-navbar">
+                <div class="container-fluid">
+                    <div class="row align-items-center w-100">
+                        <div class="col">
+                            <h4 class="mb-0">Manajemen Kontrak</h4>
+                            <small class="text-muted">Kelola semua kontrak proyek dengan efisien</small>
+                        </div>
+                        <div class="col-auto d-flex gap-2">
+                            <button class="btn btn-outline-primary btn-sm" onclick="toggleTheme()" title="Toggle Theme">
+                                <i class="fas fa-moon" id="themeIconNavbar"></i>
+                            </button>
+                            <div class="dropdown">
+                                <button class="btn btn-outline-primary dropdown-toggle btn-sm" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-user me-1"></i><span id="currentUser">User</span>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="logout()">
+                                        <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                    </a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="content-area">
+
+        <!-- Action Buttons -->
+        <div class="action-buttons mb-4">
+            <button class="btn btn-primary" onclick="showCreateContractModal()">
+                <i class="fas fa-plus me-2"></i>Tambah Kontrak Baru
+            </button>
+            <button class="btn btn-outline-secondary" onclick="exportContracts()">
+                <i class="fas fa-download me-2"></i>Export Kontrak
+            </button>
+            <button class="btn btn-outline-info" onclick="refreshContracts()">
+                <i class="fas fa-sync me-2"></i>Refresh
+            </button>
+        </div>
+
+        <!-- Contract Stats -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-file-contract"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="totalContracts">0</div>
+                        <div class="stat-label">Total Kontrak</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock text-warning"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="pendingContracts">0</div>
+                        <div class="stat-label">Pending</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle text-success"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="activeContracts">0</div>
+                        <div class="stat-label">Aktif</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-exclamation-triangle text-danger"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="expiringContracts">0</div>
+                        <div class="stat-label">Kadaluarsa</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter and Search -->
+        <div class="contract-filters mb-4">
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text" class="form-control" id="contractSearch" placeholder="Cari kontrak...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="statusFilter">
+                        <option value="">Semua Status</option>
+                        <option value="draft">Draft</option>
+                        <option value="pending">Pending</option>
+                        <option value="active">Aktif</option>
+                        <option value="completed">Selesai</option>
+                        <option value="expired">Kadaluarsa</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="typeFilter">
+                        <option value="">Semua Tipe</option>
+                        <option value="project">Proyek</option>
+                        <option value="service">Layanan</option>
+                        <option value="maintenance">Maintenance</option>
+                        <option value="consultation">Konsultasi</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-outline-primary w-100" onclick="applyFilters()">
+                        <i class="fas fa-filter me-1"></i>Filter
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contracts Table -->
+        <div class="contracts-table-container">
+            <div class="table-responsive">
+                <table class="table table-hover contracts-table">
+                    <thead>
+                        <tr>
+                            <th>
+                                <input type="checkbox" id="selectAllContracts" onchange="toggleSelectAll()">
+                            </th>
+                            <th>ID</th>
+                            <th>Nama Kontrak</th>
+                            <th>Klien</th>
+                            <th>Tipe</th>
+                            <th>Status</th>
+                            <th>Nilai</th>
+                            <th>Tanggal Mulai</th>
+                            <th>Tanggal Berakhir</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="contractsTableBody">
+                        <!-- Contract rows will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Bulk Actions -->
+        <div class="bulk-actions mt-3" id="bulkActions" style="display: none;">
+            <div class="alert alert-info d-flex align-items-center justify-content-between">
+                <span><i class="fas fa-info-circle me-2"></i><span id="selectedCount">0</span> kontrak dipilih</span>
+                <div class="btn-group">
+                    <button class="btn btn-sm btn-outline-primary" onclick="bulkExport()">
+                        <i class="fas fa-download me-1"></i>Export
+                    </button>
+                    <button class="btn btn-sm btn-outline-warning" onclick="bulkArchive()">
+                        <i class="fas fa-archive me-1"></i>Archive
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="bulkDelete()">
+                        <i class="fas fa-trash me-1"></i>Hapus
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Contract Modal -->
+    <div class="modal fade" id="createContractModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-file-contract me-2"></i>Tambah Kontrak Baru</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createContractForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="text" class="form-control" id="contractName" placeholder="Nama Kontrak" required>
+                                    <label for="contractName"><i class="fas fa-file-alt me-2"></i>Nama Kontrak</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <select class="form-select" id="contractType" required>
+                                        <option value="">Pilih Tipe Kontrak</option>
+                                        <option value="project">Proyek</option>
+                                        <option value="service">Layanan</option>
+                                        <option value="maintenance">Maintenance</option>
+                                        <option value="consultation">Konsultasi</option>
+                                    </select>
+                                    <label for="contractType"><i class="fas fa-tags me-2"></i>Tipe Kontrak</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="text" class="form-control" id="clientName" placeholder="Nama Klien" required>
+                                    <label for="clientName"><i class="fas fa-user me-2"></i>Nama Klien</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="number" class="form-control" id="contractValue" placeholder="Nilai Kontrak" required>
+                                    <label for="contractValue"><i class="fas fa-money-bill me-2"></i>Nilai Kontrak (Rp)</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="date" class="form-control" id="startDate" required>
+                                    <label for="startDate"><i class="fas fa-calendar-alt me-2"></i>Tanggal Mulai</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="date" class="form-control" id="endDate" required>
+                                    <label for="endDate"><i class="fas fa-calendar-check me-2"></i>Tanggal Berakhir</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <textarea class="form-control" id="contractDescription" placeholder="Deskripsi Kontrak" style="height: 100px"></textarea>
+                            <label for="contractDescription"><i class="fas fa-align-left me-2"></i>Deskripsi Kontrak</label>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <select class="form-select" id="contractStatus">
+                                        <option value="draft">Draft</option>
+                                        <option value="pending">Pending</option>
+                                        <option value="active">Aktif</option>
+                                    </select>
+                                    <label for="contractStatus"><i class="fas fa-flag me-2"></i>Status</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="text" class="form-control" id="contractManager" placeholder="Project Manager">
+                                    <label for="contractManager"><i class="fas fa-user-tie me-2"></i>Project Manager</label>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-primary" onclick="createContract()">
+                        <i class="fas fa-save me-2"></i>Simpan Kontrak
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contract Details Modal -->
+    <div class="modal fade" id="contractDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-eye me-2"></i>Detail Kontrak</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="contractDetailsContent">
+                    <!-- Contract details will be populated here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-warning" onclick="editContract()">
+                        <i class="fas fa-edit me-2"></i>Edit
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="deleteContract()">
+                        <i class="fas fa-trash me-2"></i>Hapus
+                    </button>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="contracts.js"></script>
+    <script>
+        let currentTheme = 'light';
+
+        // Theme toggle functionality
+        function toggleTheme() {
+            currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            localStorage.setItem('theme', currentTheme);
+            
+            const themeIcon = document.getElementById('themeIconNavbar');
+            
+            if (currentTheme === 'dark') {
+                themeIcon.className = 'fas fa-sun';
+            } else {
+                themeIcon.className = 'fas fa-moon';
+            }
+        }
+
+        // Load saved theme
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            currentTheme = savedTheme;
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            
+            const themeIcon = document.getElementById('themeIconNavbar');
+            
+            if (currentTheme === 'dark') {
+                themeIcon.className = 'fas fa-sun';
+            } else {
+                themeIcon.className = 'fas fa-moon';
+            }
+        }
+
+        // Initialize sidebar
+        function initializeSidebar() {
+            const toggleBtn = document.getElementById('sidebarToggle');
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', function() {
+                    sidebar.classList.toggle('collapsed');
+                    mainContent.classList.toggle('expanded');
+                });
+            }
+        }
+
+        // Logout function
+        function logout() {
+            if (confirm('Apakah Anda yakin ingin logout?')) {
+                localStorage.removeItem('user');
+                localStorage.removeItem('role');
+                window.location.href = 'index.html';
+            }
+        }
+
+        // Initialize everything on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTheme();
+            initializeSidebar();
+            initializeContracts();
+            
+            // Load user info if available
+            const user = localStorage.getItem('user') || 'User';
+            document.getElementById('currentUser').textContent = user;
+        });
+    </script>
+</body>
+</html>
