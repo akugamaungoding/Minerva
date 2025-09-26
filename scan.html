@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scan QR Kontrak</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="styles.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+  <script src="contracts.js"></script>
+
+  <style>
+    /* Warna header tabel seperti dashboard */
+    .table thead th {
+      background: linear-gradient(90deg, #0400DE 0%, #3A00FF 100%);
+      color: #fff;
+      text-align: center;
+      vertical-align: middle;
+    }
+    .table tbody td {
+      text-align: center;
+      vertical-align: middle;
+    }
+    .preview-wrapper {
+      display: none;
+    }
+    .preview-media {
+      width: 100%;
+      max-width: 200px;
+      height: auto;
+      border-radius: .5rem;
+      box-shadow: 0 6px 18px rgba(22, 28, 45, 0.06);
+      background: #000;
+    }
+    .preview-actions .btn {
+      min-width: 150px;
+    }
+  </style>
+</head>
+<body class="bg-light">
+
+  <div class="container py-5">
+    <h2 class="mb-4 text-center">📄 Scan QR Kontrak</h2>
+
+    <!-- Input & Preview QR -->
+    <div class="card p-4 shadow-sm mb-4">
+      <div class="d-flex flex-wrap gap-2 preview-actions mb-3 justify-content-center">
+        <button id="startCameraBtn" class="btn btn-primary">
+          <i class="fas fa-camera me-1"></i> Start Camera
+        </button>
+        <button id="uploadImageBtn" class="btn btn-outline-primary">
+          <i class="fas fa-file-arrow-up me-1"></i> Upload Image
+        </button>
+        <button id="pasteImageBtn" class="btn btn-outline-secondary">
+          <i class="fas fa-paste me-1"></i> Paste Image
+        </button>
+        <button id="stopCameraBtn" class="btn btn-outline-danger d-none ms-auto">
+          <i class="fas fa-stop me-1"></i> Stop Camera
+        </button>
+      </div>
+      <input id="qrFileInput" type="file" accept="image/*" class="d-none">
+      <div class="preview-wrapper text-center" id="previewWrapper">
+        <div class="text-muted small mb-2">Preview</div>
+        <video id="videoPreview" class="preview-media d-none mx-auto d-block" playsinline></video>
+        <img id="imagePreview" class="preview-media d-none mx-auto d-block" alt="QR Preview">
+      </div>
+      <canvas id="canvas" class="d-none"></canvas>
+    </div>
+
+    <!-- Detail Kontrak -->
+    <div id="contractDetail"></div>
+  </div>
+
+  <!-- Back to dashboard (bottom-left) -->
+  <div class="position-fixed bottom-0 start-0 m-3">
+    <a href="index.html" class="btn btn-outline-secondary btn-sm">
+      <i class="fas fa-arrow-left me-1"></i> Kembali ke Dashboard
+    </a>
+  </div>
+
+  <!-- Modal Update Progres -->
+  <div class="modal fade" id="updateProgresModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title">Update Progres Kontrak</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="progresForm">
+            <input type="hidden" id="currentContractId">
+            <div class="mb-3">
+              <label class="form-label">Status</label>
+              <select class="form-select" id="status" required>
+                <option value="">-- Pilih Status --</option>
+                <option value="Active">Active</option>
+                <option value="In Review">In Review</option>
+                <option value="Pending">Pending</option>
+                <option value="Completed">Completed</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Tahap</label>
+              <input type="text" id="lifecycleStage" class="form-control" readonly>
+              <div class="form-text">Tahap dihitung otomatis dari status: Draft → Review → Approval → Active → Ended</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Progres (%)</label>
+              <input type="number" class="form-control" id="progress" min="0" max="100" placeholder="0-100">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Catatan</label>
+              <textarea class="form-control" id="note" rows="3"></textarea>
+            </div>
+            <button type="submit" class="btn btn-success w-100">Simpan</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Build contract map from contracts.js sample data (nomorKontrak -> detail)
+    const contractIndex = {};
+    if (typeof sampleContracts !== 'undefined' && Array.isArray(sampleContracts)) {
+      sampleContracts.forEach(c => {
+        if (c && c.nomorKontrak) {
+          contractIndex[c.nomorKontrak] = {
+            proyek: c.namaProyek || '-',
+            nilai: (c.mataUang || 'Rp') + ' ' + (c.nilaiKontrak != null ? new Intl.NumberFormat('id-ID').format(c.nilaiKontrak) : '-'),
+            status: (c.status || '-').charAt(0).toUpperCase() + (c.status || '-').slice(1),
+            progress: '-',
+            file: c.dokumenLampiran || '#'
+          };
+        }
+      });
+    }
+
+    let currentId = null;
+
+    // Upload dan scan QR
+    document.addEventListener("DOMContentLoaded", () => {
+      const startCameraBtn = document.getElementById("startCameraBtn");
+      const stopCameraBtn = document.getElementById("stopCameraBtn");
+      const uploadImageBtn = document.getElementById("uploadImageBtn");
+      const pasteImageBtn = document.getElementById("pasteImageBtn");
+      const fileInput = document.getElementById("qrFileInput");
+
+      if (startCameraBtn) startCameraBtn.addEventListener("click", startCamera);
+      if (stopCameraBtn) stopCameraBtn.addEventListener("click", stopCamera);
+      if (uploadImageBtn) uploadImageBtn.addEventListener("click", () => fileInput.click());
+      if (fileInput) fileInput.addEventListener("change", handleQRUpload);
+      if (pasteImageBtn) pasteImageBtn.addEventListener("click", handleClipboardRead);
+      document.addEventListener("paste", handleClipboardPasteEvent);
+
+      // Handle submit update progres
+      document.getElementById("progresForm").addEventListener("submit", function(e){
+        e.preventDefault();
+        if(currentId && contractIndex[currentId]){
+          const newStatus = document.getElementById("status").value;
+          contractIndex[currentId].status = newStatus;
+          contractIndex[currentId].progress = document.getElementById("progress").value + "%";
+          // Bisa simpan catatan juga kalau mau
+          showContractDetail(currentId);
+
+          // Tutup modal
+          let modal = bootstrap.Modal.getInstance(document.getElementById("updateProgresModal"));
+          modal.hide();
+        }
+      });
+      // lifecycle computed from status
+      const statusEl = document.getElementById("status");
+      if (statusEl) {
+        statusEl.addEventListener("change", function(){
+          const stage = inferStageFromStatus((this.value || '').toLowerCase());
+          const stageInput = document.getElementById("lifecycleStage");
+          if (stageInput) stageInput.value = getLifecycleLabel(stage);
+        });
+      }
+    });
+
+    function handleQRUpload(e) {
+      const file = e.target.files && e.target.files[0] ? e.target.files[0] : e?.dataTransfer?.files?.[0];
+      if (!file) return;
+      showImagePreviewAndScan(file);
+    }
+
+    function showImagePreviewAndScan(file) {
+      const previewWrapper = document.getElementById("previewWrapper");
+      const imgEl = document.getElementById("imagePreview");
+      const videoEl = document.getElementById("videoPreview");
+      stopCamera();
+      const reader = new FileReader();
+      reader.onload = function() {
+        imgEl.src = reader.result;
+        previewWrapper.style.display = "block";
+        imgEl.classList.remove("d-none");
+        videoEl.classList.add("d-none");
+        setTimeout(() => decodeImageElement(imgEl), 50);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function decodeImageElement(imgEl){
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      const width = imgEl.naturalWidth || imgEl.width;
+      const height = imgEl.naturalHeight || imgEl.height;
+      if (!width || !height) return;
+      canvas.width = width;
+      canvas.height = height;
+      ctx.drawImage(imgEl, 0, 0, width, height);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const code = jsQR(imageData.data, canvas.width, canvas.height);
+      if (code) {
+        onQrDecoded(code, canvas);
+      } else {
+        alert("QR Code tidak terbaca dari gambar");
+      }
+    }
+
+    async function startCamera(){
+      try {
+        stopCamera();
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        const videoEl = document.getElementById("videoPreview");
+        const previewWrapper = document.getElementById("previewWrapper");
+        const imgEl = document.getElementById("imagePreview");
+        videoEl.srcObject = stream;
+        await videoEl.play();
+        previewWrapper.style.display = "block";
+        videoEl.classList.remove("d-none");
+        imgEl.classList.add("d-none");
+        document.getElementById("stopCameraBtn").classList.remove("d-none");
+        window.__cameraStream = stream;
+        window.__scanning = true;
+        scanLoop();
+      } catch(err){
+        alert("Kamera tidak terdeteksi atau izin ditolak");
+      }
+    }
+
+    function stopCamera(){
+      window.__scanning = false;
+      if (window.__rafId) {
+        cancelAnimationFrame(window.__rafId);
+        window.__rafId = null;
+      }
+      if (window.__cameraStream) {
+        window.__cameraStream.getTracks().forEach(t => t.stop());
+        window.__cameraStream = null;
+      }
+      const stopBtn = document.getElementById("stopCameraBtn");
+      if (stopBtn) stopBtn.classList.add("d-none");
+    }
+
+    function scanLoop(){
+      if (!window.__scanning) return;
+      const videoEl = document.getElementById("videoPreview");
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      if (videoEl.readyState === videoEl.HAVE_ENOUGH_DATA) {
+        canvas.width = videoEl.videoWidth;
+        canvas.height = videoEl.videoHeight;
+        ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, canvas.width, canvas.height);
+        if (code) {
+          window.__scanning = false;
+          onQrDecoded(code, canvas);
+          stopCamera();
+          return;
+        }
+      }
+      window.__rafId = requestAnimationFrame(scanLoop);
+    }
+
+    function onQrDecoded(code, sourceCanvas){
+      // Generate ulang QR berdasarkan payload yang terbaca
+      try {
+        showGeneratedQrImage(code.data);
+      } catch(_e) {
+        // abaikan jika gagal generate
+      }
+
+      try {
+        const data = JSON.parse(code.data);
+        if (data && data.contractId) {
+          showContractDetail(data.contractId);
+          const c = contractIndex[data.contractId];
+          if (c) {
+            const stage = inferStageFromStatus((c.status || '').toLowerCase());
+            const stageInput = document.getElementById("lifecycleStage");
+            if (stageInput) stageInput.value = getLifecycleLabel(stage);
+          }
+        } else {
+          alert("Format QR tidak sesuai (contractId tidak ditemukan)");
+        }
+      } catch(err){
+        alert("Format QR bukan JSON yang valid");
+      }
+    }
+
+    function showGeneratedQrImage(rawString){
+      const previewWrapper = document.getElementById("previewWrapper");
+      const imgEl = document.getElementById("imagePreview");
+      const videoEl = document.getElementById("videoPreview");
+      // Gunakan API yang sama seperti halaman generate, ukuran lebih kecil agar pas di preview
+      const size = '160x160';
+      const apiUrl = 'https://api.qrserver.com/v1/create-qr-code/?data=' + encodeURIComponent(rawString) + '&size=' + size;
+      imgEl.src = apiUrl;
+      previewWrapper.style.display = "block";
+      imgEl.classList.remove("d-none");
+      videoEl.classList.add("d-none");
+    }
+
+    async function handleClipboardRead(){
+      if (!navigator.clipboard || !navigator.clipboard.read) {
+        alert("Clipboard image API tidak didukung. Coba tekan Ctrl+V pada halaman ini.");
+        return;
+      }
+      try {
+        const items = await navigator.clipboard.read();
+        for (const item of items) {
+          for (const type of item.types) {
+            if (type.startsWith("image/")) {
+              const blob = await item.getType(type);
+              showImagePreviewAndScan(blob);
+              return;
+            }
+          }
+        }
+        alert("Tidak ada gambar pada clipboard");
+      } catch(err){
+        alert("Gagal membaca clipboard. Pastikan beri izin clipboard.");
+      }
+    }
+
+    function handleClipboardPasteEvent(e){
+      if (!e.clipboardData) return;
+      const items = e.clipboardData.items;
+      for (let i = 0; i < items.length; i++) {
+        const it = items[i];
+        if (it.type && it.type.startsWith("image/")) {
+          const file = it.getAsFile();
+          if (file) {
+            showImagePreviewAndScan(file);
+            e.preventDefault();
+            return;
+          }
+        }
+      }
+    }
+
+    function showContractDetail(contractId) {
+      let c = contractIndex[contractId];
+      if (c) {
+        currentId = contractId;
+        document.getElementById("contractDetail").innerHTML = `
+          <div class="card p-3 shadow-sm">
+            <h5 class="mb-3">Detail Kontrak</h5>
+            <div class="table-responsive">
+              <table class="table table-bordered">
+                <thead>
+                  <tr>
+                    <th>No. Kontrak</th>
+                    <th>Nama Proyek</th>
+                    <th>Nilai</th>
+                    <th>Status</th>
+                    <th>Progress</th>
+                    <th>Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>${contractId}</td>
+                    <td>${c.proyek}</td>
+                    <td>${c.nilai}</td>
+                    <td>${c.status}</td>
+                    <td>${c.progress}</td>
+                    <td>
+                      <div class="d-flex gap-2 justify-content-center">
+                        <button class="btn btn-outline-primary btn-sm" id="lihatDetailBtn">
+                          <i class="fas fa-eye me-1"></i>
+                        </button>
+                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#updateProgresModal">
+                          <i class="fas fa-pen me-1"></i>
+                        </button>
+                        <a href="${buildQrUrl(contractId)}" class="btn btn-success btn-sm" download="${contractId}.png">
+                          <i class="fas fa-download me-1"></i>
+                        </a>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+        document.getElementById("currentContractId").value = contractId;
+        const lihatBtn = document.getElementById("lihatDetailBtn");
+        if (lihatBtn) {
+          lihatBtn.addEventListener("click", function(){
+            // Untuk konsistensi pattern, saat ini hanya scroll ke detail card
+            const card = document.getElementById("contractDetail");
+            if (card) {
+              card.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+          });
+        }
+      } else {
+        document.getElementById("contractDetail").innerHTML =
+          "<p class='text-danger'>Kontrak tidak ditemukan</p>";
+      }
+    }
+    function inferStageFromStatus(status){
+      switch((status||'').toLowerCase()){
+        case 'draft': return 'draft';
+        case 'in review':
+        case 'pending': return 'review';
+        case 'approval': return 'approval';
+        case 'active': return 'active';
+        case 'completed':
+        case 'ended':
+        case 'expired': return 'ended';
+        default: return 'review';
+      }
+    }
+    function getLifecycleLabel(stage){
+      const m={draft:'Draft',review:'Review',approval:'Approval',active:'Active',ended:'Ended'};return m[stage]||stage||'-';
+    }
+    function buildQrUrl(contractId){
+      const payload = JSON.stringify({ contractId });
+      return 'https://api.qrserver.com/v1/create-qr-code/?data=' + encodeURIComponent(payload) + '&size=160x160';
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    (function applySavedTheme(){
+      try {
+        var t = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', t);
+      } catch(e) {}
+    })();
+  </script>
+</body>
+</html>
