@@ -1,7 +1,8 @@
 const clientMenuItems = [
     { name: 'Dasbor', icon: 'fas fa-tachometer-alt', href: '#dashboard', color: 'primary' },
     { name: 'Komunikasi', icon: 'fas fa-comments', href: '#communication', color: 'info' },
-    { name: 'AI Assistant', icon: 'fas fa-robot', href: '#ai', color: 'warning' }
+    { name: 'AI Assistant', icon: 'fas fa-robot', href: '#ai', color: 'warning' },
+    { name: 'QR Scanner', icon: 'fas fa-qrcode', href: 'scan.html', color: 'primary' }
 ];
 
 const clientDashboardItems = [
@@ -22,6 +23,13 @@ const clientDashboardItems = [
         icon: 'fas fa-robot', 
         description: 'Asisten AI untuk bantuan',
         color: 'warning'
+    },
+    { 
+        name: 'QR Scanner', 
+        icon: 'fas fa-qrcode', 
+        description: 'Scan QR untuk melihat kontrak',
+        color: 'success',
+        href: 'scan.html'
     }
 ];
 
@@ -68,6 +76,9 @@ function openClientModule(moduleName) {
             break;
         case 'ai_assistant':
             showPage('ai');
+            break;
+        case 'scannerPage':
+            window.location.href = 'scan.html';
             break;
         default:
             showPage('dashboard');
