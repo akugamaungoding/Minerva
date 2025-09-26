@@ -2,7 +2,8 @@ const adminMenuItems = [
     { name: 'Dasbor', icon: 'fas fa-tachometer-alt', href: '#dashboard', color: 'primary' },
     { name: 'Manajemen Proyek', icon: 'fas fa-tasks', href: '#projects', color: 'success' },
     { name: 'Komunikasi', icon: 'fas fa-comments', href: '#communication', color: 'info' },
-    { name: 'AI Assistant', icon: 'fas fa-robot', href: '#ai', color: 'warning' }
+    { name: 'AI Assistant', icon: 'fas fa-robot', href: '#ai', color: 'warning' },
+    { name: 'QR Scanner', icon: 'fas fa-qrcode', href: 'scan.html', color: 'primary' }
 ];
 
 const adminDashboardItems = [
@@ -29,6 +30,13 @@ const adminDashboardItems = [
         icon: 'fas fa-robot', 
         description: 'Asisten AI untuk bantuan proyek',
         color: 'warning'
+    },
+    { 
+        name: 'QR Scanner', 
+        icon: 'fas fa-qrcode', 
+        description: 'Scan QR untuk melihat kontrak',
+        color: 'success',
+        href: 'scan.html'
     }
 ];
 

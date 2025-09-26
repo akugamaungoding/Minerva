@@ -1,7 +1,9 @@
 const clientMenuItems = [
     { name: 'Dasbor', icon: 'fas fa-tachometer-alt', href: '#dashboard', color: 'primary' },
+    { name: 'Manajemen Kontrak', icon: 'fas fa-file-contract', href: '#contracts', color: 'success'},
     { name: 'Komunikasi', icon: 'fas fa-comments', href: '#communication', color: 'info' },
-    { name: 'AI Assistant', icon: 'fas fa-robot', href: '#ai', color: 'warning' }
+    { name: 'AI Assistant', icon: 'fas fa-robot', href: '#ai', color: 'warning' },
+    { name: 'QR Scanner', icon: 'fas fa-qrcode', href: 'scan.html', color: 'primary' }
 ];
 
 const clientDashboardItems = [
@@ -10,6 +12,12 @@ const clientDashboardItems = [
         icon: 'fas fa-tachometer-alt', 
         description: 'Tinjauan proyek Anda',
         color: 'primary'
+    },
+    { 
+        name: 'Manajemen_Kontrak', 
+        icon: 'fas fa-file-contract', 
+        description: 'Kelola kontrak proyek',
+        color: 'success'
     },
     { 
         name: 'Komunikasi', 
@@ -22,6 +30,13 @@ const clientDashboardItems = [
         icon: 'fas fa-robot', 
         description: 'Asisten AI untuk bantuan',
         color: 'warning'
+    },
+    { 
+        name: 'QR Scanner', 
+        icon: 'fas fa-qrcode', 
+        description: 'Scan QR untuk melihat kontrak',
+        color: 'success',
+        href: 'scan.html'
     }
 ];
 
@@ -63,11 +78,17 @@ function openClientModule(moduleName) {
         case 'dasbor':
             showPage('dashboard');
             break;
+        case 'manajemen_kontrak':
+            window.location.href = 'contracts.html';
+            break;
         case 'komunikasi':
             showPage('communication');
             break;
         case 'ai_assistant':
             showPage('ai');
+            break;
+        case 'scannerPage':
+            window.location.href = 'scan.html';
             break;
         default:
             showPage('dashboard');
