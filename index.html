@@ -3,106 +3,238 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Project Management System</title>
+    <title>Minerva - Project Management System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="styles.css" rel="stylesheet">
 </head>
 <body>
-    <!-- Login Section -->
-    <div id="loginSection" class="login-container">
-        <div class="login-card">
-            <div class="login-header">
-                <h1><i class="fas fa-project-diagram me-2"></i>ProjectHub</h1>
-                <p>Sistem Manajemen Proyek Terintegrasi</p>
-            </div>
-            <div class="login-body">
-                <form id="loginForm">
-                    <div class="role-selector">
-                        <label class="form-label fw-bold">Pilih Role:</label>
-                        <div class="role-option active" onclick="selectRole('admin')">
-                            <input type="radio" name="role" value="admin" checked>
-                            <i class="fas fa-user-shield role-icon"></i>
-                            <span class="fw-bold">Administrator</span>
-                            <small class="d-block text-muted">Manajemen lengkap sistem</small>
+    <div id="authSection">
+        <div class="login-container">
+            <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+                <i class="fas fa-moon" id="themeIcon"></i>
+            </button>
+            
+            <div class="login-card">
+                <div class="login-header">
+                    <h1><i class="fas fa-project-diagram me-2"></i>Minerva</h1>
+                    <p>Sistem Manajemen Proyek Terintegrasi</p>
+                </div>
+                <div class="login-body">
+                    <form id="loginForm">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="loginUsername" placeholder="Username" required>
+                            <label for="loginUsername"><i class="fas fa-user me-2"></i>Username</label>
                         </div>
-                        <div class="role-option" onclick="selectRole('client')">
-                            <input type="radio" name="role" value="client">
-                            <i class="fas fa-user role-icon"></i>
-                            <span class="fw-bold">Klien</span>
-                            <small class="d-block text-muted">Akses terbatas untuk klien</small>
+                        
+                        <div class="form-floating">
+                            <input type="password" class="form-control" id="loginPassword" placeholder="Password" required>
+                            <label for="loginPassword"><i class="fas fa-lock me-2"></i>Password</label>
                         </div>
-                    </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-login">
+                            <i class="fas fa-sign-in-alt me-2"></i>Masuk
+                        </button>
+                    </form>
+
+                    <form id="registerForm" style="display: none;">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="registerUsername" placeholder="Username" required>
+                            <label for="registerUsername"><i class="fas fa-user me-2"></i>Username</label>
+                        </div>
+                        
+                        <div class="form-floating">
+                            <input type="email" class="form-control" id="registerEmail" placeholder="Email" required>
+                            <label for="registerEmail"><i class="fas fa-envelope me-2"></i>Email</label>
+                        </div>
+                        
+                        <div class="form-floating">
+                            <input type="password" class="form-control" id="registerPassword" placeholder="Password" required>
+                            <label for="registerPassword"><i class="fas fa-lock me-2"></i>Password</label>
+                        </div>
+                        
+                        <div class="form-floating">
+                            <input type="password" class="form-control" id="confirmPassword" placeholder="Confirm Password" required>
+                            <label for="confirmPassword"><i class="fas fa-lock me-2"></i>Confirm Password</label>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-login">
+                            <i class="fas fa-user-plus me-2"></i>Daftar
+                        </button>
+                    </form>
                     
-                    <div class="form-floating">
-                        <input type="text" class="form-control" id="username" placeholder="Username" required>
-                        <label for="username"><i class="fas fa-user me-2"></i>Username</label>
+                    <div class="auth-toggle" id="authToggle">
+                        Belum punya akun? <a href="#" onclick="showRegisterForm()">Daftar di sini</a>
                     </div>
-                    
-                    <div class="form-floating">
-                        <input type="password" class="form-control" id="password" placeholder="Password" required>
-                        <label for="password"><i class="fas fa-lock me-2"></i>Password</label>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary btn-login">
-                        <i class="fas fa-sign-in-alt me-2"></i>Masuk
-                    </button>
-                </form>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Dashboard Section -->
     <div id="dashboardSection" class="dashboard-container">
-        <!-- Navigation -->
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-            <div class="container">
-                <a class="navbar-brand" href="#">
-                    <i class="fas fa-project-diagram me-2"></i>ProjectHub
-                </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                    <span class="navbar-toggler-icon"></span>
+        <div id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <h3>Minerva</h3>
+                <button id="sidebarToggle" class="sidebar-toggle">
+                    <i class="fas fa-bars"></i>
                 </button>
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav me-auto" id="navMenu">
-                        <!-- Navigation items will be populated by JavaScript -->
-                    </ul>
-                    <ul class="navbar-nav">
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-user me-1"></i><span id="currentUser">User</span>
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="#" onclick="logout()">
-                                    <i class="fas fa-sign-out-alt me-2"></i>Logout
-                                </a></li>
-                            </ul>
-                        </li>
-                    </ul>
+            </div>
+            <nav class="sidebar-nav">
+                <ul id="sidebarNav" class="nav flex-column">
+                </ul>
+            </nav>
+        </div>
+
+        <div id="mainContent" class="main-content">
+            <nav class="top-navbar">
+                <div class="container-fluid">
+                    <div class="row align-items-center w-100">
+                        <div class="col">
+                            <h4 class="mb-0">Selamat Datang, <span id="welcomeUser">User</span></h4>
+                            <small class="text-muted">Role: <span id="userRole">USER</span></small>
+                        </div>
+                        <div class="col-auto d-flex gap-2">
+                            <button class="btn btn-outline-primary btn-sm" onclick="toggleTheme()" title="Toggle Theme">
+                                <i class="fas fa-moon" id="themeIconNavbar"></i>
+                            </button>
+                            <div class="dropdown">
+                                <button class="btn btn-outline-primary dropdown-toggle btn-sm" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-user me-1"></i><span id="currentUser">User</span>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="showChangePasswordModal()">
+                                        <i class="fas fa-key me-2"></i>Ganti Password
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="#" onclick="logout()">
+                                        <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                    </a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="content-area">
+                <div class="welcome-section">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h2>Dashboard <span id="welcomeUser2">User</span></h2>
+                            <p class="mb-0">Kelola proyek Anda dengan efisien dan kolaboratif</p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <div class="d-flex gap-2 justify-content-end">
+                                <button class="btn btn-outline-light" onclick="exportReport()">
+                                    <i class="fas fa-download me-2"></i>Export
+                                </button>
+                                <button class="btn btn-outline-light" onclick="backupSystem()">
+                                    <i class="fas fa-database me-2"></i>Backup
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="dashboardContent">
+                    <div class="row" id="menuGrid">
+                    </div>
+                </div>
+
+                <div id="dashboardPage" class="page-container active">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalProjects">0</div>
+                            <div class="stat-label">Total Proyek</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="activeProjects">0</div>
+                            <div class="stat-label">Proyek Aktif</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="completedTasks">0</div>
+                            <div class="stat-label">Tugas Selesai</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="teamMembers">0</div>
+                            <div class="stat-label">Anggota Tim</div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="chart-container">
+                                <div class="chart-title">Progress Proyek</div>
+                                <div class="chart-placeholder">
+                                    <i class="fas fa-chart-pie me-2"></i>
+                                    Grafik Progress Proyek
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="chart-container">
+                                <div class="chart-title">Timeline Proyek</div>
+                                <div class="chart-placeholder">
+                                    <i class="fas fa-chart-line me-2"></i>
+                                    Grafik Timeline Proyek
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chart-container">
+                        <div class="chart-title">Analisis Performa Tim</div>
+                        <div class="chart-placeholder">
+                            <i class="fas fa-chart-bar me-2"></i>
+                            Grafik Analisis Performa Tim
+                        </div>
+                    </div>
+                </div>
+
+                <div id="projectsPage" class="page-container">
+                    <h3>Manajemen Proyek</h3>
+                    <p>Halaman manajemen proyek akan dikembangkan lebih lanjut.</p>
+                </div>
+
+                <div id="communicationPage" class="page-container">
+                    <h3>Komunikasi</h3>
+                    <p>Halaman komunikasi akan dikembangkan lebih lanjut.</p>
+                </div>
+
+                <div id="aiPage" class="page-container">
+                    <h3>AI Assistant</h3>
+                    <p>Halaman AI Assistant akan dikembangkan lebih lanjut.</p>
                 </div>
             </div>
-        </nav>
+        </div>
+    </div>
 
-        <!-- Main Content -->
-        <div class="container mt-4">
-            <div class="welcome-section">
-                <div class="row align-items-center">
-                    <div class="col-md-8">
-                        <h2>Selamat Datang, <span id="welcomeUser">User</span>!</h2>
-                        <p class="mb-0">Kelola proyek Anda dengan efisien dan kolaboratif</p>
-                    </div>
-                    <div class="col-md-4 text-end">
-                        <button class="btn logout-btn" onclick="logout()">
-                            <i class="fas fa-sign-out-alt me-2"></i>Logout
-                        </button>
-                    </div>
+    <div class="modal fade" id="changePasswordModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Ganti Password</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-            </div>
-
-            <!-- Dashboard Content -->
-            <div id="dashboardContent">
-                <div class="row" id="menuGrid">
-                    <!-- Menu items will be populated by JavaScript based on role -->
+                <div class="modal-body">
+                    <form id="changePasswordForm">
+                        <div class="form-floating mb-3">
+                            <input type="password" class="form-control" id="currentPassword" placeholder="Password Lama" required>
+                            <label for="currentPassword">Password Lama</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input type="password" class="form-control" id="newPassword" placeholder="Password Baru" required>
+                            <label for="newPassword">Password Baru</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input type="password" class="form-control" id="confirmNewPassword" placeholder="Konfirmasi Password Baru" required>
+                            <label for="confirmNewPassword">Konfirmasi Password Baru</label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-primary" onclick="changePassword()">Ganti Password</button>
                 </div>
             </div>
         </div>
@@ -112,5 +244,9 @@
     <script src="main.js"></script>
     <script src="admin.js"></script>
     <script src="client.js"></script>
+    <script src="dashboard.js"></script>
+    <script src="projects.js"></script>
+    <script src="communication.js"></script>
+    <script src="ai.js"></script>
 </body>
 </html>
