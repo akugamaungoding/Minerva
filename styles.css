@@ -244,6 +244,9 @@ body {
     width: 30px;
     height: 30px;
     border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
     transition: all 0.3s ease;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
@@ -310,6 +313,8 @@ body {
     border-bottom: 1px solid var(--border-color);
     padding: 1rem 2rem;
     box-shadow: 0 2px 10px var(--shadow-color);
+    position: relative;
+    z-index: 1000;
 }
 
 .navbar-brand {
@@ -867,31 +872,191 @@ body {
 /* Contract Details Modal */
 .contract-details-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
     margin-bottom: 2rem;
 }
 
 .contract-detail-card {
-    background: var(--bg-secondary);
-    border-radius: 10px;
-    padding: 1.5rem;
-    border-left: 4px solid var(--primary-color);
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.contract-detail-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--primary-color);
+    opacity: 0.7;
+}
+
+.contract-detail-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--shadow-color);
+    border-color: var(--primary-color);
 }
 
 .contract-detail-card h6 {
     color: var(--primary-color);
     font-weight: 600;
     margin-bottom: 0.5rem;
+    font-size: 0.85rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.contract-detail-card h6 i {
     font-size: 0.8rem;
+    opacity: 0.8;
 }
 
 .contract-detail-card p {
     margin: 0;
+    color: var(--text-color);
+    font-size: 0.95rem;
+    line-height: 1.4;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.contract-value {
+    font-weight: 700;
+    color: var(--success-color);
     font-size: 1.1rem;
-    font-weight: 500;
+}
+
+/* Dark theme contract details */
+[data-theme="dark"] .contract-detail-card {
+    background: var(--card-bg);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .contract-detail-card:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .contract-detail-card h6 {
+    color: var(--primary-color);
+}
+
+[data-theme="dark"] .contract-detail-card p {
+    color: var(--text-color);
+}
+
+/* Contract Section Styling */
+.contract-section {
+    margin-bottom: 2rem;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px var(--shadow-color);
+    transition: all 0.3s ease;
+}
+
+.contract-section:hover {
+    box-shadow: 0 4px 16px var(--shadow-color);
+    transform: translateY(-1px);
+}
+
+.contract-section .section-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--primary-color);
+    position: relative;
+}
+
+.contract-section .section-header::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 60px;
+    height: 2px;
+    background: var(--primary-color);
+    border-radius: 1px;
+}
+
+.contract-section .contract-details-grid {
+    margin-bottom: 0;
+}
+
+/* Dark theme contract section */
+[data-theme="dark"] .contract-section {
+    background: var(--card-bg);
+    border-color: var(--border-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .contract-section:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .contract-section .section-header {
+    border-bottom-color: var(--primary-color);
+}
+
+[data-theme="dark"] .contract-section .section-header::after {
+    background: var(--primary-color);
+}
+
+
+/* Responsive contract sections */
+@media (max-width: 768px) {
+    .contract-section {
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .contract-section .section-header {
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+    }
+    
+    .contract-section .section-header h6 {
+        font-size: 0.8rem;
+    }
+    
+    .contract-details-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .contract-section {
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+        border-radius: 8px;
+    }
+    
+    .contract-section .section-header h6 {
+        font-size: 0.75rem;
+    }
+    
+    .contract-detail-card {
+        padding: 0.75rem;
+    }
+    
+    .contract-detail-card h6 {
+        font-size: 0.8rem;
+    }
+    
+    .contract-detail-card p {
+        font-size: 0.9rem;
+    }
 }
 
 .contract-timeline {
@@ -1349,6 +1514,439 @@ textarea.form-control {
 
 [data-theme="dark"] .input-group:focus-within .form-control {
     border-color: var(--primary-color);
+}
+
+/* Phone Input Group Styling */
+.input-group .form-select {
+    border-right: none;
+    border-radius: 8px 0 0 8px;
+    background: var(--card-bg);
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+.input-group .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(4, 0, 222, 0.1);
+}
+
+.input-group:focus-within .form-select {
+    border-color: var(--primary-color);
+}
+
+.input-group .form-select + .form-control {
+    border-left: 1px solid var(--border-color);
+    border-radius: 0 8px 8px 0;
+}
+
+/* Country Code Dropdown Styling */
+#countryCode {
+    font-size: 0.9rem;
+    padding: 0.75rem 0.5rem;
+}
+
+#countryCode option {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+}   
+
+/* Dark theme phone input */
+[data-theme="dark"] .input-group .form-select {
+    background: var(--card-bg);
+    color: var(--text-color);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .input-group .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+[data-theme="dark"] .input-group:focus-within .form-select {
+    border-color: var(--primary-color);
+}
+
+/* Pagination Styling */
+.pagination-container {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    box-shadow: 0 2px 8px var(--shadow-color);
+}
+
+.pagination-info {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.pagination {
+    margin: 0;
+}
+
+.pagination .page-item {
+    margin: 0 2px;
+}
+
+.pagination .page-link {
+    color: var(--text-color);
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    min-width: 40px;
+    text-align: center;
+}
+
+.pagination .page-link:hover {
+    color: white;
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(4, 0, 222, 0.2);
+}
+
+.pagination .page-item.active .page-link {
+    color: white;
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 8px rgba(4, 0, 222, 0.3);
+}
+
+.pagination .page-item.disabled .page-link {
+    color: var(--text-muted);
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.pagination .page-item.disabled .page-link:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+/* Dark theme pagination */
+[data-theme="dark"] .pagination-container {
+    background: var(--card-bg);
+    border-color: var(--border-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .pagination .page-link {
+    color: var(--text-color);
+    background: var(--card-bg);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .pagination .page-link:hover {
+    color: white;
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+[data-theme="dark"] .pagination .page-item.active .page-link {
+    color: white;
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+[data-theme="dark"] .pagination .page-item.disabled .page-link {
+    color: var(--text-muted);
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+}
+
+/* Responsive pagination */
+@media (max-width: 768px) {
+    .pagination-container {
+        padding: 0.75rem 1rem;
+    }
+    
+    .pagination-info {
+        font-size: 0.8rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .pagination {
+        justify-content: center !important;
+    }
+    
+    .pagination .page-link {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.8rem;
+        min-width: 35px;
+    }
+}
+
+@media (max-width: 576px) {
+    .pagination-container .row {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .pagination-container .col-md-6 {
+        width: 100%;
+    }
+    
+    .pagination .page-item {
+        margin: 0 1px;
+    }
+    
+    .pagination .page-link {
+        padding: 0.3rem 0.5rem;
+        font-size: 0.75rem;
+        min-width: 30px;
+    }
+}
+
+/* Barang Modal Styling */
+#barangDetailsModal .modal-dialog {
+    max-width: 1200px;
+}
+
+#barangTable {
+    margin-bottom: 0;
+}
+
+#barangTable th {
+    background: var(--primary-color) !important;
+    color: white !important;
+    font-weight: 600;
+    text-align: center;
+    vertical-align: middle;
+    border: none;
+    padding: 1rem 0.75rem;
+}
+
+#barangTable td {
+    vertical-align: middle;
+    padding: 0.75rem;
+    border-color: var(--border-color);
+    color: var(--text-color);
+    background: var(--card-bg);
+}
+
+#barangTable tbody tr {
+    background: var(--card-bg);
+    color: var(--text-color);
+}
+
+#barangTable tbody tr:hover {
+    background: var(--bg-secondary);
+    color: var(--text-color);
+}
+
+#barangTable tbody tr:nth-child(even) {
+    background: var(--bg-secondary);
+    color: var(--text-color);
+}
+
+#barangTable tbody tr:nth-child(even):hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+#barangTable tbody tr:hover td {
+    color: var(--text-color);
+}
+
+#barangTable tbody tr:nth-child(even):hover td {
+    color: white;
+}
+
+#barangTable code {
+    background: var(--primary-color);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+/* Dark theme for barang table */
+[data-theme="dark"] #barangTable th {
+    background: var(--primary-color) !important;
+    color: white !important;
+}
+
+[data-theme="dark"] #barangTable td {
+    color: var(--text-color);
+    border-color: var(--border-color);
+    background: var(--card-bg);
+}
+
+[data-theme="dark"] #barangTable tbody tr {
+    background: var(--card-bg);
+    color: var(--text-color);
+}
+
+[data-theme="dark"] #barangTable tbody tr:hover {
+    background: rgba(99, 102, 241, 0.15);
+    color: var(--text-color);
+}
+
+[data-theme="dark"] #barangTable tbody tr:nth-child(even) {
+    background: var(--bg-secondary);
+    color: var(--text-color);
+}
+
+[data-theme="dark"] #barangTable tbody tr:nth-child(even):hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+[data-theme="dark"] #barangTable tbody tr:hover td {
+    color: var(--text-color);
+}
+
+[data-theme="dark"] #barangTable tbody tr:nth-child(even):hover td {
+    color: white;
+}
+
+[data-theme="dark"] #barangTable code {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* Barang table action buttons */
+#barangTable .btn-group .btn {
+    border-color: var(--border-color);
+    color: var(--text-color);
+    background: var(--card-bg);
+}
+
+#barangTable .btn-group .btn:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+[data-theme="dark"] #barangTable .btn-group .btn {
+    border-color: var(--border-color);
+    color: var(--text-color);
+    background: var(--card-bg);
+}
+
+[data-theme="dark"] #barangTable .btn-group .btn:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+/* Add Barang Modal Styling */
+#addBarangModal .modal-dialog {
+    max-width: 800px;
+}
+
+#addBarangModal .form-label {
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+#addBarangModal .form-label i {
+    color: var(--primary-color);
+    margin-right: 0.5rem;
+}
+
+#addBarangModal .form-control,
+#addBarangModal .form-select {
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    background: var(--card-bg);
+    color: var(--text-color);
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: none;
+}
+
+#addBarangModal .form-control:focus,
+#addBarangModal .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(4, 0, 222, 0.1);
+    outline: none;
+}
+
+#addBarangModal .form-control:hover,
+#addBarangModal .form-select:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(4, 0, 222, 0.1);
+}
+
+/* Dark theme for add barang modal */
+[data-theme="dark"] #addBarangModal .form-label {
+    color: var(--text-color);
+}
+
+[data-theme="dark"] #addBarangModal .form-label i {
+    color: var(--primary-color);
+}
+
+[data-theme="dark"] #addBarangModal .form-control,
+[data-theme="dark"] #addBarangModal .form-select {
+    background: var(--card-bg);
+    color: var(--text-color);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] #addBarangModal .form-control:focus,
+[data-theme="dark"] #addBarangModal .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+[data-theme="dark"] #addBarangModal .form-control:hover,
+[data-theme="dark"] #addBarangModal .form-select:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 8px rgba(99, 102, 241, 0.1);
+}
+
+/* Responsive barang modal */
+@media (max-width: 768px) {
+    #barangDetailsModal .modal-dialog {
+        max-width: 95%;
+        margin: 1rem auto;
+    }
+    
+    #barangTable th,
+    #barangTable td {
+        padding: 0.5rem 0.25rem;
+        font-size: 0.8rem;
+    }
+    
+    #barangTable th:nth-child(3),
+    #barangTable th:nth-child(4),
+    #barangTable th:nth-child(5),
+    #barangTable th:nth-child(6),
+    #barangTable td:nth-child(3),
+    #barangTable td:nth-child(4),
+    #barangTable td:nth-child(5),
+    #barangTable td:nth-child(6) {
+        display: none;
+    }
+}
+
+@media (max-width: 576px) {
+    #addBarangModal .modal-dialog {
+        max-width: 95%;
+        margin: 1rem auto;
+    }
+    
+    #addBarangModal .form-control,
+    #addBarangModal .form-select {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.9rem;
+    }
 }
 
 /* Readonly input styling */
@@ -1920,8 +2518,6 @@ textarea.form-control {
     
     .main-content {
         margin-left: 0;
-        width: 100%;
-    }
     
     /* Top navbar adjustments */
     .top-navbar {
@@ -2301,4 +2897,4 @@ textarea.form-control {
         padding: 0.25rem;
         border: 1px solid #000;
     }
-}
+}}
