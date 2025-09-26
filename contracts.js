@@ -3,77 +3,118 @@ let contracts = [];
 let filteredContracts = [];
 let selectedContracts = new Set();
 
-// Sample contract data
+// Sample contract data based on new database structure
 const sampleContracts = [
     {
         id: 1,
-        name: 'Website E-commerce Development',
-        client: 'PT. Maju Jaya',
-        type: 'project',
+        nomorKontrak: 'KONTRAK_15012024_001',
+        namaProyek: 'Pengiriman Logistik Jakarta',
+        jenisKontrak: 'Logistik',
+        tglPengajuan: '2024-01-15T08:00:00.000Z',
+        tglMulai: '2024-01-15',
+        tglSelesai: '2024-04-15',
+        nilaiKontrak: 25000000,
+        mataUang: 'IDR',
+        perusahaanPemberi: 1,
+        perusahaanPenyedia: 2,
+        alamat: 'Jl. Sudirman No. 123, Jakarta Selatan',
+        kontakResmi: '08123456789',
+        namaPic: 'John Doe',
+        npwp: '12.345.678.9-012.000',
+        asuransi: 1,
+        terminPembayaran: 'DP',
+        metodePembayaran: 'Transfer Bank',
+        ppn: 11.00,
+        pajakLainnya: 0,
+        penaltiTerlambat: 100000,
+        hariPenalti: 7,
+        dokumenLampiran: 'kontrak_logistik_jakarta.pdf',
         status: 'active',
+        createdAt: '2024-01-10',
+        updatedAt: '2024-01-15',
+        // Legacy fields
+        name: 'Pengiriman Logistik Jakarta',
+        client: 'John Doe',
+        type: 'logistik',
         value: 25000000,
         startDate: '2024-01-15',
         endDate: '2024-04-15',
-        description: 'Pembuatan website e-commerce dengan fitur lengkap',
-        manager: 'John Doe',
-        createdAt: '2024-01-10',
-        updatedAt: '2024-01-15'
+        description: 'Kontrak Logistik - Pengiriman Logistik Jakarta',
+        manager: 'John Doe'
     },
     {
         id: 2,
-        name: 'Mobile App Development',
-        client: 'CV. Teknologi Indonesia',
-        type: 'project',
+        nomorKontrak: 'KONTRAK_01022024_002',
+        namaProyek: 'Penyimpanan Barang Surabaya',
+        jenisKontrak: 'Penyimpanan',
+        tglPengajuan: '2024-02-01T09:00:00.000Z',
+        tglMulai: '2024-02-01',
+        tglSelesai: '2024-06-01',
+        nilaiKontrak: 35000000,
+        mataUang: 'IDR',
+        perusahaanPemberi: 1,
+        perusahaanPenyedia: 2,
+        alamat: 'Jl. Thamrin No. 456, Surabaya',
+        kontakResmi: '08123456788',
+        namaPic: 'Jane Smith',
+        npwp: '98.765.432.1-098.000',
+        asuransi: 0,
+        terminPembayaran: 'Cicilan',
+        metodePembayaran: 'LC',
+        ppn: 11.00,
+        pajakLainnya: 500000,
+        penaltiTerlambat: 150000,
+        hariPenalti: 10,
+        dokumenLampiran: 'kontrak_penyimpanan_surabaya.pdf',
         status: 'pending',
+        createdAt: '2024-01-25',
+        updatedAt: '2024-01-25',
+        // Legacy fields
+        name: 'Penyimpanan Barang Surabaya',
+        client: 'Jane Smith',
+        type: 'penyimpanan',
         value: 35000000,
         startDate: '2024-02-01',
         endDate: '2024-06-01',
-        description: 'Pengembangan aplikasi mobile untuk iOS dan Android',
-        manager: 'Jane Smith',
-        createdAt: '2024-01-25',
-        updatedAt: '2024-01-25'
+        description: 'Kontrak Penyimpanan - Penyimpanan Barang Surabaya',
+        manager: 'Jane Smith'
     },
     {
         id: 3,
-        name: 'IT Consulting Services',
-        client: 'PT. Digital Solutions',
-        type: 'consultation',
+        nomorKontrak: 'KONTRAK_01122023_003',
+        namaProyek: 'Bongkar Muat Pelabuhan',
+        jenisKontrak: 'Bongkar Muat',
+        tglPengajuan: '2023-12-01T10:00:00.000Z',
+        tglMulai: '2023-12-01',
+        tglSelesai: '2024-01-31',
+        nilaiKontrak: 15000000,
+        mataUang: 'USD',
+        perusahaanPemberi: 1,
+        perusahaanPenyedia: 2,
+        alamat: 'Pelabuhan Tanjung Priok, Jakarta',
+        kontakResmi: '08123456787',
+        namaPic: 'Mike Johnson',
+        npwp: '11.222.333.4-555.000',
+        asuransi: 1,
+        terminPembayaran: 'Pelunasan',
+        metodePembayaran: 'Transfer Bank',
+        ppn: 11.00,
+        pajakLainnya: 0,
+        penaltiTerlambat: 200000,
+        hariPenalti: 5,
+        dokumenLampiran: 'kontrak_bongkar_muat.pdf',
         status: 'completed',
+        createdAt: '2023-11-20',
+        updatedAt: '2024-01-31',
+        // Legacy fields
+        name: 'Bongkar Muat Pelabuhan',
+        client: 'Mike Johnson',
+        type: 'bongkar_muat',
         value: 15000000,
         startDate: '2023-12-01',
         endDate: '2024-01-31',
-        description: 'Konsultasi IT infrastructure dan digital transformation',
-        manager: 'Mike Johnson',
-        createdAt: '2023-11-20',
-        updatedAt: '2024-01-31'
-    },
-    {
-        id: 4,
-        name: 'System Maintenance',
-        client: 'PT. Bintang Terang',
-        type: 'maintenance',
-        status: 'active',
-        value: 8000000,
-        startDate: '2024-01-01',
-        endDate: '2024-12-31',
-        description: 'Maintenance sistem IT dan support teknis',
-        manager: 'Sarah Wilson',
-        createdAt: '2023-12-15',
-        updatedAt: '2024-01-01'
-    },
-    {
-        id: 5,
-        name: 'Cloud Services',
-        client: 'PT. Modern Tech',
-        type: 'service',
-        status: 'expired',
-        value: 12000000,
-        startDate: '2023-06-01',
-        endDate: '2023-12-31',
-        description: 'Layanan cloud hosting dan backup',
-        manager: 'David Brown',
-        createdAt: '2023-05-20',
-        updatedAt: '2023-12-31'
+        description: 'Kontrak Bongkar Muat - Bongkar Muat Pelabuhan',
+        manager: 'Mike Johnson'
     }
 ];
 
@@ -128,25 +169,30 @@ function renderContractsTable() {
                 <input type="checkbox" class="contract-checkbox" value="${contract.id}" 
                        onchange="toggleContractSelection(${contract.id})">
             </td>
-            <td class="text-center">#${contract.id}</td>
             <td>
-                <strong>${contract.name}</strong>
-                <br><small class="text-muted">${contract.description}</small>
+                <strong>${contract.nomorKontrak || `#${contract.id}`}</strong>
             </td>
-            <td>${contract.client}</td>
             <td>
-                <span class="type-badge type-${contract.type}">
-                    ${getTypeLabel(contract.type)}
+                <strong>${contract.namaProyek || contract.name}</strong>
+                ${contract.description ? `<br><small class="text-muted">${contract.description}</small>` : ''}
+            </td>
+            <td>
+                <span class="type-badge type-${(contract.jenisKontrak || contract.type).toLowerCase().replace(' ', '_')}">
+                    ${contract.jenisKontrak || getTypeLabel(contract.type)}
                 </span>
             </td>
+            <td>${contract.namaPic || contract.client}</td>
+            <td class="contract-value">${formatCurrency(contract.nilaiKontrak || contract.value)}</td>
+            <td class="text-center">
+                <span class="badge bg-secondary">${contract.mataUang || 'IDR'}</span>
+            </td>
+            <td class="contract-dates">${formatDate(contract.tglMulai || contract.startDate)}</td>
+            <td class="contract-dates">${formatDate(contract.tglSelesai || contract.endDate)}</td>
             <td>
                 <span class="status-badge status-${contract.status}">
                     ${getStatusLabel(contract.status)}
                 </span>
             </td>
-            <td class="contract-value">Rp ${formatCurrency(contract.value)}</td>
-            <td class="contract-dates">${formatDate(contract.startDate)}</td>
-            <td class="contract-dates">${formatDate(contract.endDate)}</td>
             <td>
                 <div class="action-buttons-small">
                     <button class="btn btn-sm btn-outline-primary" onclick="viewContract(${contract.id})" title="Lihat Detail">
@@ -184,11 +230,12 @@ function applyFilters() {
     const typeFilter = document.getElementById('typeFilter').value;
 
     filteredContracts = contracts.filter(contract => {
-        const matchesSearch = contract.name.toLowerCase().includes(searchTerm) ||
-                            contract.client.toLowerCase().includes(searchTerm) ||
-                            contract.description.toLowerCase().includes(searchTerm);
+        const matchesSearch = (contract.namaProyek || contract.name || '').toLowerCase().includes(searchTerm) ||
+                            (contract.namaPic || contract.client || '').toLowerCase().includes(searchTerm) ||
+                            (contract.nomorKontrak || '').toLowerCase().includes(searchTerm) ||
+                            (contract.description || '').toLowerCase().includes(searchTerm);
         const matchesStatus = !statusFilter || contract.status === statusFilter;
-        const matchesType = !typeFilter || contract.type === typeFilter;
+        const matchesType = !typeFilter || (contract.jenisKontrak || contract.type) === typeFilter;
 
         return matchesSearch && matchesStatus && matchesType;
     });
@@ -198,8 +245,7 @@ function applyFilters() {
 
 // Show create contract modal
 function showCreateContractModal() {
-    const modal = new bootstrap.Modal(document.getElementById('createContractModal'));
-    clearCreateContractForm();
+    const modal = new bootstrap.Modal(document.getElementById('methodSelectionModal'));
     modal.show();
 }
 
@@ -209,28 +255,66 @@ function clearCreateContractForm() {
     document.getElementById('contractStatus').value = 'draft';
 }
 
+// Generate contract number
+function generateContractNumber() {
+    const today = new Date();
+    const day = String(today.getDate()).padStart(2, '0');
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const year = today.getFullYear();
+    const sequence = String(contracts.length + 1).padStart(3, '0');
+    
+    return `KONTRAK_${day}${month}${year}_${sequence}`;
+}
+
 // Create new contract
 function createContract() {
     const form = document.getElementById('createContractForm');
-    const formData = new FormData(form);
-
+    
     // Validate form
     if (!form.checkValidity()) {
         form.classList.add('was-validated');
         return;
     }
 
+    // Generate contract number
+    const nomorKontrak = generateContractNumber();
+    
+    // Get form values
     const newContract = {
         id: contracts.length + 1,
-        name: document.getElementById('contractName').value,
-        client: document.getElementById('clientName').value,
-        type: document.getElementById('contractType').value,
-        status: document.getElementById('contractStatus').value,
-        value: parseInt(document.getElementById('contractValue').value),
-        startDate: document.getElementById('startDate').value,
-        endDate: document.getElementById('endDate').value,
-        description: document.getElementById('contractDescription').value,
-        manager: document.getElementById('contractManager').value,
+        nomorKontrak: nomorKontrak,
+        namaProyek: document.getElementById('namaProyek').value,
+        jenisKontrak: document.getElementById('jenisKontrak').value,
+        tglPengajuan: new Date().toISOString(),
+        tglMulai: document.getElementById('tglMulai').value,
+        tglSelesai: document.getElementById('tglSelesai').value,
+        nilaiKontrak: parseFloat(document.getElementById('nilaiKontrak').value),
+        mataUang: document.getElementById('mataUang').value,
+        perusahaanPemberi: 1, // Default from logged user
+        perusahaanPenyedia: 2, // Default ILCS
+        alamat: document.getElementById('alamat').value,
+        kontakResmi: document.getElementById('kontakResmi').value,
+        namaPic: document.getElementById('namaPic').value,
+        npwp: document.getElementById('npwp').value,
+        asuransi: document.getElementById('asuransi').checked ? 1 : 0,
+        terminPembayaran: document.getElementById('terminPembayaran').value,
+        metodePembayaran: document.getElementById('metodePembayaran').value,
+        ppn: parseFloat(document.getElementById('ppn').value),
+        pajakLainnya: parseFloat(document.getElementById('pajakLainnya').value) || 0,
+        penaltiTerlambat: parseFloat(document.getElementById('penaltiTerlambat').value) || 0,
+        hariPenalti: parseInt(document.getElementById('hariPenalti').value) || 0,
+        dokumenLampiran: document.getElementById('dokumenLampiran').files.length > 0 ? 
+                        Array.from(document.getElementById('dokumenLampiran').files).map(f => f.name).join(',') : '',
+        // Legacy fields for backward compatibility
+        name: document.getElementById('namaProyek').value,
+        client: document.getElementById('namaPic').value,
+        type: document.getElementById('jenisKontrak').value.toLowerCase().replace(' ', '_'),
+        status: 'pending',
+        value: parseFloat(document.getElementById('nilaiKontrak').value),
+        startDate: document.getElementById('tglMulai').value,
+        endDate: document.getElementById('tglSelesai').value,
+        description: `Kontrak ${document.getElementById('jenisKontrak').value} - ${document.getElementById('namaProyek').value}`,
+        manager: document.getElementById('namaPic').value,
         createdAt: new Date().toISOString().split('T')[0],
         updatedAt: new Date().toISOString().split('T')[0]
     };
@@ -243,7 +327,7 @@ function createContract() {
     const modal = bootstrap.Modal.getInstance(document.getElementById('createContractModal'));
     modal.hide();
 
-    showSuccess('Kontrak berhasil dibuat!');
+    showSuccess(`Kontrak berhasil dibuat dengan nomor: ${nomorKontrak}`);
 }
 
 // View contract details
@@ -538,4 +622,74 @@ document.addEventListener('DOMContentLoaded', function() {
     if (document.getElementById('contractsPage')) {
         initializeContracts();
     }
+    
+    // Initialize floating labels for form inputs
+    initializeFloatingLabels();
+    
+    // Initialize currency symbol updates
+    initializeCurrencySymbols();
 });
+
+// Function to initialize floating labels
+function initializeFloatingLabels() {
+    // Get all form floating inputs
+    const floatingInputs = document.querySelectorAll('.form-floating input, .form-floating select, .form-floating textarea');
+    
+    floatingInputs.forEach(input => {
+        // Check if input has value on load
+        if (input.value && input.value !== '') {
+            input.classList.add('has-value');
+        }
+        
+        // Add event listeners
+        input.addEventListener('input', function() {
+            if (this.value && this.value !== '') {
+                this.classList.add('has-value');
+            } else {
+                this.classList.remove('has-value');
+            }
+        });
+        
+        input.addEventListener('focus', function() {
+            this.classList.add('focused');
+        });
+        
+        input.addEventListener('blur', function() {
+            this.classList.remove('focused');
+        });
+    });
+}
+
+// Function to initialize currency symbols
+function initializeCurrencySymbols() {
+    const mataUangSelect = document.getElementById('mataUang');
+    const currencySymbol = document.getElementById('currencySymbol');
+    const pajakCurrencySymbol = document.getElementById('pajakCurrencySymbol');
+    const penaltiCurrencySymbol = document.getElementById('penaltiCurrencySymbol');
+    
+    // Currency symbol mapping
+    const currencyMap = {
+        'IDR': 'Rp',
+        'USD': '$',
+        'EUR': '€',
+        'SGD': 'S$'
+    };
+    
+    // Function to update currency symbols
+    function updateCurrencySymbols() {
+        const selectedCurrency = mataUangSelect.value;
+        const symbol = currencyMap[selectedCurrency] || 'Rp';
+        
+        if (currencySymbol) currencySymbol.textContent = symbol;
+        if (pajakCurrencySymbol) pajakCurrencySymbol.textContent = symbol;
+        if (penaltiCurrencySymbol) penaltiCurrencySymbol.textContent = symbol;
+    }
+    
+    // Add event listener for currency change
+    if (mataUangSelect) {
+        mataUangSelect.addEventListener('change', updateCurrencySymbols);
+        
+        // Set initial currency symbol
+        updateCurrencySymbols();
+    }
+}

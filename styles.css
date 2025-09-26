@@ -499,6 +499,7 @@ body {
     
     .content-area {
         padding: 1rem;
+        margin-left: 0;
     }
 }
 
@@ -641,9 +642,84 @@ body {
     overflow: hidden;
 }
 
+/* Table responsive wrapper */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Ensure table has minimum width for mobile scrolling */
+@media (max-width: 767.98px) {
+    .contracts-table {
+        min-width: 700px;
+    }
+    
+    .contracts-table th,
+    .contracts-table td {
+        min-width: 80px;
+    }
+    
+    /* Specific column widths for better mobile experience */
+    .contracts-table th:nth-child(1),
+    .contracts-table td:nth-child(1) {
+        min-width: 40px; /* Checkbox column */
+    }
+    
+    .contracts-table th:nth-child(2),
+    .contracts-table td:nth-child(2) {
+        min-width: 120px; /* No. Kontrak */
+    }
+    
+    .contracts-table th:nth-child(3),
+    .contracts-table td:nth-child(3) {
+        min-width: 150px; /* Nama Proyek */
+    }
+    
+    .contracts-table th:nth-child(4),
+    .contracts-table td:nth-child(4) {
+        min-width: 80px; /* Jenis */
+    }
+    
+    .contracts-table th:nth-child(5),
+    .contracts-table td:nth-child(5) {
+        min-width: 100px; /* Nama PIC */
+    }
+    
+    .contracts-table th:nth-child(6),
+    .contracts-table td:nth-child(6) {
+        min-width: 100px; /* Nilai Kontrak */
+    }
+    
+    .contracts-table th:nth-child(7),
+    .contracts-table td:nth-child(7) {
+        min-width: 60px; /* Mata Uang */
+    }
+    
+    .contracts-table th:nth-child(8),
+    .contracts-table td:nth-child(8) {
+        min-width: 100px; /* Tanggal Mulai */
+    }
+    
+    .contracts-table th:nth-child(9),
+    .contracts-table td:nth-child(9) {
+        min-width: 100px; /* Tanggal Selesai */
+    }
+    
+    .contracts-table th:nth-child(10),
+    .contracts-table td:nth-child(10) {
+        min-width: 80px; /* Status */
+    }
+    
+    .contracts-table th:nth-child(11),
+    .contracts-table td:nth-child(11) {
+        min-width: 100px; /* Aksi */
+    }
+}
+
 .contracts-table {
     margin: 0;
     color: var(--text-color);
+    background: var(--card-bg);
 }
 
 .contracts-table thead th {
@@ -652,18 +728,43 @@ body {
     border: none;
     font-weight: 600;
     padding: 1rem 0.75rem;
-    text-align: center;
+    text-align: center !important;
+    vertical-align: middle !important;
+}
+
+.contracts-table thead th * {
+    text-align: center !important;
+    vertical-align: middle !important;
+}
+
+.contracts-table thead th .form-check {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.contracts-table thead th .form-check-input {
+    margin: 0;
 }
 
 .contracts-table tbody td {
     border-bottom: 1px solid var(--border-color);
     padding: 1rem 0.75rem;
     vertical-align: middle;
+    background: var(--card-bg);
+}
+
+.contracts-table tbody tr {
+    background: var(--card-bg);
 }
 
 .contracts-table tbody tr:hover {
     background: rgba(4, 0, 222, 0.05);
     transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .contracts-table tbody tr:hover {
+    background: rgba(99, 102, 241, 0.1);
 }
 
 .status-badge {
@@ -903,7 +1004,6 @@ body {
 }
 
 .contracts-page .main-content {
-    margin-left: 250px;
     transition: all 0.3s ease;
 }
 
@@ -946,4 +1046,1259 @@ body {
 .text-center .btn-lg:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(4, 0, 222, 0.3);
+}
+
+/* Method Selection Modal Styles */
+.method-card {
+    border: 2px solid var(--border-color);
+    border-radius: 15px;
+    padding: 2rem 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: var(--card-bg);
+    height: 100%;
+}
+
+.method-card:hover {
+    border-color: var(--primary-color);
+    background: rgba(4, 0, 222, 0.05);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px var(--shadow-color);
+}
+
+.method-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.method-card h6 {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+}
+
+.method-card p {
+    font-size: 0.9rem;
+    margin-bottom: 0;
+}
+
+/* Excel Upload Modal Styles */
+.template-section {
+    background: var(--bg-secondary);
+    border-radius: 10px;
+    padding: 1.5rem;
+}
+
+.upload-area {
+    border: 2px dashed var(--border-color);
+    border-radius: 15px;
+    padding: 3rem 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    background: var(--bg-secondary);
+}
+
+.upload-area:hover {
+    border-color: var(--primary-color);
+    background: rgba(4, 0, 222, 0.05);
+}
+
+.upload-area.dragover {
+    border-color: var(--primary-color);
+    background: rgba(4, 0, 222, 0.1);
+    transform: scale(1.02);
+}
+
+.upload-icon {
+    font-size: 3rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.upload-content h6 {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+}
+
+.file-info {
+    animation: slideDown 0.3s ease-out;
+}
+
+.preview-section {
+    background: var(--bg-secondary);
+    border-radius: 10px;
+    padding: 1.5rem;
+}
+
+#previewTable {
+    font-size: 0.9rem;
+    color: var(--text-color);
+    background: var(--card-bg);
+}
+
+#previewTable th {
+    background: var(--primary-color);
+    color: white;
+    font-weight: 600;
+    border: none;
+    padding: 0.75rem;
+    text-align: center !important;
+    vertical-align: middle !important;
+}
+
+#previewTable thead th * {
+    text-align: center !important;
+    vertical-align: middle !important;
+}
+
+#previewTable td {
+    border-color: var(--border-color);
+    padding: 0.5rem 0.75rem;
+    background: var(--card-bg);
+}
+
+/* Dark Theme Preview Table */
+[data-theme="dark"] #previewTable {
+    background: var(--card-bg);
+    color: white;
+}
+
+[data-theme="dark"] #previewTable th {
+    background: var(--primary-color);
+    color: white;
+}
+
+[data-theme="dark"] #previewTable td {
+    background: var(--card-bg);
+    border-color: var(--border-color);
+    color: white;
+}
+
+[data-theme="dark"] #previewTable tbody tr:hover {
+    background: rgba(99, 102, 241, 0.1);
+}
+
+[data-theme="dark"] #previewTable tbody tr {
+    background: var(--card-bg);
+    color: white;
+}
+
+[data-theme="dark"] #previewTable tbody td * {
+    color: white !important;
+}
+
+/* Modern Section Headers in Forms */
+.section-header {
+    margin: 2rem 0 1.5rem 0;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border-color);
+    position: relative;
+    background: linear-gradient(90deg, var(--primary-color) 0%, transparent 100%);
+    background-size: 100% 2px;
+    background-repeat: no-repeat;
+    background-position: 0 100%;
+}
+
+.section-header h6 {
+    color: var(--primary-color);
+    font-weight: 600;
+    margin: 0;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.section-header h6 i {
+    font-size: 0.8rem;
+    opacity: 0.8;
+}
+
+/* Form Layout Improvements */
+.modal-body .row {
+    margin-bottom: 0.5rem;
+}
+
+.modal-body .mb-3 {
+    margin-bottom: 1.5rem;
+}
+
+.modal-body .form-check {
+    margin-bottom: 1rem;
+}
+
+/* Modern form styling */
+.form-label {
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-label i {
+    color: var(--primary-color);
+    margin-right: 0.5rem;
+}
+
+.form-control,
+.form-select {
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    background: var(--card-bg);
+    color: var(--text-color);
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: none;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(4, 0, 222, 0.1);
+    outline: none;
+}
+
+.form-control:hover,
+.form-select:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 1px rgba(4, 0, 222, 0.1);
+}
+
+/* Textarea specific styling */
+textarea.form-control {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* Placeholder styling */
+.form-control::placeholder {
+    color: var(--text-muted);
+    opacity: 0.8;
+    font-size: 0.9rem;
+}
+
+.form-control:focus::placeholder {
+    color: var(--text-muted);
+    opacity: 0.6;
+}
+
+/* Dark theme placeholder */
+[data-theme="dark"] .form-control::placeholder {
+    color: var(--text-muted);
+    opacity: 0.7;
+}
+
+[data-theme="dark"] .form-control:focus::placeholder {
+    color: var(--text-muted);
+    opacity: 0.5;
+}
+
+/* Currency input styling */
+.input-group-text {
+    background: var(--card-bg);
+    border: 2px solid var(--border-color);
+    border-right: none;
+    color: var(--text-color);
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 0.75rem 0.5rem;
+    border-radius: 8px 0 0 8px;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.input-group .form-control {
+    border-left: none;
+    border-radius: 0 8px 8px 0;
+}
+
+.input-group:focus-within .input-group-text {
+    border-color: var(--primary-color);
+    background: var(--primary-color);
+    color: white;
+}
+
+.input-group:focus-within .form-control {
+    border-color: var(--primary-color);
+}
+
+/* Dark theme currency input */
+[data-theme="dark"] .input-group-text {
+    background: var(--card-bg);
+    border-color: var(--border-color);
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .input-group:focus-within .input-group-text {
+    border-color: var(--primary-color);
+    background: var(--primary-color);
+    color: white;
+}
+
+[data-theme="dark"] .input-group:focus-within .form-control {
+    border-color: var(--primary-color);
+}
+
+/* Readonly input styling */
+.form-control[readonly] {
+    background-color: var(--bg-color);
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Dark theme form styling */
+[data-theme="dark"] .form-label {
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select {
+    background: var(--card-bg);
+    border-color: var(--border-color);
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .form-control:focus,
+[data-theme="dark"] .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+[data-theme="dark"] .form-control:hover,
+[data-theme="dark"] .form-select:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.1);
+}
+
+[data-theme="dark"] .form-control[readonly] {
+    background-color: var(--bg-color);
+    opacity: 0.7;
+}
+
+/* Consistent form spacing */
+#createContractForm .row:last-child {
+    margin-bottom: 0;
+}
+
+/* Form section spacing */
+#createContractForm .section-header + .row {
+    margin-top: 0.5rem;
+}
+
+
+.form-floating > .form-control {
+    padding: 1rem 0.75rem 0.5rem 0.75rem;
+    border: 2px solid var(--border-color);
+    background: var(--card-bg);
+    color: var(--text-color);
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    border-radius: 8px;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: none;
+}
+
+.form-floating > .form-control:focus {
+    padding: 1rem 0.75rem 0.5rem 0.75rem;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(4, 0, 222, 0.1);
+    outline: none;
+}
+
+.form-floating > .form-control:focus ~ label,
+.form-floating > .form-control:not(:placeholder-shown) ~ label,
+.form-floating > .form-control:not([value=""]) ~ label {
+    transform: scale(0.75) translateY(-0.5rem) translateX(0.15rem);
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+/* Form select styling */
+.form-floating > .form-select {
+    padding: 1rem 0.75rem 0.5rem 0.75rem;
+    border: 2px solid var(--border-color);
+    background: var(--card-bg);
+    color: var(--text-color);
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    border-radius: 8px;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: none;
+}
+
+.form-floating > .form-select:focus {
+    padding: 1rem 0.75rem 0.5rem 0.75rem;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(4, 0, 222, 0.1);
+    outline: none;
+}
+
+.form-floating > .form-select:focus ~ label,
+.form-floating > .form-select:not([value=""]) ~ label,
+.form-floating > .form-select:not([value="0"]) ~ label {
+    transform: scale(0.75) translateY(-0.5rem) translateX(0.15rem);
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+/* Textarea styling */
+.form-floating > textarea.form-control {
+    padding: 1rem 0.75rem 0.5rem 0.75rem;
+    min-height: 80px;
+    border: 2px solid var(--border-color);
+    background: var(--card-bg);
+    color: var(--text-color);
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    border-radius: 8px;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: none;
+    resize: vertical;
+}
+
+.form-floating > textarea.form-control:focus {
+    padding: 1rem 0.75rem 0.5rem 0.75rem;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(4, 0, 222, 0.1);
+    outline: none;
+}
+
+/* Dark theme form floating */
+[data-theme="dark"] .form-floating > label {
+    color: var(--text-secondary);
+    background: transparent;
+}
+
+[data-theme="dark"] .form-floating > .form-control {
+    background: var(--card-bg);
+    border-color: var(--border-color);
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .form-floating > .form-control:focus {
+    background: var(--card-bg);
+    border-color: var(--primary-color);
+    color: var(--text-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+[data-theme="dark"] .form-floating > .form-select {
+    background: var(--card-bg);
+    border-color: var(--border-color);
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .form-floating > .form-select:focus {
+    background: var(--card-bg);
+    border-color: var(--primary-color);
+    color: var(--text-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* Modern hover effects */
+.form-floating > .form-control:hover,
+.form-floating > .form-select:hover,
+.form-floating > textarea.form-control:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 1px rgba(4, 0, 222, 0.1);
+}
+
+/* Dark theme hover effects */
+[data-theme="dark"] .form-floating > .form-control:hover,
+[data-theme="dark"] .form-floating > .form-select:hover,
+[data-theme="dark"] .form-floating > textarea.form-control:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.1);
+}
+
+/* Ensure labels have no background in all themes */
+.form-floating > label {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+/* Light theme label background fix */
+[data-theme="light"] .form-floating > label {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+/* Floating label behavior for inputs with default values */
+.form-floating > .form-control[value]:not([value=""]):not([value="0"]) ~ label,
+.form-floating > .form-control:not(:placeholder-shown) ~ label,
+.form-floating > .form-control:focus ~ label {
+    transform: scale(0.75) translateY(-0.5rem) translateX(0.15rem);
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+/* Floating label behavior for selects with default values */
+.form-floating > .form-select:not([value=""]):not([value="0"]) ~ label,
+.form-floating > .form-select:focus ~ label {
+    transform: scale(0.75) translateY(-0.5rem) translateX(0.15rem);
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+/* Floating label behavior for textareas */
+.form-floating > textarea.form-control:not(:placeholder-shown) ~ label,
+.form-floating > textarea.form-control:focus ~ label {
+    transform: scale(0.75) translateY(-0.5rem) translateX(0.15rem);
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+/* JavaScript-controlled floating label behavior */
+.form-floating > .form-control.has-value ~ label,
+.form-floating > .form-control.focused ~ label,
+.form-floating > .form-select.has-value ~ label,
+.form-floating > .form-select.focused ~ label,
+.form-floating > textarea.form-control.has-value ~ label,
+.form-floating > textarea.form-control.focused ~ label {
+    transform: scale(0.75) translateY(-0.5rem) translateX(0.15rem);
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+/* Form switch styling */
+.form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.form-check-input:focus {
+    border-color: var(--primary-color);
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(4, 0, 222, 0.25);
+}
+
+/* Dark theme form switch */
+[data-theme="dark"] .form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+[data-theme="dark"] .form-check-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(99, 102, 241, 0.25);
+}
+
+/* Form Switch Styling */
+.form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.form-check-input:focus {
+    box-shadow: 0 0 0 0.25rem rgba(4, 0, 222, 0.25);
+}
+
+/* File Input Styling */
+.form-control[type="file"] {
+    padding: 0.75rem;
+}
+
+.form-control[type="file"]::-webkit-file-upload-button {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    margin-right: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.form-control[type="file"]::-webkit-file-upload-button:hover {
+    background: var(--secondary-color);
+}
+
+/* Readonly Input Styling */
+.form-control[readonly] {
+    background-color: var(--bg-secondary);
+    border-color: var(--border-color);
+    color: var(--text-secondary);
+}
+
+/* Dark Theme Table Styling */
+[data-theme="dark"] .contracts-table {
+    background: var(--card-bg);
+    color: white;
+}
+
+[data-theme="dark"] .contracts-table tbody tr {
+    background: var(--card-bg);
+    color: white;
+}
+
+[data-theme="dark"] .contracts-table tbody tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.02);
+    color: white;
+}
+
+[data-theme="dark"] .contracts-table tbody tr:hover {
+    background: rgba(99, 102, 241, 0.15);
+    color: white;
+}
+
+[data-theme="dark"] .contracts-table tbody td {
+    background: transparent;
+    border-bottom-color: var(--border-color);
+    color: white;
+}
+
+[data-theme="dark"] .contracts-table tbody td strong {
+    color: white;
+}
+
+[data-theme="dark"] .contracts-table tbody td small {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* Ensure all text in table cells is white in dark theme */
+[data-theme="dark"] .contracts-table tbody td * {
+    color: white !important;
+}
+
+[data-theme="dark"] .contracts-table tbody td .text-muted {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+[data-theme="dark"] .contracts-table tbody td .contract-value {
+    color: white !important;
+}
+
+[data-theme="dark"] .contracts-table tbody td .contract-dates {
+    color: white !important;
+}
+
+[data-theme="dark"] .contracts-table tbody td .badge {
+    color: white !important;
+}
+
+[data-theme="dark"] .contracts-table tbody td .badge.bg-secondary {
+    background: rgba(156, 163, 175, 0.8) !important;
+    color: white !important;
+}
+
+/* Dark Theme Dropdown Styling */
+[data-theme="dark"] .dropdown-menu {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 10px 30px var(--shadow-color);
+}
+
+[data-theme="dark"] .dropdown-item {
+    color: var(--text-color);
+    background: transparent;
+}
+
+[data-theme="dark"] .dropdown-item:hover {
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .dropdown-item:focus {
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .dropdown-divider {
+    border-top-color: var(--border-color);
+}
+
+/* Dark Theme Form Select Styling */
+[data-theme="dark"] .form-select {
+    background: var(--card-bg);
+    border-color: var(--border-color);
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .form-select:focus {
+    background: var(--card-bg);
+    border-color: var(--primary-color);
+    color: var(--text-color);
+    box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
+}
+
+[data-theme="dark"] .form-select option {
+    background: var(--card-bg);
+    color: var(--text-color);
+}
+
+/* Dark Theme Form Control Styling */
+[data-theme="dark"] .form-control {
+    background: var(--card-bg);
+    border-color: var(--border-color);
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .form-control:focus {
+    background: var(--card-bg);
+    border-color: var(--primary-color);
+    color: var(--text-color);
+    box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
+}
+
+[data-theme="dark"] .form-control::placeholder {
+    color: var(--text-secondary);
+}
+
+/* Dark Theme Input Group Styling */
+[data-theme="dark"] .input-group-text {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+    color: var(--text-secondary);
+}
+
+/* Dark Theme Modal Styling */
+[data-theme="dark"] .modal-content {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .modal-header {
+    border-bottom-color: var(--border-color);
+}
+
+[data-theme="dark"] .modal-footer {
+    border-top-color: var(--border-color);
+}
+
+/* Dark Theme Alert Styling */
+[data-theme="dark"] .alert-info {
+    background: rgba(99, 102, 241, 0.1);
+    border-color: rgba(99, 102, 241, 0.2);
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .alert-success {
+    background: rgba(34, 197, 94, 0.1);
+    border-color: rgba(34, 197, 94, 0.2);
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .alert-danger {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.2);
+    color: var(--text-color);
+}
+
+/* Dark Theme Badge Styling */
+[data-theme="dark"] .badge {
+    color: white;
+}
+
+[data-theme="dark"] .badge.bg-secondary {
+    background: rgba(156, 163, 175, 0.8) !important;
+    color: white;
+}
+
+/* Dark Theme Type Badge Styling */
+[data-theme="dark"] .type-badge {
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .type-logistik {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+}
+
+[data-theme="dark"] .type-penyimpanan {
+    background: rgba(34, 197, 94, 0.2);
+    color: #4ade80;
+}
+
+[data-theme="dark"] .type-bongkar_muat {
+    background: rgba(251, 191, 36, 0.2);
+    color: #fbbf24;
+}
+
+[data-theme="dark"] .type-transportasi {
+    background: rgba(168, 85, 247, 0.2);
+    color: #a78bfa;
+}
+
+/* Dark Theme Status Badge Styling */
+[data-theme="dark"] .status-badge {
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .status-draft {
+    background: rgba(156, 163, 175, 0.2);
+    color: #d1d5db;
+}
+
+[data-theme="dark"] .status-pending {
+    background: rgba(251, 191, 36, 0.2);
+    color: #fbbf24;
+}
+
+[data-theme="dark"] .status-active {
+    background: rgba(34, 197, 94, 0.2);
+    color: #4ade80;
+}
+
+[data-theme="dark"] .status-completed {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+}
+
+[data-theme="dark"] .status-expired {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+}
+
+/* Dark Theme Text Muted */
+[data-theme="dark"] .text-muted {
+    color: var(--text-secondary) !important;
+}
+
+/* Dark Theme Small Text */
+[data-theme="dark"] small {
+    color: var(--text-secondary);
+}
+
+/* Dark Theme Form Text */
+[data-theme="dark"] .form-text {
+    color: var(--text-secondary);
+}
+
+/* Responsive adjustments for modals */
+@media (max-width: 768px) {
+    .method-card {
+        padding: 1.5rem 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .method-icon {
+        font-size: 2.5rem;
+    }
+    
+    .upload-area {
+        padding: 2rem 1rem;
+    }
+    
+    .upload-icon {
+        font-size: 2.5rem;
+    }
+    
+    .section-header h6 {
+        font-size: 0.9rem;
+    }
+}
+
+/* ===== COMPREHENSIVE RESPONSIVE DESIGN ===== */
+
+/* Extra Small devices (phones, 576px and down) */
+@media (max-width: 575.98px) {
+    /* Sidebar adjustments */
+    .sidebar {
+        width: 100%;
+        transform: translateX(-100%);
+        z-index: 1050;
+    }
+    
+    .sidebar.show {
+        transform: translateX(0);
+    }
+    
+    .main-content {
+        margin-left: 0;
+        width: 100%;
+    }
+    
+    /* Top navbar adjustments */
+    .top-navbar {
+        padding: 0.5rem 1rem;
+    }
+    
+    .navbar-brand {
+        font-size: 1rem;
+    }
+    
+    /* Page header adjustments */
+    .page-header {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .page-header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .page-header p {
+        font-size: 0.9rem;
+    }
+    
+    /* Action buttons responsive */
+    .action-buttons {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .action-buttons .btn {
+        width: 100%;
+        margin: 0;
+    }
+    
+    /* Stats cards responsive */
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .stat-card {
+        padding: 1rem;
+    }
+    
+    .stat-card h3 {
+        font-size: 1.5rem;
+    }
+    
+    .stat-card p {
+        font-size: 0.8rem;
+    }
+    
+    /* Filters responsive */
+    .filters-section {
+        padding: 1rem;
+    }
+    
+    .filters-row {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .filters-row .col-md-3,
+    .filters-row .col-md-4,
+    .filters-row .col-md-5 {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Table responsive - Mobile specific */
+    .table-responsive {
+        border-radius: 8px;
+        margin: 0;
+        font-size: 0.8rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .contracts-table {
+        font-size: 0.8rem;
+        min-width: 600px; /* Ensure minimum width for horizontal scroll */
+    }
+    
+    .contracts-table th,
+    .contracts-table td {
+        padding: 0.5rem 0.3rem;
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+    
+    /* Ensure all headers are visible on mobile */
+    .contracts-table thead th {
+        font-size: 0.75rem;
+        padding: 0.5rem 0.3rem;
+        text-align: center;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
+        border: none;
+        font-weight: 600;
+    }
+    
+    /* Mobile table cell styling */
+    .contracts-table tbody td {
+        font-size: 0.75rem;
+        padding: 0.5rem 0.3rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    /* Hide some columns on mobile but keep essential ones */
+    .contracts-table .d-none-mobile {
+        display: none !important;
+    }
+    
+    /* Bulk actions responsive */
+    .bulk-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 1rem;
+    }
+    
+    .bulk-actions .btn {
+        width: 100%;
+        margin: 0;
+    }
+    
+    /* Modal adjustments */
+    .modal-dialog {
+        margin: 0.5rem;
+        max-width: calc(100% - 1rem);
+    }
+    
+    .modal-content {
+        border-radius: 8px;
+    }
+    
+    .modal-header {
+        padding: 1rem;
+    }
+    
+    .modal-body {
+        padding: 1rem;
+    }
+    
+    .modal-footer {
+        padding: 1rem;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .modal-footer .btn {
+        width: 100%;
+        margin: 0;
+    }
+    
+    /* Form responsive */
+    .modal-body .row {
+        margin-bottom: 0;
+    }
+    
+    .modal-body .col-md-6 {
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+    
+    .modal-body .form-floating {
+        margin-bottom: 1rem;
+    }
+    
+    .section-header {
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .section-header h6 {
+        font-size: 0.85rem;
+    }
+    
+    /* Mobile form floating fixes */
+    .form-floating > label {
+        font-size: 0.9rem;
+        transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem);
+    }
+    
+    .form-floating > .form-control {
+        font-size: 0.9rem;
+        padding-top: 1.5rem;
+        padding-bottom: 0.5rem;
+    }
+    
+    .form-floating > .form-control:focus {
+        padding-top: 1.5rem;
+        padding-bottom: 0.5rem;
+    }
+    
+    .form-floating > .form-select {
+        font-size: 0.9rem;
+        padding-top: 1.5rem;
+        padding-bottom: 0.5rem;
+    }
+    
+    .form-floating > .form-select:focus {
+        padding-top: 1.5rem;
+        padding-bottom: 0.5rem;
+    }
+    
+    .form-floating > textarea.form-control {
+        padding-top: 1.5rem;
+        padding-bottom: 0.5rem;
+        min-height: 70px;
+    }
+    
+    .form-floating > textarea.form-control:focus {
+        padding-top: 1.5rem;
+        padding-bottom: 0.5rem;
+    }
+}
+
+/* Small devices (landscape phones, 576px and up) */
+@media (min-width: 576px) and (max-width: 767.98px) {
+    /* Stats cards 2 columns */
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    /* Action buttons in row */
+    .action-buttons {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .action-buttons .btn {
+        flex: 1;
+        min-width: 120px;
+    }
+    
+    /* Filters in 2 columns */
+    .filters-row {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .filters-row .col-md-3 {
+        width: 48%;
+    }
+    
+    .filters-row .col-md-4 {
+        width: 48%;
+    }
+    
+    .filters-row .col-md-5 {
+        width: 100%;
+    }
+    
+    /* Table adjustments */
+    .contracts-table th,
+    .contracts-table td {
+        padding: 0.6rem 0.4rem;
+        font-size: 0.85rem;
+    }
+    
+    /* Form floating adjustments for small screens */
+    .form-floating > label {
+        font-size: 0.9rem;
+    }
+    
+    .form-floating > .form-control {
+        font-size: 0.9rem;
+    }
+    
+    .form-floating > .form-select {
+        font-size: 0.9rem;
+    }
+}
+
+/* Medium devices (tablets, 768px and up) */
+@media (min-width: 768px) and (max-width: 991.98px) {
+    /* Sidebar adjustments */
+    .sidebar {
+        width: 250px;
+    }
+    
+    .main-content {
+        margin-left: 250px;
+    }
+    
+    /* Stats cards 2x2 grid */
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+    
+    /* Table adjustments */
+    .contracts-table th,
+    .contracts-table td {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.9rem;
+    }
+    
+    /* Modal adjustments */
+    .modal-dialog.modal-lg {
+        max-width: 90%;
+    }
+}
+
+/* Large devices (desktops, 992px and up) */
+@media (min-width: 992px) {
+    /* Full sidebar */
+    .sidebar {
+        width: 280px;
+    }
+    
+    .main-content {
+        margin-left: 280px;
+    }
+    
+    /* Full stats grid */
+    .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 2rem;
+    }
+    
+    /* Full table */
+    .contracts-table th,
+    .contracts-table td {
+        padding: 1rem 0.75rem;
+        font-size: 1rem;
+    }
+    
+    /* Full modal */
+    .modal-dialog.modal-lg {
+        max-width: 800px;
+    }
+}
+
+/* Extra large devices (large desktops, 1200px and up) */
+@media (min-width: 1200px) {
+    .container-fluid {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 2.5rem;
+    }
+    
+    .stat-card {
+        padding: 2rem;
+    }
+}
+
+/* Print styles */
+@media print {
+    .sidebar,
+    .top-navbar,
+    .action-buttons,
+    .bulk-actions,
+    .filters-section {
+        display: none !important;
+    }
+    
+    .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+    
+    .contracts-table {
+        font-size: 0.8rem;
+    }
+    
+    .contracts-table th,
+    .contracts-table td {
+        padding: 0.25rem;
+        border: 1px solid #000;
+    }
 }
