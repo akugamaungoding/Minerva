@@ -127,8 +127,21 @@ function setupNavigation(menuItems) {
     menuItems.forEach(item => {
         const li = document.createElement('li');
         li.className = 'nav-item';
+        
+        // Mapping nama menu ke page name yang benar
+        let pageName = item.name.toLowerCase().replace(' ', '_');
+        if (item.name === 'Manajemen Kontrak') {
+            pageName = 'contracts';
+        } else if (item.name === 'Komunikasi') {
+            pageName = 'communication';
+        } else if (item.name === 'AI Assistant') {
+            pageName = 'ai';
+        } else if (item.name === 'Dasbor') {
+            pageName = 'dashboard';
+        }
+        
         li.innerHTML = `
-            <a class="nav-link" href="#" onclick="showPage('${item.name.toLowerCase().replace(' ', '_')}')">
+            <a class="nav-link" href="#" onclick="showPage('${pageName}')">
                 <i class="${item.icon}"></i>
                 <span>${item.name}</span>
             </a>
@@ -144,6 +157,19 @@ function setupDashboard(menuItems) {
     menuItems.forEach(item => {
         const col = document.createElement('div');
         col.className = 'col-md-4 mb-4';
+        
+        // Mapping nama menu ke page name yang benar
+        let pageName = item.name.toLowerCase().replace(' ', '_');
+        if (item.name === 'Manajemen_Kontrak') {
+            pageName = 'contracts';
+        } else if (item.name === 'Komunikasi') {
+            pageName = 'communication';
+        } else if (item.name === 'AI Assistant') {
+            pageName = 'ai';
+        } else if (item.name === 'Dasbor') {
+            pageName = 'dashboard';
+        }
+        
         col.innerHTML = `
             <div class="card dashboard-card ${currentRole}-card h-100 fade-in">
                 <div class="card-body text-center p-4">
@@ -152,7 +178,7 @@ function setupDashboard(menuItems) {
                     </div>
                     <h5 class="card-title text-${item.color}">${item.name}</h5>
                     <p class="card-text text-muted">${item.description}</p>
-                    <button class="btn btn-outline-${item.color}" onclick="showPage('${item.name.toLowerCase().replace(' ', '_')}')">
+                    <button class="btn btn-outline-${item.color}" onclick="showPage('${pageName}')">
                         <i class="fas fa-arrow-right me-2"></i>Buka
                     </button>
                 </div>
@@ -179,6 +205,8 @@ function showPage(pageName) {
     
     if (pageName === 'dashboard') {
         loadDashboardData();
+    } else if (pageName === 'communication') {
+        loadCommunicationPage();
     }
 }
 
