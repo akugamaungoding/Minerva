@@ -1,5 +1,6 @@
 const clientMenuItems = [
     { name: 'Dasbor', icon: 'fas fa-tachometer-alt', href: '#dashboard', color: 'primary' },
+    { name: 'Manajemen Kontrak', icon: 'fas fa-file-contract', href: '#contracts', color: 'success'},
     { name: 'Komunikasi', icon: 'fas fa-comments', href: '#communication', color: 'info' },
     { name: 'AI Assistant', icon: 'fas fa-robot', href: '#ai', color: 'warning' },
     { name: 'QR Scanner', icon: 'fas fa-qrcode', href: 'scan.html', color: 'primary' }
@@ -11,6 +12,12 @@ const clientDashboardItems = [
         icon: 'fas fa-tachometer-alt', 
         description: 'Tinjauan proyek Anda',
         color: 'primary'
+    },
+    { 
+        name: 'Manajemen_Kontrak', 
+        icon: 'fas fa-file-contract', 
+        description: 'Kelola kontrak proyek',
+        color: 'success'
     },
     { 
         name: 'Komunikasi', 
@@ -70,6 +77,9 @@ function openClientModule(moduleName) {
     switch(moduleName) {
         case 'dasbor':
             showPage('dashboard');
+            break;
+        case 'manajemen_kontrak':
+            window.location.href = 'contracts.html';
             break;
         case 'komunikasi':
             showPage('communication');

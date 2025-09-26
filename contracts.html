@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajemen Kontrak - Minerva</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+</head>
+<body data-theme="light" class="contracts-page">
+    <div class="dashboard-container">
+        <div id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <h3>Minerva</h3>
+                <button id="sidebarToggle" class="sidebar-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <nav class="sidebar-nav">
+                <ul id="sidebarNav" class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="contracts.html">
+                            <i class="fas fa-file-contract"></i>
+                            <span>Manajemen Kontrak</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#communication">
+                            <i class="fas fa-comments"></i>
+                            <span>Komunikasi</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#ai">
+                            <i class="fas fa-robot"></i>
+                            <span>AI Assistant</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+
+        <div id="mainContent" class="main-content">
+            <nav class="top-navbar">
+                <div class="container-fluid">
+                    <div class="row align-items-center w-100%">
+                        <div class="col">
+                            <h4 class="mb-0">Manajemen Kontrak</h4>
+                            <small class="text-muted d-none d-sm-inline">Kelola semua kontrak proyek dengan efisien</small>
+                        </div>
+                        <div class="col-auto d-flex gap-2">
+                            <button class="btn btn-outline-primary btn-sm" onclick="toggleTheme()" title="Toggle Theme">
+                                <i class="fas fa-moon" id="themeIconNavbar"></i>
+                            </button>
+                            <div class="dropdown">
+                                <button class="btn btn-outline-primary dropdown-toggle btn-sm" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-user me-1"></i><span id="currentUser">User</span>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="logout()">
+                                        <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                    </a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="content-area">
+
+        <!-- Action Buttons -->
+        <div class="action-buttons mb-4">
+            <button class="btn btn-primary" onclick="showCreateContractModal()">
+                <i class="fas fa-plus me-2"></i><span class="d-none d-sm-inline">Tambah Kontrak Baru</span><span class="d-inline d-sm-none">Tambah</span>
+            </button>
+            <button class="btn btn-outline-secondary" onclick="exportContracts()">
+                <i class="fas fa-download me-2"></i><span class="d-none d-sm-inline">Export Kontrak</span><span class="d-inline d-sm-none">Export</span>
+            </button>
+            <button class="btn btn-outline-info" onclick="refreshContracts()">
+                <i class="fas fa-sync me-2"></i><span class="d-none d-sm-inline">Refresh</span><span class="d-inline d-sm-none">Refresh</span>
+            </button>
+        </div>
+
+        <!-- Contract Stats -->
+        <div class="row mb-4">
+            <div class="col-6 col-sm-6 col-lg-3 mb-3">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-file-contract"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="totalContracts">0</div>
+                        <div class="stat-label">Total Kontrak</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-sm-6 col-lg-3 mb-3">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock text-warning"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="pendingContracts">0</div>
+                        <div class="stat-label">Pending</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-sm-6 col-lg-3 mb-3">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle text-success"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="activeContracts">0</div>
+                        <div class="stat-label">Aktif</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-sm-6 col-lg-3 mb-3">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-exclamation-triangle text-danger"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="expiringContracts">0</div>
+                        <div class="stat-label">Kadaluarsa</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+         <!-- Filter and Search -->
+         <div class="contract-filters mb-4">
+             <div class="row g-3 align-items-center justify-content-between">
+                 <div class="col-12 col-sm-6 col-md-4">
+                     <div class="input-group">
+                         <span class="input-group-text">
+                             <i class="fas fa-search"></i>
+                         </span>
+                         <input type="text" class="form-control" id="contractSearch" placeholder="Cari kontrak...">
+                     </div>
+                 </div>
+                 <div class="col-12 col-md-3">
+                     <select class="form-select" id="statusFilter">
+                         <option value="">Semua Status</option>
+                         <option value="draft">Draft</option>
+                         <option value="pending">Pending</option>
+                         <option value="active">Aktif</option>
+                         <option value="completed">Selesai</option>
+                         <option value="expired">Kadaluarsa</option>
+                     </select>
+                 </div>
+                 <div class="col-12 col-md-3">
+                     <select class="form-select" id="typeFilter">
+                         <option value="">Semua Jenis</option>
+                         <option value="Logistik">Logistik</option>
+                         <option value="Penyimpanan">Penyimpanan</option>
+                         <option value="Bongkar Muat">Bongkar Muat</option>
+                         <option value="Transportasi">Transportasi</option>
+                     </select>
+                 </div>
+                 <div class="col-12 col-md-2">
+                     <button class="btn btn-outline-primary w-100" onclick="applyFilters()">
+                         <i class="fas fa-filter me-1"></i><span class="d-none d-sm-inline">Filter</span>
+                     </button>
+                 </div>
+             </div>
+         </div>
+
+        <!-- Contracts Table -->
+        <div class="contracts-table-container">
+            <div class="table-responsive">
+                 <table class="table table-hover contracts-table">
+                                 <thead>
+                                     <tr>
+                                         <th class="d-sm-table-cell">
+                                             <input type="checkbox" id="selectAllContracts" onchange="toggleSelectAll()">
+                                         </th>
+                                         <th>No. Kontrak</th>
+                                         <th>Nama Proyek</th>
+                                         <th class="d-md-table-cell">Jenis</th>
+                                         <th class="d-md-table-cell">Nama PIC</th>
+                                         <th class="d-sm-table-cell">Nilai Kontrak</th>
+                                         <th class="d-md-table-cell">Mata Uang</th>
+                                         <th class="d-md-table-cell">Tanggal Mulai</th>
+                                         <th class="d-md-table-cell">Tanggal Selesai</th>
+                                         <th>Status</th>
+                                         <th>Aksi</th>
+                                     </tr>
+                                 </thead>
+                    <tbody id="contractsTableBody">
+                        <!-- Contract rows will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Bulk Actions -->
+        <div class="bulk-actions mt-3" id="bulkActions" style="display: none;">
+            <div class="alert alert-info d-flex align-items-center justify-content-between">
+                <span><i class="fas fa-info-circle me-2"></i><span id="selectedCount">0</span> kontrak dipilih</span>
+                <div class="btn-group">
+                    <button class="btn btn-sm btn-outline-primary" onclick="bulkExport()">
+                        <i class="fas fa-download me-1"></i>Export
+                    </button>
+                    <button class="btn btn-sm btn-outline-warning" onclick="bulkArchive()">
+                        <i class="fas fa-archive me-1"></i>Archive
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="bulkDelete()">
+                        <i class="fas fa-trash me-1"></i>Hapus
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination-container mt-4">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <div class="pagination-info">
+                        <span class="text-muted">
+                            Menampilkan <span id="showingStart">1</span> - <span id="showingEnd">10</span> 
+                            dari <span id="totalRecords">0</span> kontrak
+                        </span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <nav aria-label="Pagination Navigation">
+                        <ul class="pagination justify-content-end mb-0" id="pagination">
+                            <!-- Pagination items will be generated by JavaScript -->
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Method Selection Modal -->
+    <div class="modal fade" id="methodSelectionModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-plus me-2"></i>Tambah Kontrak Baru</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <h6 class="mb-4">Pilih metode penambahan kontrak:</h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="method-card" onclick="selectMethod('form')">
+                                <div class="method-icon">
+                                    <i class="fas fa-edit"></i>
+                                </div>
+                                <h6>Isi Form Manual</h6>
+                                <p class="text-muted">Isi data kontrak secara manual menggunakan form</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="method-card" onclick="selectMethod('excel')">
+                                <div class="method-icon">
+                                    <i class="fas fa-file-excel"></i>
+                                </div>
+                                <h6>Upload Excel</h6>
+                                <p class="text-muted">Upload dokumen Excel yang berisi data kontrak</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Contract Form Modal -->
+    <div class="modal fade" id="createContractModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Isi Form Kontrak</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createContractForm">
+                        <!-- Informasi Dasar Kontrak -->
+                        <div class="section-header mb-3">
+                            <h6><i class="fas fa-info-circle me-2"></i>Informasi Dasar Kontrak</h6>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="namaProyek" class="form-label"><i class="fas fa-project-diagram me-2"></i>Nama Proyek/Logistik</label>
+                                    <input type="text" class="form-control" id="namaProyek" placeholder="Masukkan nama proyek atau logistik" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="jenisKontrak" class="form-label"><i class="fas fa-tags me-2"></i>Jenis Kontrak</label>
+                                    <select class="form-select" id="jenisKontrak" required>
+                                        <option value="">Pilih Jenis Kontrak</option>
+                                        <option value="Logistik">Logistik</option>
+                                        <option value="Penyimpanan">Penyimpanan</option>
+                                        <option value="Bongkar Muat">Bongkar Muat</option>
+                                        <option value="Transportasi">Transportasi</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tanggal Kontrak -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="tglMulai" class="form-label"><i class="fas fa-calendar-alt me-2"></i>Tanggal Mulai</label>
+                                    <input type="date" class="form-control" id="tglMulai" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="tglSelesai" class="form-label"><i class="fas fa-calendar-check me-2"></i>Tanggal Selesai</label>
+                                    <input type="date" class="form-control" id="tglSelesai" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="kontakResmi" class="form-label"><i class="fas fa-phone me-2"></i>Kontak Resmi</label>
+                                    <div class="input-group">
+                                        <select class="form-select" id="countryCode" style="max-width: 120px;">
+                                            <option value="+62">🇮🇩 +62</option>
+                                            <option value="+1">🇺🇸 +1</option>
+                                            <option value="+44">🇬🇧 +44</option>
+                                            <option value="+65">🇸🇬 +65</option>
+                                            <option value="+60">🇲🇾 +60</option>
+                                            <option value="+66">🇹🇭 +66</option>
+                                            <option value="+63">🇵🇭 +63</option>
+                                            <option value="+84">🇻🇳 +84</option>
+                                            <option value="+86">🇨🇳 +86</option>
+                                            <option value="+81">🇯🇵 +81</option>
+                                            <option value="+82">🇰🇷 +82</option>
+                                            <option value="+61">🇦🇺 +61</option>
+                                            <option value="+49">🇩🇪 +49</option>
+                                            <option value="+33">🇫🇷 +33</option>
+                                            <option value="+39">🇮🇹 +39</option>
+                                            <option value="+34">🇪🇸 +34</option>
+                                            <option value="+31">🇳🇱 +31</option>
+                                            <option value="+46">🇸🇪 +46</option>
+                                            <option value="+47">🇳🇴 +47</option>
+                                            <option value="+45">🇩🇰 +45</option>
+                                            <option value="+41">🇨🇭 +41</option>
+                                            <option value="+43">🇦🇹 +43</option>
+                                            <option value="+32">🇧🇪 +32</option>
+                                            <option value="+351">🇵🇹 +351</option>
+                                            <option value="+30">🇬🇷 +30</option>
+                                            <option value="+90">🇹🇷 +90</option>
+                                            <option value="+7">🇷🇺 +7</option>
+                                            <option value="+91">🇮🇳 +91</option>
+                                            <option value="+92">🇵🇰 +92</option>
+                                            <option value="+880">🇧🇩 +880</option>
+                                            <option value="+94">🇱🇰 +94</option>
+                                            <option value="+977">🇳🇵 +977</option>
+                                            <option value="+975">🇧🇹 +975</option>
+                                            <option value="+960">🇲🇻 +960</option>
+                                            <option value="+93">🇦🇫 +93</option>
+                                            <option value="+98">🇮🇷 +98</option>
+                                            <option value="+964">🇮🇶 +964</option>
+                                            <option value="+965">🇰🇼 +965</option>
+                                            <option value="+973">🇧🇭 +973</option>
+                                            <option value="+974">🇶🇦 +974</option>
+                                            <option value="+971">🇦🇪 +971</option>
+                                            <option value="+968">🇴🇲 +968</option>
+                                            <option value="+966">🇸🇦 +966</option>
+                                        </select>
+                                        <input type="tel" class="form-control" id="kontakResmi" placeholder="Masukkan nomor telepon" pattern="[0-9\s\-\(\)]+" title="Hanya angka, spasi, tanda hubung, dan tanda kurung yang diperbolehkan" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Nilai Kontrak -->
+                        <div class="section-header mb-3 mt-4">
+                            <h6><i class="fas fa-money-bill-wave me-2"></i>Nilai Kontrak</h6>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="nilaiKontrak" class="form-label"><i class="fas fa-money-bill me-2"></i>Nilai Kontrak</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text" id="currencySymbol">Rp</span>
+                                        <input type="number" class="form-control" id="nilaiKontrak" step="0.01" placeholder="Masukkan nilai kontrak" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="mataUang" class="form-label"><i class="fas fa-coins me-2"></i>Mata Uang</label>
+                                    <select class="form-select" id="mataUang" required>
+                                        <option value="IDR">IDR - Rupiah Indonesia</option>
+                                        <option value="USD">USD - US Dollar</option>
+                                        <option value="EUR">EUR - Euro</option>
+                                        <option value="SGD">SGD - Singapore Dollar</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Informasi Perusahaan -->
+                        <div class="section-header mb-3 mt-4">
+                            <h6><i class="fas fa-building me-2"></i>Informasi Perusahaan</h6>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="namaPic" class="form-label"><i class="fas fa-user-tie me-2"></i>Nama PIC</label>
+                                    <input type="text" class="form-control" id="namaPic" placeholder="Nama lengkap Person in Charge">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="npwp" class="form-label"><i class="fas fa-id-card me-2"></i>NPWP</label>
+                                    <input type="text" class="form-control" id="npwp" maxlength="25" placeholder="Nomor Pokok Wajib Pajak">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="alamat" class="form-label"><i class="fas fa-map-marker-alt me-2"></i>Alamat Perusahaan</label>
+                            <textarea class="form-control" id="alamat" rows="3" placeholder="Masukkan alamat lengkap perusahaan"></textarea>
+                        </div>
+
+                        <!-- Asuransi -->
+                        <div class="section-header mb-3 mt-4">
+                            <h6><i class="fas fa-shield-alt me-2"></i>Asuransi</h6>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="asuransi">
+                                    <label class="form-check-label" for="asuransi">
+                                        <i class="fas fa-shield-alt me-2"></i>Dengan Asuransi
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <!-- Empty column for alignment -->
+                            </div>
+                        </div>
+
+                        <!-- Pembayaran -->
+                        <div class="section-header mb-3 mt-4">
+                            <h6><i class="fas fa-credit-card me-2"></i>Informasi Pembayaran</h6>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="terminPembayaran" class="form-label"><i class="fas fa-calendar-week me-2"></i>Termin Pembayaran</label>
+                                    <select class="form-select" id="terminPembayaran" required>
+                                        <option value="">Pilih Termin Pembayaran</option>
+                                        <option value="DP">DP (Down Payment)</option>
+                                        <option value="Cicilan">Cicilan</option>
+                                        <option value="Pelunasan">Pelunasan</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="metodePembayaran" class="form-label"><i class="fas fa-money-check me-2"></i>Metode Pembayaran</label>
+                                    <select class="form-select" id="metodePembayaran" required>
+                                        <option value="">Pilih Metode Pembayaran</option>
+                                        <option value="Transfer Bank">Transfer Bank</option>
+                                        <option value="LC">Letter of Credit (LC)</option>
+                                        <option value="Cash">Cash</option>
+                                        <option value="Cek">Cek</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pajak dan Penalti -->
+                        <div class="section-header mb-3 mt-4">
+                            <h6><i class="fas fa-calculator me-2"></i>Pajak dan Penalti</h6>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="ppn" class="form-label"><i class="fas fa-percentage me-2"></i>PPN (%)</label>
+                                    <input type="number" class="form-control" id="ppn" step="0.01" value="11.00" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="pajakLainnya" class="form-label"><i class="fas fa-receipt me-2"></i>Pajak Lainnya</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text" id="pajakCurrencySymbol">Rp</span>
+                                        <input type="number" class="form-control" id="pajakLainnya" step="0.01" value="0" placeholder="Nilai pajak tambahan (opsional)">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="penaltiTerlambat" class="form-label"><i class="fas fa-exclamation-triangle me-2"></i>Penalti Terlambat</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text" id="penaltiCurrencySymbol">Rp</span>
+                                        <input type="number" class="form-control" id="penaltiTerlambat" step="0.01" value="0" placeholder="Nilai penalti per hari (opsional)">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="hariPenalti" class="form-label"><i class="fas fa-calendar-times me-2"></i>Hari Penalti</label>
+                                    <input type="number" class="form-control" id="hariPenalti" value="0" placeholder="Jumlah hari keterlambatan (opsional)">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dokumen Lampiran -->
+                        <div class="section-header mb-3 mt-4">
+                            <h6><i class="fas fa-paperclip me-2"></i>Dokumen Lampiran</h6>
+                        </div>
+                        <div class="mb-3">
+                            <input type="file" class="form-control" id="dokumenLampiran" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                            <small class="form-text text-muted">Upload dokumen pendukung (PDF, DOC, DOCX, JPG, PNG)</small>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-primary" onclick="createContract()">
+                        <i class="fas fa-save me-2"></i>Simpan Kontrak
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Excel Upload Modal -->
+    <div class="modal fade" id="excelUploadModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-file-excel me-2"></i>Upload Dokumen Excel</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Template Download Section -->
+                    <div class="template-section mb-4">
+                        <div class="alert alert-info">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-info-circle me-3"></i>
+                                <div>
+                                    <strong>Download Template Excel</strong>
+                                    <p class="mb-0">Gunakan template Excel berikut untuk memastikan format data yang benar</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <button class="btn btn-success" onclick="downloadTemplate()">
+                                <i class="fas fa-download me-2"></i>Download Template Excel
+                            </button>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <!-- Upload Section -->
+                    <div class="upload-section">
+                        <h6 class="mb-3"><i class="fas fa-upload me-2"></i>Upload Dokumen Excel</h6>
+                        <div class="upload-area" id="uploadArea">
+                            <div class="upload-content">
+                                <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                                <h6>Drag & Drop file Excel di sini</h6>
+                                <p class="text-muted">atau klik untuk memilih file</p>
+                                <input type="file" id="excelFile" accept=".xlsx,.xls" style="display: none;">
+                                <button class="btn btn-outline-primary" onclick="document.getElementById('excelFile').click()">
+                                    <i class="fas fa-file me-2"></i>Pilih File Excel
+                                </button>
+                            </div>
+                        </div>
+                        <div id="fileInfo" class="file-info mt-3" style="display: none;">
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle me-2"></i>
+                                <span id="fileName"></span> siap diupload
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Preview Section -->
+                    <div id="previewSection" class="preview-section mt-4" style="display: none;">
+                        <h6 class="mb-3"><i class="fas fa-eye me-2"></i>Preview Data</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered" id="previewTable">
+                                <thead class="table-light">
+                                    <tr id="previewHeaders"></tr>
+                                </thead>
+                                <tbody id="previewBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-primary" id="uploadBtn" onclick="uploadExcel()" disabled>
+                        <i class="fas fa-upload me-2"></i>Upload & Import Data
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contract Details Modal -->
+    <div class="modal fade" id="contractDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-eye me-2"></i>Detail Kontrak</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="contractDetailsContent">
+                    <!-- Contract details will be populated here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-warning" onclick="editContract()">
+                        <i class="fas fa-edit me-2"></i>Edit
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="deleteContract()">
+                        <i class="fas fa-trash me-2"></i>Hapus
+                    </button>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="contracts.js"></script>
+    <script>
+        let currentTheme = 'light';
+
+        // Theme toggle functionality
+        function toggleTheme() {
+            currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            localStorage.setItem('theme', currentTheme);
+            
+            const themeIcon = document.getElementById('themeIconNavbar');
+            
+            if (currentTheme === 'dark') {
+                themeIcon.className = 'fas fa-sun';
+            } else {
+                themeIcon.className = 'fas fa-moon';
+            }
+        }
+
+        // Load saved theme
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            currentTheme = savedTheme;
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            
+            const themeIcon = document.getElementById('themeIconNavbar');
+            
+            if (currentTheme === 'dark') {
+                themeIcon.className = 'fas fa-sun';
+            } else {
+                themeIcon.className = 'fas fa-moon';
+            }
+        }
+
+        // Initialize sidebar
+        function initializeSidebar() {
+            const toggleBtn = document.getElementById('sidebarToggle');
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', function() {
+                    sidebar.classList.toggle('collapsed');
+                    mainContent.classList.toggle('expanded');
+                });
+            }
+        }
+
+        // Logout function
+        function logout() {
+            if (confirm('Apakah Anda yakin ingin logout?')) {
+                localStorage.removeItem('user');
+                localStorage.removeItem('role');
+                window.location.href = 'index.html';
+            }
+        }
+
+        // Method selection functions
+        function selectMethod(method) {
+            const methodModal = bootstrap.Modal.getInstance(document.getElementById('methodSelectionModal'));
+            methodModal.hide();
+            
+            if (method === 'form') {
+                const formModal = new bootstrap.Modal(document.getElementById('createContractModal'));
+                formModal.show();
+            } else if (method === 'excel') {
+                const excelModal = new bootstrap.Modal(document.getElementById('excelUploadModal'));
+                excelModal.show();
+            }
+        }
+
+        // Download Excel template
+        function downloadTemplate() {
+            // Create sample Excel template data based on database structure
+            const templateData = [
+                ['Nama Proyek', 'Jenis Kontrak', 'Tanggal Mulai', 'Tanggal Selesai', 'Nilai Kontrak', 'Mata Uang', 'Kontak Resmi', 'Nama PIC', 'NPWP', 'Alamat', 'Asuransi', 'Termin Pembayaran', 'Metode Pembayaran', 'PPN (%)', 'Pajak Lainnya', 'Penalti Terlambat', 'Hari Penalti'],
+                ['Pengiriman Logistik Jakarta', 'Logistik', '2024-01-15', '2024-04-15', '25000000', 'IDR', '08123456789', 'John Doe', '12.345.678.9-012.000', 'Jl. Sudirman No. 123, Jakarta', 'Ya', 'DP', 'Transfer Bank', '11.00', '0', '100000', '7'],
+                ['Penyimpanan Barang Surabaya', 'Penyimpanan', '2024-02-01', '2024-06-01', '35000000', 'IDR', '08123456788', 'Jane Smith', '98.765.432.1-098.000', 'Jl. Thamrin No. 456, Surabaya', 'Tidak', 'Cicilan', 'LC', '11.00', '500000', '150000', '10']
+            ];
+            
+            // Convert to CSV and download
+            const csvContent = templateData.map(row => row.join(',')).join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'template_kontrak.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showSuccess('Template Excel berhasil didownload!');
+        }
+
+        // File upload handling
+        function setupFileUpload() {
+            const fileInput = document.getElementById('excelFile');
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInfo = document.getElementById('fileInfo');
+            const fileName = document.getElementById('fileName');
+            const uploadBtn = document.getElementById('uploadBtn');
+
+            // File input change
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    handleFileSelect(file);
+                }
+            });
+
+            // Drag and drop
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+
+            uploadArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+            });
+
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                const file = e.dataTransfer.files[0];
+                if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
+                    handleFileSelect(file);
+                } else {
+                    showError('Harap pilih file Excel (.xlsx atau .xls)');
+                }
+            });
+        }
+
+        function handleFileSelect(file) {
+            const fileInfo = document.getElementById('fileInfo');
+            const fileName = document.getElementById('fileName');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const previewSection = document.getElementById('previewSection');
+
+            fileName.textContent = file.name;
+            fileInfo.style.display = 'block';
+            uploadBtn.disabled = false;
+
+            // Simulate preview (in real app, you would parse the Excel file)
+            showPreview();
+        }
+
+        function showPreview() {
+            const previewSection = document.getElementById('previewSection');
+            const previewHeaders = document.getElementById('previewHeaders');
+            const previewBody = document.getElementById('previewBody');
+
+            // Sample preview data based on new structure
+            const headers = ['Nama Proyek', 'Jenis Kontrak', 'Nilai Kontrak', 'Mata Uang', 'Tanggal Mulai', 'Tanggal Selesai', 'Nama PIC'];
+            const sampleData = [
+                ['Pengiriman Logistik Jakarta', 'Logistik', 'Rp 25.000.000', 'IDR', '2024-01-15', '2024-04-15', 'John Doe'],
+                ['Penyimpanan Barang Surabaya', 'Penyimpanan', 'Rp 35.000.000', 'IDR', '2024-02-01', '2024-06-01', 'Jane Smith']
+            ];
+
+            // Clear previous content
+            previewHeaders.innerHTML = '';
+            previewBody.innerHTML = '';
+
+            // Add headers
+            headers.forEach(header => {
+                const th = document.createElement('th');
+                th.textContent = header;
+                previewHeaders.appendChild(th);
+            });
+
+            // Add sample data
+            sampleData.forEach(row => {
+                const tr = document.createElement('tr');
+                row.forEach(cell => {
+                    const td = document.createElement('td');
+                    td.textContent = cell;
+                    tr.appendChild(td);
+                });
+                previewBody.appendChild(tr);
+            });
+
+            previewSection.style.display = 'block';
+        }
+
+        // Upload Excel function
+        function uploadExcel() {
+            const fileInput = document.getElementById('excelFile');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                showError('Harap pilih file Excel terlebih dahulu');
+                return;
+            }
+
+            // Simulate upload process
+            const uploadBtn = document.getElementById('uploadBtn');
+            const originalText = uploadBtn.innerHTML;
+            
+            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Mengupload...';
+            uploadBtn.disabled = true;
+
+            setTimeout(() => {
+                // Simulate successful upload
+                showSuccess('Data Excel berhasil diupload dan diimport!');
+                
+                // Close modal
+                const excelModal = bootstrap.Modal.getInstance(document.getElementById('excelUploadModal'));
+                excelModal.hide();
+
+                // Reset form
+                fileInput.value = '';
+                document.getElementById('fileInfo').style.display = 'none';
+                document.getElementById('previewSection').style.display = 'none';
+                uploadBtn.innerHTML = originalText;
+                uploadBtn.disabled = true;
+
+                // Refresh contracts table
+                applyFilters();
+                updateContractStats();
+            }, 2000);
+        }
+
+        // Show error function
+        function showError(message) {
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-danger alert-dismissible fade show position-fixed';
+            alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            alert.innerHTML = `
+                <i class="fas fa-exclamation-circle me-2"></i>${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(alert);
+            
+            setTimeout(() => {
+                if (alert.parentNode) {
+                    alert.parentNode.removeChild(alert);
+                }
+            }, 5000);
+        }
+
+        // Initialize phone validation
+        function initializePhoneValidation() {
+            const phoneInput = document.getElementById('kontakResmi');
+            const countryCodeSelect = document.getElementById('countryCode');
+            
+            if (phoneInput && countryCodeSelect) {
+                // Add input event listener for real-time validation
+                phoneInput.addEventListener('input', function(e) {
+                    // Remove any non-numeric characters except spaces, hyphens, and parentheses
+                    let value = e.target.value.replace(/[^0-9\s\-\(\)]/g, '');
+                    e.target.value = value;
+                });
+                
+                // Add keypress event listener to prevent non-numeric input
+                phoneInput.addEventListener('keypress', function(e) {
+                    // Allow: backspace, delete, tab, escape, enter, space, hyphen, parentheses
+                    if ([8, 9, 27, 13, 32, 45, 40, 41].indexOf(e.keyCode) !== -1 ||
+                        // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+                        (e.keyCode === 65 && e.ctrlKey === true) ||
+                        (e.keyCode === 67 && e.ctrlKey === true) ||
+                        (e.keyCode === 86 && e.ctrlKey === true) ||
+                        (e.keyCode === 88 && e.ctrlKey === true) ||
+                        // Allow: home, end, left, right, down, up
+                        (e.keyCode >= 35 && e.keyCode <= 40)) {
+                        return;
+                    }
+                    // Ensure that it is a number and stop the keypress
+                    if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+                        e.preventDefault();
+                    }
+                });
+                
+                // Add paste event listener to clean pasted content
+                phoneInput.addEventListener('paste', function(e) {
+                    setTimeout(() => {
+                        let value = e.target.value.replace(/[^0-9\s\-\(\)]/g, '');
+                        e.target.value = value;
+                    }, 0);
+                });
+            }
+        }
+
+        // Get full phone number with country code
+        function getFullPhoneNumber() {
+            const countryCode = document.getElementById('countryCode').value;
+            const phoneNumber = document.getElementById('kontakResmi').value;
+            return countryCode + phoneNumber;
+        }
+
+        // Initialize everything on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTheme();
+            initializeSidebar();
+            initializeContracts();
+            setupFileUpload();
+            initializePhoneValidation();
+            
+            // Load user info if available
+            const user = localStorage.getItem('user') || 'User';
+            document.getElementById('currentUser').textContent = user;
+        });
+    </script>
+
+    <!-- Barang Details Modal -->
+    <div class="modal fade" id="barangDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-boxes me-2"></i>
+                        Detail Barang - <span id="barangContractTitle"></span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Barang Actions -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <button class="btn btn-primary" onclick="showAddBarangModal()">
+                                <i class="fas fa-plus me-2"></i>Tambah Barang
+                            </button>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <span class="text-muted">
+                                Total: <span id="barangTotalCount">0</span> barang
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Barang Table -->
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="barangTable">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>No</th>
+                                    <th>Jenis Barang</th>
+                                    <th>Volume (m³)</th>
+                                    <th>Berat (kg)</th>
+                                    <th>Jumlah Kontainer</th>
+                                    <th>Ukuran (ft)</th>
+                                    <th>Nomor Kontainer</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="barangTableBody">
+                                <!-- Barang data will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Barang Modal -->
+    <div class="modal fade" id="addBarangModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-plus me-2"></i>
+                        <span id="addBarangModalTitle">Tambah Barang Baru</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addBarangForm" novalidate>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="jenisBarang" class="form-label">
+                                    <i class="fas fa-tag me-2"></i>Jenis Barang
+                                </label>
+                                <input type="text" class="form-control" id="jenisBarang" 
+                                       placeholder="Masukkan jenis barang" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="volume" class="form-label">
+                                    <i class="fas fa-cube me-2"></i>Volume (m³)
+                                </label>
+                                <input type="number" class="form-control" id="volume" 
+                                       step="0.01" placeholder="0.00" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="berat" class="form-label">
+                                    <i class="fas fa-weight me-2"></i>Berat (kg)
+                                </label>
+                                <input type="number" class="form-control" id="berat" 
+                                       step="0.01" placeholder="0.00" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="jumlahKontainer" class="form-label">
+                                    <i class="fas fa-shipping-fast me-2"></i>Jumlah Kontainer
+                                </label>
+                                <input type="number" class="form-control" id="jumlahKontainer" 
+                                       min="1" placeholder="1" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="ukuranKontainer" class="form-label">
+                                    <i class="fas fa-ruler me-2"></i>Ukuran Kontainer (ft)
+                                </label>
+                                <select class="form-select" id="ukuranKontainer" required>
+                                    <option value="">Pilih ukuran</option>
+                                    <option value="20">20 ft</option>
+                                    <option value="40">40 ft</option>
+                                    <option value="45">45 ft</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="nomorKontainer" class="form-label">
+                                    <i class="fas fa-barcode me-2"></i>Nomor Kontainer
+                                </label>
+                                <input type="text" class="form-control" id="nomorKontainer" 
+                                       placeholder="Masukkan nomor kontainer" required>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-primary" onclick="saveBarang()">
+                        <i class="fas fa-save me-2"></i>Simpan
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
