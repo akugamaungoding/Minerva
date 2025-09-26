@@ -677,7 +677,8 @@ body {
     
     .contracts-table th:nth-child(4),
     .contracts-table td:nth-child(4) {
-        min-width: 80px; /* Jenis */
+        min-width: 120px; /* Jenis */
+        white-space: nowrap;
     }
     
     .contracts-table th:nth-child(5),
@@ -2303,6 +2304,59 @@ textarea.form-control {
     }
 }
 
+/* Rounded Table Header */
+.table thead th:first-child {
+    border-top-left-radius: 8px;
+}
+
+.table thead th:last-child {
+    border-top-right-radius: 8px;
+}
+
+/* Specific styling for contracts table */
+.contracts-table thead th:first-child {
+    border-top-left-radius: 8px;
+}
+
+.contracts-table thead th:last-child {
+    border-top-right-radius: 8px;
+}
+
+/* Specific styling for barang tables */
+#barangTable thead th:first-child,
+#contractBarangTable thead th:first-child {
+    border-top-left-radius: 8px;
+}
+
+#barangTable thead th:last-child,
+#contractBarangTable thead th:last-child {
+    border-top-right-radius: 8px;
+}
+
+/* Barang Details Modal Theme Support */
+#barangDetailsModal .modal-content {
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+}
+
+#barangDetailsModal .modal-header {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+#barangDetailsModal .modal-body {
+    background-color: var(--card-bg);
+    color: var(--text-color);
+}
+
+#barangDetailsModal .modal-footer {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    border-top: 1px solid var(--border-color);
+}
+
 /* Barang Table Theme Support */
 #barangTable, #contractBarangTable {
     background-color: var(--card-bg);
@@ -2329,6 +2383,7 @@ textarea.form-control {
 #barangTable tbody td, #contractBarangTable tbody td {
     border-color: var(--border-color);
     color: var(--text-color);
+    background-color: var(--card-bg);
 }
 
 #barangTable tbody td code, #contractBarangTable tbody td code {
@@ -2337,66 +2392,129 @@ textarea.form-control {
     border: 1px solid var(--border-color);
 }
 
-/* Dark theme specific barang table styling */
-[data-theme="dark"] #barangTable, [data-theme="dark"] #contractBarangTable {
+/* Barang details modal will automatically follow the active theme via CSS variables */
+
+/* Contract Details Form Styling */
+#contractDetailsContent form {
     background-color: var(--card-bg);
     color: var(--text-color);
 }
 
-[data-theme="dark"] #barangTable thead th, [data-theme="dark"] #contractBarangTable thead th {
-    background-color: #1a1a1a;
+#contractDetailsContent .form-label {
     color: var(--text-color);
-    border-color: var(--border-color);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
 }
 
-[data-theme="dark"] #barangTable tbody tr, [data-theme="dark"] #contractBarangTable tbody tr {
+#contractDetailsContent .form-control[readonly] {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    cursor: default;
+}
+
+#contractDetailsContent .form-control[readonly]:focus {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    border-color: var(--border-color);
+    box-shadow: none;
+}
+
+#contractDetailsContent h5 {
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--primary-color);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Filter Dropdown Icon */
+#statusFilter, #typeFilter {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m1 6 7 7 7-7'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 12px;
+    padding-right: 2.25rem;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+
+/* Dark theme dropdown icon */
+[data-theme="dark"] #statusFilter,
+[data-theme="dark"] #typeFilter {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m1 6 7 7 7-7'/%3e%3c/svg%3e");
+}
+
+/* Light theme dropdown icon */
+[data-theme="light"] #statusFilter,
+[data-theme="light"] #typeFilter {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m1 6 7 7 7-7'/%3e%3c/svg%3e");
+}
+
+/* Sticky Topbar */
+.top-navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1030;
+    background-color: var(--bg-color);
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease-in-out;
+}
+
+/* Topbar hidden state */
+.top-navbar.hidden {
+    transform: translateY(-100%);
+}
+
+/* Adjust main content when topbar is sticky */
+.main-content {
+    margin-top: 80px; /* Adjust based on topbar height */
+    transition: margin-top 0.3s ease-in-out;
+}
+
+/* When topbar is hidden, reduce margin */
+.main-content.topbar-hidden {
+    margin-top: 0;
+}
+
+
+/* Pagination Theme Support */
+.pagination-container {
     background-color: var(--card-bg);
     color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
 }
 
-[data-theme="dark"] #barangTable tbody tr:hover, [data-theme="dark"] #contractBarangTable tbody tr:hover {
-    background-color: #404040;
-}
-
-[data-theme="dark"] #barangTable tbody td, [data-theme="dark"] #contractBarangTable tbody td {
-    border-color: var(--border-color);
+.pagination-info {
     color: var(--text-color);
 }
 
-[data-theme="dark"] #barangTable tbody td code, [data-theme="dark"] #contractBarangTable tbody td code {
-    background-color: #404040;
-    color: #e5e7eb;
-    border: 1px solid #404040;
+.pagination .page-item .page-link {
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
 }
 
-/* Light theme specific barang table styling */
-[data-theme="light"] #barangTable, [data-theme="light"] #contractBarangTable {
-    background-color: #ffffff;
-    color: #333333;
+.pagination .page-item .page-link:hover {
+    background-color: var(--border-color);
+    color: var(--text-color);
 }
 
-[data-theme="light"] #barangTable thead th, [data-theme="light"] #contractBarangTable thead th {
-    background-color: #f8f9fa;
-    color: #333333;
-    border-color: #dee2e6;
+.pagination .page-item.active .page-link {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
 }
 
-[data-theme="light"] #barangTable tbody tr, [data-theme="light"] #contractBarangTable tbody tr {
-    background-color: #ffffff;
-    color: #333333;
+.pagination .page-item.disabled .page-link {
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    opacity: 0.5;
 }
 
-[data-theme="light"] #barangTable tbody tr:hover, [data-theme="light"] #contractBarangTable tbody tr:hover {
-    background-color: #f8f9fa;
-}
-
-[data-theme="light"] #barangTable tbody td, [data-theme="light"] #contractBarangTable tbody td {
-    border-color: #dee2e6;
-    color: #333333;
-}
-
-[data-theme="light"] #barangTable tbody td code, [data-theme="light"] #contractBarangTable tbody td code {
-    background-color: #f8f9fa;
-    color: #495057;
-    border: 1px solid #dee2e6;
-}
+/* Pagination will automatically follow the active theme via CSS variables */

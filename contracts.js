@@ -1215,188 +1215,159 @@ function viewContract(contractId) {
 
     const content = document.getElementById('contractDetailsContent');
     content.innerHTML = `
-        <!-- Informasi Dasar Kontrak -->
-        <div class="contract-section">
-            <div class="section-header mb-3">
-                <h6><i class="fas fa-info-circle me-2"></i>Informasi Dasar Kontrak</h6>
+        <form class="needs-validation" novalidate>
+            <!-- Informasi Dasar Kontrak -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h5 class="mb-3"><i class="fas fa-info-circle me-2"></i>Informasi Dasar Kontrak</h5>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="viewNomorKontrak" class="form-label">Nomor Kontrak</label>
+                    <input type="text" class="form-control" id="viewNomorKontrak" value="${contract.nomorKontrak || 'N/A'}" readonly>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="viewNamaProyek" class="form-label">Nama Proyek</label>
+                    <input type="text" class="form-control" id="viewNamaProyek" value="${contract.namaProyek || contract.name || 'N/A'}" readonly>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="viewJenisKontrak" class="form-label">Jenis Kontrak</label>
+                    <input type="text" class="form-control" id="viewJenisKontrak" value="${contract.jenisKontrak || contract.type || 'N/A'}" readonly>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="viewStatus" class="form-label">Status</label>
+                    <input type="text" class="form-control" id="viewStatus" value="${getStatusLabel(contract.status)}" readonly>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="viewTglMulai" class="form-label">Tanggal Mulai</label>
+                    <input type="text" class="form-control" id="viewTglMulai" value="${formatDate(contract.tglMulai || contract.startDate)}" readonly>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="viewTglSelesai" class="form-label">Tanggal Selesai</label>
+                    <input type="text" class="form-control" id="viewTglSelesai" value="${formatDate(contract.tglSelesai || contract.endDate)}" readonly>
+                </div>
             </div>
-            <div class="contract-details-grid">
-                <div class="contract-detail-card">
-                    <h6><i class="fas fa-file-contract me-2"></i>Nomor Kontrak</h6>
-                    <p>${contract.nomorKontrak || 'N/A'}</p>
-                </div>
-                <div class="contract-detail-card">
-                    <h6><i class="fas fa-project-diagram me-2"></i>Nama Proyek</h6>
-                    <p>${contract.namaProyek || contract.name || 'N/A'}</p>
-                </div>
-                <div class="contract-detail-card">
-                    <h6><i class="fas fa-tags me-2"></i>Jenis Kontrak</h6>
-                    <p>${contract.jenisKontrak || contract.type || 'N/A'}</p>
-                </div>
-                <div class="contract-detail-card">
-                    <h6><i class="fas fa-info-circle me-2"></i>Status</h6>
-                    <p><span class="status-badge status-${contract.status}">${getStatusLabel(contract.status)}</span></p>
-                </div>
-                <div class="contract-detail-card">
-                    <h6><i class="fas fa-calendar-alt me-2"></i>Tanggal Mulai</h6>
-                    <p>${formatDate(contract.tglMulai || contract.startDate)}</p>
-                </div>
-                <div class="contract-detail-card">
-                    <h6><i class="fas fa-calendar-check me-2"></i>Tanggal Selesai</h6>
-                    <p>${formatDate(contract.tglSelesai || contract.endDate)}</p>
-                </div>
-            </div>
-        </div>
 
-        <!-- Nilai Kontrak -->
-        <div class="contract-section">
-            <div class="section-header mb-3">
-                <h6><i class="fas fa-money-bill-wave me-2"></i>Nilai Kontrak</h6>
-            </div>
-            <div class="contract-details-grid">
-                <div class="contract-detail-card">
-                    <h6><i class="fas fa-money-bill me-2"></i>Nilai Kontrak</h6>
-                    <p class="contract-value">${contract.mataUang || 'Rp'} ${formatCurrency(contract.nilaiKontrak || contract.value)}</p>
+            <!-- Nilai Kontrak -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h5 class="mb-3"><i class="fas fa-money-bill-wave me-2"></i>Nilai Kontrak</h5>
                 </div>
-                <div class="contract-detail-card">
-                    <h6><i class="fas fa-coins me-2"></i>Mata Uang</h6>
-                    <p><span class="badge bg-secondary">${contract.mataUang || 'IDR'}</span></p>
+                <div class="col-md-6 mb-3">
+                    <label for="viewNilaiKontrak" class="form-label">Nilai Kontrak</label>
+                    <input type="text" class="form-control" id="viewNilaiKontrak" value="${contract.mataUang || 'Rp'} ${formatCurrency(contract.nilaiKontrak || contract.value)}" readonly>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="viewMataUang" class="form-label">Mata Uang</label>
+                    <input type="text" class="form-control" id="viewMataUang" value="${contract.mataUang || 'IDR'}" readonly>
                 </div>
             </div>
-        </div>
 
-        <!-- Informasi Perusahaan -->
-        <div class="contract-section">
-            <div class="section-header mb-3">
-                <h6><i class="fas fa-building me-2"></i>Informasi Perusahaan</h6>
+            <!-- Informasi Perusahaan -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h5 class="mb-3"><i class="fas fa-building me-2"></i>Informasi Perusahaan</h5>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="viewNamaPic" class="form-label">Nama PIC</label>
+                    <input type="text" class="form-control" id="viewNamaPic" value="${contract.namaPic || contract.client || contract.manager || 'N/A'}" readonly>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="viewKontakResmi" class="form-label">Kontak Resmi</label>
+                    <input type="text" class="form-control" id="viewKontakResmi" value="${contract.kontakResmi || 'N/A'}" readonly>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="viewNpwp" class="form-label">NPWP</label>
+                    <input type="text" class="form-control" id="viewNpwp" value="${contract.npwp || 'N/A'}" readonly>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="viewAlamat" class="form-label">Alamat</label>
+                    <input type="text" class="form-control" id="viewAlamat" value="${contract.alamat || 'N/A'}" readonly>
+                </div>
             </div>
-            <div class="contract-details-grid">
-                <div class="contract-detail-card">
-                    <h6><i class="fas fa-user-tie me-2"></i>Nama PIC</h6>
-                    <p>${contract.namaPic || contract.client || contract.manager || 'N/A'}</p>
-                </div>
-                <div class="contract-detail-card">
-                    <h6><i class="fas fa-phone me-2"></i>Kontak Resmi</h6>
-                    <p>${contract.kontakResmi || 'N/A'}</p>
-                </div>
-                <div class="contract-detail-card">
-                    <h6><i class="fas fa-id-card me-2"></i>NPWP</h6>
-                    <p>${contract.npwp || 'N/A'}</p>
-                </div>
-                <div class="contract-detail-card">
-                    <h6><i class="fas fa-map-marker-alt me-2"></i>Alamat</h6>
-                    <p>${contract.alamat || 'N/A'}</p>
-                </div>
-            </div>
-        </div>
 
-        <!-- Asuransi -->
-        <div class="contract-section">
-            <div class="section-header mb-3">
-                <h6><i class="fas fa-shield-alt me-2"></i>Asuransi</h6>
-            </div>
-            <div class="contract-details-grid">
-                <div class="contract-detail-card">
-                    <h6><i class="fas fa-shield-alt me-2"></i>Asuransi</h6>
-                    <p>${contract.asuransi ? 'Ya' : 'Tidak'}</p>
+            <!-- Asuransi -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h5 class="mb-3"><i class="fas fa-shield-alt me-2"></i>Asuransi</h5>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="viewAsuransi" class="form-label">Asuransi</label>
+                    <input type="text" class="form-control" id="viewAsuransi" value="${contract.asuransi ? 'Ya' : 'Tidak'}" readonly>
                 </div>
             </div>
-        </div>
 
-        <!-- Informasi Pembayaran -->
-        <div class="contract-section">
-            <div class="section-header mb-3">
-                <h6><i class="fas fa-credit-card me-2"></i>Informasi Pembayaran</h6>
-            </div>
-            <div class="contract-details-grid">
-                <div class="contract-detail-card">
-                    <h6><i class="fas fa-calendar-week me-2"></i>Termin Pembayaran</h6>
-                    <p>${contract.terminPembayaran || 'N/A'}</p>
+            <!-- Informasi Pembayaran -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h5 class="mb-3"><i class="fas fa-credit-card me-2"></i>Informasi Pembayaran</h5>
                 </div>
-                <div class="contract-detail-card">
-                    <h6><i class="fas fa-money-check me-2"></i>Metode Pembayaran</h6>
-                    <p>${contract.metodePembayaran || 'N/A'}</p>
+                <div class="col-md-6 mb-3">
+                    <label for="viewTerminPembayaran" class="form-label">Termin Pembayaran</label>
+                    <input type="text" class="form-control" id="viewTerminPembayaran" value="${contract.terminPembayaran || 'N/A'}" readonly>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="viewMetodePembayaran" class="form-label">Metode Pembayaran</label>
+                    <input type="text" class="form-control" id="viewMetodePembayaran" value="${contract.metodePembayaran || 'N/A'}" readonly>
                 </div>
             </div>
-        </div>
 
-        <!-- Pajak dan Penalti -->
-        <div class="contract-section">
-            <div class="section-header mb-3">
-                <h6><i class="fas fa-calculator me-2"></i>Pajak dan Penalti</h6>
+            <!-- Pajak dan Penalti -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h5 class="mb-3"><i class="fas fa-calculator me-2"></i>Pajak dan Penalti</h5>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="viewPpn" class="form-label">PPN</label>
+                    <input type="text" class="form-control" id="viewPpn" value="${contract.ppn || 0}%" readonly>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="viewPajakLainnya" class="form-label">Pajak Lainnya</label>
+                    <input type="text" class="form-control" id="viewPajakLainnya" value="${contract.mataUang || 'Rp'} ${formatCurrency(contract.pajakLainnya || 0)}" readonly>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="viewPenaltiTerlambat" class="form-label">Penalti Terlambat</label>
+                    <input type="text" class="form-control" id="viewPenaltiTerlambat" value="${contract.mataUang || 'Rp'} ${formatCurrency(contract.penaltiTerlambat || 0)}" readonly>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="viewHariPenalti" class="form-label">Hari Penalti</label>
+                    <input type="text" class="form-control" id="viewHariPenalti" value="${contract.hariPenalti || 0} hari" readonly>
+                </div>
             </div>
-            <div class="contract-details-grid">
-                <div class="contract-detail-card">
-                    <h6><i class="fas fa-percentage me-2"></i>PPN</h6>
-                    <p>${contract.ppn || 0}%</p>
-                </div>
-                <div class="contract-detail-card">
-                    <h6><i class="fas fa-receipt me-2"></i>Pajak Lainnya</h6>
-                    <p>${contract.mataUang || 'Rp'} ${formatCurrency(contract.pajakLainnya || 0)}</p>
-                </div>
-                <div class="contract-detail-card">
-                    <h6><i class="fas fa-exclamation-triangle me-2"></i>Penalti Terlambat</h6>
-                    <p>${contract.mataUang || 'Rp'} ${formatCurrency(contract.penaltiTerlambat || 0)}</p>
-                </div>
-                <div class="contract-detail-card">
-                    <h6><i class="fas fa-calendar-times me-2"></i>Hari Penalti</h6>
-                    <p>${contract.hariPenalti || 0} hari</p>
-                </div>
-            </div>
-        </div>
 
-        <!-- Dokumen Lampiran -->
-        <div class="contract-section">
-            <div class="section-header mb-3">
-                <h6><i class="fas fa-paperclip me-2"></i>Dokumen Lampiran</h6>
-            </div>
-            <div class="contract-details-grid">
-                <div class="contract-detail-card">
-                    <h6><i class="fas fa-paperclip me-2"></i>Dokumen Lampiran</h6>
-                    <p>${contract.dokumenLampiran || 'Tidak ada'}</p>
+            <!-- Dokumen Lampiran -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h5 class="mb-3"><i class="fas fa-paperclip me-2"></i>Dokumen Lampiran</h5>
+                </div>
+                <div class="col-12 mb-3">
+                    <label for="viewDokumenLampiran" class="form-label">Dokumen Lampiran</label>
+                    <input type="text" class="form-control" id="viewDokumenLampiran" value="${contract.dokumenLampiran || 'Tidak ada'}" readonly>
                 </div>
             </div>
-        </div>
-        
-        <div class="contract-timeline">
-            <h5><i class="fas fa-history me-2"></i>Timeline Kontrak</h5>
-            <div class="timeline-item">
-                <div class="timeline-icon">
-                    <i class="fas fa-plus"></i>
+            
+            <!-- Timeline Kontrak -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h5 class="mb-3"><i class="fas fa-history me-2"></i>Timeline Kontrak</h5>
                 </div>
-                <div class="timeline-content">
-                    <h6>Kontrak Dibuat</h6>
-                    <p>${formatDate(contract.createdAt)}</p>
+                <div class="col-md-6 mb-3">
+                    <label for="viewCreatedAt" class="form-label">Kontrak Dibuat</label>
+                    <input type="text" class="form-control" id="viewCreatedAt" value="${formatDate(contract.createdAt)}" readonly>
                 </div>
-            </div>
-            <div class="timeline-item">
-                <div class="timeline-icon">
-                    <i class="fas fa-calendar-plus"></i>
+                <div class="col-md-6 mb-3">
+                    <label for="viewTglPengajuan" class="form-label">Tanggal Pengajuan</label>
+                    <input type="text" class="form-control" id="viewTglPengajuan" value="${formatDate(contract.tglPengajuan)}" readonly>
                 </div>
-                <div class="timeline-content">
-                    <h6>Tanggal Pengajuan</h6>
-                    <p>${formatDate(contract.tglPengajuan)}</p>
+                <div class="col-md-6 mb-3">
+                    <label for="viewTglMulaiTimeline" class="form-label">Kontrak Dimulai</label>
+                    <input type="text" class="form-control" id="viewTglMulaiTimeline" value="${formatDate(contract.tglMulai || contract.startDate)}" readonly>
                 </div>
-            </div>
-            <div class="timeline-item">
-                <div class="timeline-icon">
-                    <i class="fas fa-play"></i>
-                </div>
-                <div class="timeline-content">
-                    <h6>Kontrak Dimulai</h6>
-                    <p>${formatDate(contract.tglMulai || contract.startDate)}</p>
+                <div class="col-md-6 mb-3">
+                    <label for="viewTglSelesaiTimeline" class="form-label">Kontrak Berakhir</label>
+                    <input type="text" class="form-control" id="viewTglSelesaiTimeline" value="${formatDate(contract.tglSelesai || contract.endDate)}" readonly>
                 </div>
             </div>
-            <div class="timeline-item">
-                <div class="timeline-icon">
-                    <i class="fas fa-flag"></i>
-                </div>
-                <div class="timeline-content">
-                    <h6>Kontrak Berakhir</h6>
-                    <p>${formatDate(contract.tglSelesai || contract.endDate)}</p>
-                </div>
-            </div>
-        </div>
+        </form>
     `;
 
     // Store current contract ID for edit/delete operations
@@ -2124,7 +2095,47 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize edit form phone validation
     initializeEditPhoneValidation();
+    
+    // Initialize sticky topbar
+    initializeStickyTopbar();
 });
+
+// Sticky Topbar functionality
+let lastScrollTop = 0;
+let isTopbarHidden = false;
+
+function initializeStickyTopbar() {
+    const topbar = document.querySelector('.top-navbar');
+    const mainContent = document.querySelector('.main-content');
+    
+    if (!topbar || !mainContent) return;
+    
+    window.addEventListener('scroll', function() {
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const scrollThreshold = 50; // Minimum scroll distance to trigger hide/show
+        
+        // Only trigger if scrolled more than threshold
+        if (Math.abs(scrollTop - lastScrollTop) < scrollThreshold) return;
+        
+        if (scrollTop > lastScrollTop && scrollTop > 200) {
+            // Scrolling down and past 200px - hide topbar
+            if (!isTopbarHidden) {
+                topbar.classList.add('hidden');
+                mainContent.classList.add('topbar-hidden');
+                isTopbarHidden = true;
+            }
+        } else {
+            // Scrolling up - show topbar
+            if (isTopbarHidden) {
+                topbar.classList.remove('hidden');
+                mainContent.classList.remove('topbar-hidden');
+                isTopbarHidden = false;
+            }
+        }
+        
+        lastScrollTop = scrollTop;
+    });
+}
 
 // Initialize phone validation for edit form
 function initializeEditPhoneValidation() {
