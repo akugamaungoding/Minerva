@@ -1,11 +1,13 @@
+// Contract Management System
 let contracts = [];
 let filteredContracts = [];
 let selectedContracts = new Set();
 let currentPage = 1;
 let itemsPerPage = 10;
 let totalPages = 1;
-let barangData = new Map(); 
+let barangData = new Map(); // Map untuk menyimpan data barang per kontrak
 
+// Sample contract data based on new database structure
 const sampleContracts = [
     {
         id: 1,
@@ -31,7 +33,7 @@ const sampleContracts = [
         penaltiTerlambat: 100000,
         hariPenalti: 7,
         dokumenLampiran: 'kontrak_logistik_jakarta.pdf',
-        status: 'draft',
+        status: 'active',
         createdAt: '2024-01-10',
         updatedAt: '2024-01-15'
     },
@@ -87,7 +89,7 @@ const sampleContracts = [
         penaltiTerlambat: 200000,
         hariPenalti: 5,
         dokumenLampiran: 'kontrak_bongkar_muat.pdf',
-        status: 'expired',
+        status: 'completed',
         createdAt: '2023-11-20',
         updatedAt: '2024-01-31'
     },
@@ -721,7 +723,7 @@ function updateContractStats() {
     const pending = contracts.filter(c => c.status === 'pending').length;
     const active = contracts.filter(c => c.status === 'active').length;
     const expiring = contracts.filter(c => {
-        const endDate = new Date(c.tglSelesai || c.endDate);
+        const endDate = new Date(c.endDate);
         const today = new Date();
         const daysUntilExpiry = (endDate - today) / (1000 * 60 * 60 * 24);
         return daysUntilExpiry <= 30 && daysUntilExpiry > 0;
@@ -912,10 +914,7 @@ function renderContractsTable() {
                     <button class="btn btn-sm btn-outline-info" onclick="viewBarang(${contract.id})" title="Lihat Barang">
                         <i class="fas fa-boxes"></i>
                     </button>
-                    <button class="btn btn-sm btn-outline-warning" 
-                            onclick="editContract(${contract.id})" 
-                            title="Edit Kontrak"
-                            ${contract.status !== 'draft' ? 'disabled' : ''}>
+                    <button class="btn btn-sm btn-outline-warning" onclick="editContract(${contract.id})" title="Edit">
                         <i class="fas fa-edit"></i>
                     </button>
                     <button class="btn btn-sm btn-outline-danger" onclick="deleteContract(${contract.id})" title="Hapus">
@@ -999,12 +998,7 @@ function showCreateContractModal() {
 // Clear create contract form
 function clearCreateContractForm() {
     document.getElementById('createContractForm').reset();
-    document.getElementById('createContractForm').classList.remove('was-validated');
-    document.getElementById('createContractForm').removeAttribute('data-edit-id');
-    
-    // Clear contract barang list
-    contractBarangList = [];
-    loadContractBarangData();
+    document.getElementById('contractStatus').value = 'draft';
 }
 
 // Generate contract number
@@ -1028,12 +1022,8 @@ function createContract() {
         return;
     }
 
-    // Check if editing existing contract
-    const editId = form.getAttribute('data-edit-id');
-    const isEditing = editId !== null;
-    
-    // Generate contract number (only for new contracts)
-    const nomorKontrak = isEditing ? contracts.find(c => c.id === parseInt(editId)).nomorKontrak : generateContractNumber();
+    // Generate contract number
+    const nomorKontrak = generateContractNumber();
     
     // Get form values
     const newContract = {
@@ -1066,144 +1056,15 @@ function createContract() {
         updatedAt: new Date().toISOString().split('T')[0]
     };
 
-    if (isEditing) {
-        // Update existing contract
-        const index = contracts.findIndex(c => c.id === parseInt(editId));
-        if (index !== -1) {
-            contracts[index] = { ...contracts[index], ...newContract };
-            showSuccess('Kontrak berhasil diperbarui!');
-        }
-    } else {
-        // Add new contract
-        contracts.unshift(newContract);
-        
-        // Save barang data for new contract
-        if (contractBarangList.length > 0) {
-            barangData.set(newContract.id, [...contractBarangList]);
-        }
-        
-        showSuccess(`Kontrak berhasil dibuat dengan nomor: ${nomorKontrak}`);
-    }
-    
+    contracts.unshift(newContract);
     applyFilters();
     updateContractStats();
 
-    // Close modal and clear form
+    // Close modal
     const modal = bootstrap.Modal.getInstance(document.getElementById('createContractModal'));
     modal.hide();
-    clearCreateContractForm();
-}
 
-// Edit contract
-function editContract(contractId) {
-    const contract = contracts.find(c => c.id === contractId);
-    if (!contract) {
-        showError('Kontrak tidak ditemukan!');
-        return;
-    }
-    
-    // Check if contract can be edited (only draft status)
-    if (contract.status !== 'draft') {
-        showError('Kontrak hanya dapat diedit jika status masih DRAFT!');
-        return;
-    }
-    
-    // Fill edit form with existing data
-    document.getElementById('editNamaProyek').value = contract.namaProyek || '';
-    document.getElementById('editJenisKontrak').value = contract.jenisKontrak || '';
-    document.getElementById('editTglMulai').value = contract.tglMulai || '';
-    document.getElementById('editTglSelesai').value = contract.tglSelesai || '';
-    document.getElementById('editNilaiKontrak').value = contract.nilaiKontrak || '';
-    document.getElementById('editMataUang').value = contract.mataUang || '';
-    document.getElementById('editAlamat').value = contract.alamat || '';
-    document.getElementById('editCountryCode').value = contract.kontakResmi ? contract.kontakResmi.substring(0, 3) : '+62';
-    document.getElementById('editKontakResmi').value = contract.kontakResmi ? contract.kontakResmi.substring(3) : '';
-    document.getElementById('editNamaPic').value = contract.namaPic || '';
-    document.getElementById('editNpwp').value = contract.npwp || '';
-    document.getElementById('editAsuransi').value = contract.asuransi ? '1' : '0';
-    document.getElementById('editTerminPembayaran').value = contract.terminPembayaran || '';
-    document.getElementById('editMetodePembayaran').value = contract.metodePembayaran || '';
-    document.getElementById('editPpn').value = contract.ppn || '';
-    document.getElementById('editPajakLainnya').value = contract.pajakLainnya || '';
-    document.getElementById('editPenaltiTerlambat').value = contract.penaltiTerlambat || '';
-    document.getElementById('editHariPenalti').value = contract.hariPenalti || '';
-    document.getElementById('editDokumenLampiran').value = contract.dokumenLampiran || '';
-    
-    // Update currency symbols for edit form
-    initializeEditCurrencySymbols();
-    
-    // Store contract ID for update
-    document.getElementById('editContractForm').setAttribute('data-edit-id', contractId);
-    
-    // Show edit contract modal
-    const modal = new bootstrap.Modal(document.getElementById('editContractModal'));
-    modal.show();
-}
-
-// Update contract
-function updateContract() {
-    const form = document.getElementById('editContractForm');
-    
-    // Validate form
-    if (!form.checkValidity()) {
-        form.classList.add('was-validated');
-        return;
-    }
-    
-    // Get edit ID
-    const editId = form.getAttribute('data-edit-id');
-    if (!editId) {
-        showError('ID kontrak tidak ditemukan!');
-        return;
-    }
-    
-    // Find contract to update
-    const contractIndex = contracts.findIndex(c => c.id === parseInt(editId));
-    if (contractIndex === -1) {
-        showError('Kontrak tidak ditemukan!');
-        return;
-    }
-    
-    // Get form values
-    const updatedContract = {
-        namaProyek: document.getElementById('editNamaProyek').value,
-        jenisKontrak: document.getElementById('editJenisKontrak').value,
-        tglMulai: document.getElementById('editTglMulai').value,
-        tglSelesai: document.getElementById('editTglSelesai').value,
-        nilaiKontrak: parseFloat(document.getElementById('editNilaiKontrak').value),
-        mataUang: document.getElementById('editMataUang').value,
-        alamat: document.getElementById('editAlamat').value,
-        kontakResmi: document.getElementById('editCountryCode').value + document.getElementById('editKontakResmi').value,
-        namaPic: document.getElementById('editNamaPic').value,
-        npwp: document.getElementById('editNpwp').value,
-        asuransi: document.getElementById('editAsuransi').value === '1' ? 1 : 0,
-        terminPembayaran: document.getElementById('editTerminPembayaran').value,
-        metodePembayaran: document.getElementById('editMetodePembayaran').value,
-        ppn: parseFloat(document.getElementById('editPpn').value),
-        pajakLainnya: parseFloat(document.getElementById('editPajakLainnya').value) || 0,
-        penaltiTerlambat: parseFloat(document.getElementById('editPenaltiTerlambat').value) || 0,
-        hariPenalti: parseInt(document.getElementById('editHariPenalti').value) || 0,
-        dokumenLampiran: document.getElementById('editDokumenLampiran').value,
-        updatedAt: new Date().toISOString().split('T')[0]
-    };
-    
-    // Update contract
-    contracts[contractIndex] = { ...contracts[contractIndex], ...updatedContract };
-    
-    // Update UI
-    applyFilters();
-    updateContractStats();
-    
-    // Close modal
-    const modal = bootstrap.Modal.getInstance(document.getElementById('editContractModal'));
-    modal.hide();
-    
-    // Clear form
-    form.reset();
-    form.classList.remove('was-validated');
-    form.removeAttribute('data-edit-id');
-    
-    showSuccess('Kontrak berhasil diperbarui!');
+    showSuccess(`Kontrak berhasil dibuat dengan nomor: ${nomorKontrak}`);
 }
 
 // View contract details
@@ -1213,159 +1074,188 @@ function viewContract(contractId) {
 
     const content = document.getElementById('contractDetailsContent');
     content.innerHTML = `
-        <form class="needs-validation" novalidate>
-            <!-- Informasi Dasar Kontrak -->
-            <div class="row mb-4">
-                <div class="col-12">
-                    <h5 class="mb-3"><i class="fas fa-info-circle me-2"></i>Informasi Dasar Kontrak</h5>
+        <!-- Informasi Dasar Kontrak -->
+        <div class="contract-section">
+            <div class="section-header mb-3">
+                <h6><i class="fas fa-info-circle me-2"></i>Informasi Dasar Kontrak</h6>
+            </div>
+            <div class="contract-details-grid">
+                <div class="contract-detail-card">
+                    <h6><i class="fas fa-file-contract me-2"></i>Nomor Kontrak</h6>
+                    <p>${contract.nomorKontrak || 'N/A'}</p>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label for="viewNomorKontrak" class="form-label">Nomor Kontrak</label>
-                    <input type="text" class="form-control" id="viewNomorKontrak" value="${contract.nomorKontrak || 'N/A'}" readonly>
+                <div class="contract-detail-card">
+                    <h6><i class="fas fa-project-diagram me-2"></i>Nama Proyek</h6>
+                    <p>${contract.namaProyek || contract.name || 'N/A'}</p>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label for="viewNamaProyek" class="form-label">Nama Proyek</label>
-                    <input type="text" class="form-control" id="viewNamaProyek" value="${contract.namaProyek || contract.name || 'N/A'}" readonly>
+                <div class="contract-detail-card">
+                    <h6><i class="fas fa-tags me-2"></i>Jenis Kontrak</h6>
+                    <p>${contract.jenisKontrak || contract.type || 'N/A'}</p>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label for="viewJenisKontrak" class="form-label">Jenis Kontrak</label>
-                    <input type="text" class="form-control" id="viewJenisKontrak" value="${contract.jenisKontrak || contract.type || 'N/A'}" readonly>
+                <div class="contract-detail-card">
+                    <h6><i class="fas fa-info-circle me-2"></i>Status</h6>
+                    <p><span class="status-badge status-${contract.status}">${getStatusLabel(contract.status)}</span></p>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label for="viewStatus" class="form-label">Status</label>
-                    <input type="text" class="form-control" id="viewStatus" value="${getStatusLabel(contract.status)}" readonly>
+                <div class="contract-detail-card">
+                    <h6><i class="fas fa-calendar-alt me-2"></i>Tanggal Mulai</h6>
+                    <p>${formatDate(contract.tglMulai || contract.startDate)}</p>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label for="viewTglMulai" class="form-label">Tanggal Mulai</label>
-                    <input type="text" class="form-control" id="viewTglMulai" value="${formatDate(contract.tglMulai || contract.startDate)}" readonly>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="viewTglSelesai" class="form-label">Tanggal Selesai</label>
-                    <input type="text" class="form-control" id="viewTglSelesai" value="${formatDate(contract.tglSelesai || contract.endDate)}" readonly>
+                <div class="contract-detail-card">
+                    <h6><i class="fas fa-calendar-check me-2"></i>Tanggal Selesai</h6>
+                    <p>${formatDate(contract.tglSelesai || contract.endDate)}</p>
                 </div>
             </div>
+        </div>
 
-            <!-- Nilai Kontrak -->
-            <div class="row mb-4">
-                <div class="col-12">
-                    <h5 class="mb-3"><i class="fas fa-money-bill-wave me-2"></i>Nilai Kontrak</h5>
+        <!-- Nilai Kontrak -->
+        <div class="contract-section">
+            <div class="section-header mb-3">
+                <h6><i class="fas fa-money-bill-wave me-2"></i>Nilai Kontrak</h6>
+            </div>
+            <div class="contract-details-grid">
+                <div class="contract-detail-card">
+                    <h6><i class="fas fa-money-bill me-2"></i>Nilai Kontrak</h6>
+                    <p class="contract-value">${contract.mataUang || 'Rp'} ${formatCurrency(contract.nilaiKontrak || contract.value)}</p>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label for="viewNilaiKontrak" class="form-label">Nilai Kontrak</label>
-                    <input type="text" class="form-control" id="viewNilaiKontrak" value="${contract.mataUang || 'Rp'} ${formatCurrency(contract.nilaiKontrak || contract.value)}" readonly>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="viewMataUang" class="form-label">Mata Uang</label>
-                    <input type="text" class="form-control" id="viewMataUang" value="${contract.mataUang || 'IDR'}" readonly>
+                <div class="contract-detail-card">
+                    <h6><i class="fas fa-coins me-2"></i>Mata Uang</h6>
+                    <p><span class="badge bg-secondary">${contract.mataUang || 'IDR'}</span></p>
                 </div>
             </div>
+        </div>
 
-            <!-- Informasi Perusahaan -->
-            <div class="row mb-4">
-                <div class="col-12">
-                    <h5 class="mb-3"><i class="fas fa-building me-2"></i>Informasi Perusahaan</h5>
+        <!-- Informasi Perusahaan -->
+        <div class="contract-section">
+            <div class="section-header mb-3">
+                <h6><i class="fas fa-building me-2"></i>Informasi Perusahaan</h6>
+            </div>
+            <div class="contract-details-grid">
+                <div class="contract-detail-card">
+                    <h6><i class="fas fa-user-tie me-2"></i>Nama PIC</h6>
+                    <p>${contract.namaPic || contract.client || contract.manager || 'N/A'}</p>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label for="viewNamaPic" class="form-label">Nama PIC</label>
-                    <input type="text" class="form-control" id="viewNamaPic" value="${contract.namaPic || contract.client || contract.manager || 'N/A'}" readonly>
+                <div class="contract-detail-card">
+                    <h6><i class="fas fa-phone me-2"></i>Kontak Resmi</h6>
+                    <p>${contract.kontakResmi || 'N/A'}</p>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label for="viewKontakResmi" class="form-label">Kontak Resmi</label>
-                    <input type="text" class="form-control" id="viewKontakResmi" value="${contract.kontakResmi || 'N/A'}" readonly>
+                <div class="contract-detail-card">
+                    <h6><i class="fas fa-id-card me-2"></i>NPWP</h6>
+                    <p>${contract.npwp || 'N/A'}</p>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label for="viewNpwp" class="form-label">NPWP</label>
-                    <input type="text" class="form-control" id="viewNpwp" value="${contract.npwp || 'N/A'}" readonly>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="viewAlamat" class="form-label">Alamat</label>
-                    <input type="text" class="form-control" id="viewAlamat" value="${contract.alamat || 'N/A'}" readonly>
+                <div class="contract-detail-card">
+                    <h6><i class="fas fa-map-marker-alt me-2"></i>Alamat</h6>
+                    <p>${contract.alamat || 'N/A'}</p>
                 </div>
             </div>
+        </div>
 
-            <!-- Asuransi -->
-            <div class="row mb-4">
-                <div class="col-12">
-                    <h5 class="mb-3"><i class="fas fa-shield-alt me-2"></i>Asuransi</h5>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="viewAsuransi" class="form-label">Asuransi</label>
-                    <input type="text" class="form-control" id="viewAsuransi" value="${contract.asuransi ? 'Ya' : 'Tidak'}" readonly>
+        <!-- Asuransi -->
+        <div class="contract-section">
+            <div class="section-header mb-3">
+                <h6><i class="fas fa-shield-alt me-2"></i>Asuransi</h6>
+            </div>
+            <div class="contract-details-grid">
+                <div class="contract-detail-card">
+                    <h6><i class="fas fa-shield-alt me-2"></i>Asuransi</h6>
+                    <p>${contract.asuransi ? 'Ya' : 'Tidak'}</p>
                 </div>
             </div>
+        </div>
 
-            <!-- Informasi Pembayaran -->
-            <div class="row mb-4">
-                <div class="col-12">
-                    <h5 class="mb-3"><i class="fas fa-credit-card me-2"></i>Informasi Pembayaran</h5>
+        <!-- Informasi Pembayaran -->
+        <div class="contract-section">
+            <div class="section-header mb-3">
+                <h6><i class="fas fa-credit-card me-2"></i>Informasi Pembayaran</h6>
+            </div>
+            <div class="contract-details-grid">
+                <div class="contract-detail-card">
+                    <h6><i class="fas fa-calendar-week me-2"></i>Termin Pembayaran</h6>
+                    <p>${contract.terminPembayaran || 'N/A'}</p>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label for="viewTerminPembayaran" class="form-label">Termin Pembayaran</label>
-                    <input type="text" class="form-control" id="viewTerminPembayaran" value="${contract.terminPembayaran || 'N/A'}" readonly>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="viewMetodePembayaran" class="form-label">Metode Pembayaran</label>
-                    <input type="text" class="form-control" id="viewMetodePembayaran" value="${contract.metodePembayaran || 'N/A'}" readonly>
+                <div class="contract-detail-card">
+                    <h6><i class="fas fa-money-check me-2"></i>Metode Pembayaran</h6>
+                    <p>${contract.metodePembayaran || 'N/A'}</p>
                 </div>
             </div>
+        </div>
 
-            <!-- Pajak dan Penalti -->
-            <div class="row mb-4">
-                <div class="col-12">
-                    <h5 class="mb-3"><i class="fas fa-calculator me-2"></i>Pajak dan Penalti</h5>
+        <!-- Pajak dan Penalti -->
+        <div class="contract-section">
+            <div class="section-header mb-3">
+                <h6><i class="fas fa-calculator me-2"></i>Pajak dan Penalti</h6>
+            </div>
+            <div class="contract-details-grid">
+                <div class="contract-detail-card">
+                    <h6><i class="fas fa-percentage me-2"></i>PPN</h6>
+                    <p>${contract.ppn || 0}%</p>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label for="viewPpn" class="form-label">PPN</label>
-                    <input type="text" class="form-control" id="viewPpn" value="${contract.ppn || 0}%" readonly>
+                <div class="contract-detail-card">
+                    <h6><i class="fas fa-receipt me-2"></i>Pajak Lainnya</h6>
+                    <p>${contract.mataUang || 'Rp'} ${formatCurrency(contract.pajakLainnya || 0)}</p>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label for="viewPajakLainnya" class="form-label">Pajak Lainnya</label>
-                    <input type="text" class="form-control" id="viewPajakLainnya" value="${contract.mataUang || 'Rp'} ${formatCurrency(contract.pajakLainnya || 0)}" readonly>
+                <div class="contract-detail-card">
+                    <h6><i class="fas fa-exclamation-triangle me-2"></i>Penalti Terlambat</h6>
+                    <p>${contract.mataUang || 'Rp'} ${formatCurrency(contract.penaltiTerlambat || 0)}</p>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label for="viewPenaltiTerlambat" class="form-label">Penalti Terlambat</label>
-                    <input type="text" class="form-control" id="viewPenaltiTerlambat" value="${contract.mataUang || 'Rp'} ${formatCurrency(contract.penaltiTerlambat || 0)}" readonly>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="viewHariPenalti" class="form-label">Hari Penalti</label>
-                    <input type="text" class="form-control" id="viewHariPenalti" value="${contract.hariPenalti || 0} hari" readonly>
+                <div class="contract-detail-card">
+                    <h6><i class="fas fa-calendar-times me-2"></i>Hari Penalti</h6>
+                    <p>${contract.hariPenalti || 0} hari</p>
                 </div>
             </div>
+        </div>
 
-            <!-- Dokumen Lampiran -->
-            <div class="row mb-4">
-                <div class="col-12">
-                    <h5 class="mb-3"><i class="fas fa-paperclip me-2"></i>Dokumen Lampiran</h5>
-                </div>
-                <div class="col-12 mb-3">
-                    <label for="viewDokumenLampiran" class="form-label">Dokumen Lampiran</label>
-                    <input type="text" class="form-control" id="viewDokumenLampiran" value="${contract.dokumenLampiran || 'Tidak ada'}" readonly>
+        <!-- Dokumen Lampiran -->
+        <div class="contract-section">
+            <div class="section-header mb-3">
+                <h6><i class="fas fa-paperclip me-2"></i>Dokumen Lampiran</h6>
+            </div>
+            <div class="contract-details-grid">
+                <div class="contract-detail-card">
+                    <h6><i class="fas fa-paperclip me-2"></i>Dokumen Lampiran</h6>
+                    <p>${contract.dokumenLampiran || 'Tidak ada'}</p>
                 </div>
             </div>
-            
-            <!-- Timeline Kontrak -->
-            <div class="row mb-4">
-                <div class="col-12">
-                    <h5 class="mb-3"><i class="fas fa-history me-2"></i>Timeline Kontrak</h5>
+        </div>
+        
+        <div class="contract-timeline">
+            <h5><i class="fas fa-history me-2"></i>Timeline Kontrak</h5>
+            <div class="timeline-item">
+                <div class="timeline-icon">
+                    <i class="fas fa-plus"></i>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label for="viewCreatedAt" class="form-label">Kontrak Dibuat</label>
-                    <input type="text" class="form-control" id="viewCreatedAt" value="${formatDate(contract.createdAt)}" readonly>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="viewTglPengajuan" class="form-label">Tanggal Pengajuan</label>
-                    <input type="text" class="form-control" id="viewTglPengajuan" value="${formatDate(contract.tglPengajuan)}" readonly>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="viewTglMulaiTimeline" class="form-label">Kontrak Dimulai</label>
-                    <input type="text" class="form-control" id="viewTglMulaiTimeline" value="${formatDate(contract.tglMulai || contract.startDate)}" readonly>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="viewTglSelesaiTimeline" class="form-label">Kontrak Berakhir</label>
-                    <input type="text" class="form-control" id="viewTglSelesaiTimeline" value="${formatDate(contract.tglSelesai || contract.endDate)}" readonly>
+                <div class="timeline-content">
+                    <h6>Kontrak Dibuat</h6>
+                    <p>${formatDate(contract.createdAt)}</p>
                 </div>
             </div>
-        </form>
+            <div class="timeline-item">
+                <div class="timeline-icon">
+                    <i class="fas fa-calendar-plus"></i>
+                </div>
+                <div class="timeline-content">
+                    <h6>Tanggal Pengajuan</h6>
+                    <p>${formatDate(contract.tglPengajuan)}</p>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-icon">
+                    <i class="fas fa-play"></i>
+                </div>
+                <div class="timeline-content">
+                    <h6>Kontrak Dimulai</h6>
+                    <p>${formatDate(contract.tglMulai || contract.startDate)}</p>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-icon">
+                    <i class="fas fa-flag"></i>
+                </div>
+                <div class="timeline-content">
+                    <h6>Kontrak Berakhir</h6>
+                    <p>${formatDate(contract.tglSelesai || contract.endDate)}</p>
+                </div>
+            </div>
+        </div>
     `;
 
     // Store current contract ID for edit/delete operations
@@ -1378,135 +1268,31 @@ function viewContract(contractId) {
 // Edit contract
 function editContract(contractId) {
     const contract = contracts.find(c => c.id === contractId);
-    if (!contract) {
-        showError('Kontrak tidak ditemukan!');
-        return;
-    }
-    
-    // Check if contract can be edited (only draft status)
-    if (contract.status !== 'draft') {
-        showError('Kontrak hanya dapat diedit jika status masih DRAFT!');
-        return;
-    }
-    
-    // Fill edit form with existing data
-    document.getElementById('editNamaProyek').value = contract.namaProyek || '';
-    document.getElementById('editJenisKontrak').value = contract.jenisKontrak || '';
-    document.getElementById('editTglMulai').value = contract.tglMulai || '';
-    document.getElementById('editTglSelesai').value = contract.tglSelesai || '';
-    document.getElementById('editNilaiKontrak').value = contract.nilaiKontrak || '';
-    document.getElementById('editMataUang').value = contract.mataUang || '';
-    document.getElementById('editAlamat').value = contract.alamat || '';
-    
-    // Parse phone number to extract country code and number
-    if (contract.kontakResmi) {
-        const phoneNumber = contract.kontakResmi;
-        if (phoneNumber.startsWith('+')) {
-            // Find where the country code ends (usually 2-4 digits)
-            const match = phoneNumber.match(/^(\+\d{1,4})(.*)$/);
-            if (match) {
-                document.getElementById('editCountryCode').value = match[1];
-                document.getElementById('editKontakResmi').value = match[2];
-            } else {
-                document.getElementById('editCountryCode').value = '+62';
-                document.getElementById('editKontakResmi').value = phoneNumber;
-            }
-        } else {
-            document.getElementById('editCountryCode').value = '+62';
-            document.getElementById('editKontakResmi').value = phoneNumber;
-        }
-    } else {
-        document.getElementById('editCountryCode').value = '+62';
-        document.getElementById('editKontakResmi').value = '';
-    }
-    
-    document.getElementById('editNamaPic').value = contract.namaPic || '';
-    document.getElementById('editNpwp').value = contract.npwp || '';
-    document.getElementById('editAsuransi').value = contract.asuransi ? '1' : '0';
-    document.getElementById('editTerminPembayaran').value = contract.terminPembayaran || '';
-    document.getElementById('editMetodePembayaran').value = contract.metodePembayaran || '';
-    document.getElementById('editPpn').value = contract.ppn || '';
-    document.getElementById('editPajakLainnya').value = contract.pajakLainnya || '';
-    document.getElementById('editPenaltiTerlambat').value = contract.penaltiTerlambat || '';
-    document.getElementById('editHariPenalti').value = contract.hariPenalti || '';
-    // Note: File inputs cannot have their value set programmatically for security reasons
-    // The dokumenLampiran field will show existing file names in a separate display area if needed
-    
-    // Update currency symbols for edit form
-    initializeEditCurrencySymbols();
-    
-    // Store contract ID for update
-    document.getElementById('editContractForm').setAttribute('data-edit-id', contractId);
-    
-    // Show edit contract modal
-    const modal = new bootstrap.Modal(document.getElementById('editContractModal'));
-    modal.show();
-}
+    if (!contract) return;
 
-// Update contract
-function updateContract() {
-    const form = document.getElementById('editContractForm');
+    // Populate form with contract data
+    document.getElementById('contractName').value = contract.name;
+    document.getElementById('clientName').value = contract.client;
+    document.getElementById('contractType').value = contract.type;
+    document.getElementById('contractStatus').value = contract.status;
+    document.getElementById('contractValue').value = contract.value;
+    document.getElementById('startDate').value = contract.startDate;
+    document.getElementById('endDate').value = contract.endDate;
+    document.getElementById('contractDescription').value = contract.description;
+    document.getElementById('contractManager').value = contract.manager;
+
+    // Close details modal and open create modal for editing
+    const detailsModal = bootstrap.Modal.getInstance(document.getElementById('contractDetailsModal'));
+    if (detailsModal) detailsModal.hide();
+
+    // Update modal title and button
+    document.querySelector('#createContractModal .modal-title').innerHTML = '<i class="fas fa-edit me-2"></i>Edit Kontrak';
+    document.querySelector('#createContractModal .btn-primary').innerHTML = '<i class="fas fa-save me-2"></i>Update Kontrak';
     
-    // Validate form
-    if (!form.checkValidity()) {
-        form.classList.add('was-validated');
-        return;
-    }
-    
-    // Get edit ID
-    const editId = form.getAttribute('data-edit-id');
-    if (!editId) {
-        showError('ID kontrak tidak ditemukan!');
-        return;
-    }
-    
-    // Find contract to update
-    const contractIndex = contracts.findIndex(c => c.id === parseInt(editId));
-    if (contractIndex === -1) {
-        showError('Kontrak tidak ditemukan!');
-        return;
-    }
-    
-    // Get form values
-    const updatedContract = {
-        namaProyek: document.getElementById('editNamaProyek').value,
-        jenisKontrak: document.getElementById('editJenisKontrak').value,
-        tglMulai: document.getElementById('editTglMulai').value,
-        tglSelesai: document.getElementById('editTglSelesai').value,
-        nilaiKontrak: parseFloat(document.getElementById('editNilaiKontrak').value),
-        mataUang: document.getElementById('editMataUang').value,
-        alamat: document.getElementById('editAlamat').value,
-        kontakResmi: document.getElementById('editCountryCode').value + document.getElementById('editKontakResmi').value,
-        namaPic: document.getElementById('editNamaPic').value,
-        npwp: document.getElementById('editNpwp').value,
-        asuransi: document.getElementById('editAsuransi').value === '1' ? 1 : 0,
-        terminPembayaran: document.getElementById('editTerminPembayaran').value,
-        metodePembayaran: document.getElementById('editMetodePembayaran').value,
-        ppn: parseFloat(document.getElementById('editPpn').value),
-        pajakLainnya: parseFloat(document.getElementById('editPajakLainnya').value) || 0,
-        penaltiTerlambat: parseFloat(document.getElementById('editPenaltiTerlambat').value) || 0,
-        hariPenalti: parseInt(document.getElementById('editHariPenalti').value) || 0,
-        dokumenLampiran: document.getElementById('editDokumenLampiran').value,
-        updatedAt: new Date().toISOString().split('T')[0]
-    };
-    
-    // Update contract
-    contracts[contractIndex] = { ...contracts[contractIndex], ...updatedContract };
-    
-    // Update UI
-    applyFilters();
-    updateContractStats();
-    
-    // Close modal
-    const modal = bootstrap.Modal.getInstance(document.getElementById('editContractModal'));
-    modal.hide();
-    
-    // Clear form
-    form.reset();
-    form.classList.remove('was-validated');
-    form.removeAttribute('data-edit-id');
-    
-    showSuccess('Kontrak berhasil diperbarui!');
+    window.currentContractId = contractId;
+
+    const modal = new bootstrap.Modal(document.getElementById('createContractModal'));
+    modal.show();
 }
 
 // Delete contract
@@ -1646,7 +1432,6 @@ function exportContracts() {
 // Barang Management Functions
 let currentContractId = null;
 let editingBarangId = null;
-let contractBarangList = []; // For managing barang during contract creation
 
 // View barang for a contract
 function viewBarang(contractId) {
@@ -1674,8 +1459,6 @@ function loadBarangData(contractId) {
     const barangList = barangData.get(contractId) || [];
     const tbody = document.getElementById('barangTableBody');
     const totalCount = document.getElementById('barangTotalCount');
-    const contract = contracts.find(c => c.id === contractId);
-    const canEdit = contract && contract.status === 'draft';
     
     // Update total count
     totalCount.textContent = barangList.length;
@@ -1708,16 +1491,10 @@ function loadBarangData(contractId) {
             <td><code>${barang.nomorKontainer}</code></td>
             <td>
                 <div class="btn-group btn-group-sm">
-                    <button class="btn btn-outline-primary ${!canEdit ? 'disabled' : ''}" 
-                            onclick="${canEdit ? 'editBarang(' + barang.id + ')' : 'void(0)'}" 
-                            title="${!canEdit ? 'Edit hanya tersedia untuk status DRAFT' : 'Edit'}"
-                            ${!canEdit ? 'disabled' : ''}>
+                    <button class="btn btn-outline-primary" onclick="editBarang(${barang.id})" title="Edit">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="btn btn-outline-danger ${!canEdit ? 'disabled' : ''}" 
-                            onclick="${canEdit ? 'deleteBarang(' + barang.id + ')' : 'void(0)'}" 
-                            title="${!canEdit ? 'Hapus hanya tersedia untuk status DRAFT' : 'Hapus'}"
-                            ${!canEdit ? 'disabled' : ''}>
+                    <button class="btn btn-outline-danger" onclick="deleteBarang(${barang.id})" title="Hapus">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
@@ -1729,14 +1506,6 @@ function loadBarangData(contractId) {
 
 // Show add barang modal
 function showAddBarangModal() {
-    const contract = contracts.find(c => c.id === currentContractId);
-    
-    // Check if contract can be edited (only draft status)
-    if (!contract || contract.status !== 'draft') {
-        showError('Barang hanya dapat ditambahkan jika status kontrak masih DRAFT!');
-        return;
-    }
-    
     editingBarangId = null;
     document.getElementById('addBarangModalTitle').textContent = 'Tambah Barang Baru';
     clearBarangForm();
@@ -1747,14 +1516,6 @@ function showAddBarangModal() {
 
 // Edit barang
 function editBarang(barangId) {
-    const contract = contracts.find(c => c.id === currentContractId);
-    
-    // Check if contract can be edited (only draft status)
-    if (!contract || contract.status !== 'draft') {
-        showError('Barang hanya dapat diedit jika status kontrak masih DRAFT!');
-        return;
-    }
-    
     const barangList = barangData.get(currentContractId) || [];
     const barang = barangList.find(b => b.id === barangId);
     
@@ -1798,14 +1559,6 @@ function saveBarang() {
         updatedAt: new Date().toISOString()
     };
     
-    // Check if we're in contract creation mode or contract editing mode
-    if (currentContractId === null) {
-        // Contract creation mode
-        saveContractBarang();
-        return;
-    }
-    
-    // Contract editing mode
     if (editingBarangId) {
         // Edit existing barang
         const barangList = barangData.get(currentContractId) || [];
@@ -1840,14 +1593,6 @@ function saveBarang() {
 
 // Delete barang
 function deleteBarang(barangId) {
-    const contract = contracts.find(c => c.id === currentContractId);
-    
-    // Check if contract can be edited (only draft status)
-    if (!contract || contract.status !== 'draft') {
-        showError('Barang hanya dapat dihapus jika status kontrak masih DRAFT!');
-        return;
-    }
-    
     if (confirm('Apakah Anda yakin ingin menghapus barang ini?')) {
         const barangList = barangData.get(currentContractId) || [];
         const filteredList = barangList.filter(b => b.id !== barangId);
@@ -1862,142 +1607,6 @@ function deleteBarang(barangId) {
 function clearBarangForm() {
     document.getElementById('addBarangForm').reset();
     document.getElementById('addBarangForm').classList.remove('was-validated');
-}
-
-// Contract Creation Barang Management
-function addBarangToContract() {
-    // Show add barang modal for contract creation
-    editingBarangId = null;
-    document.getElementById('addBarangModalTitle').textContent = 'Tambah Barang ke Kontrak';
-    clearBarangForm();
-    
-    const modal = new bootstrap.Modal(document.getElementById('addBarangModal'));
-    modal.show();
-}
-
-function saveContractBarang() {
-    const form = document.getElementById('addBarangForm');
-    
-    // Validate form
-    if (!form.checkValidity()) {
-        form.classList.add('was-validated');
-        return;
-    }
-    
-    const barangData = {
-        jenisBarang: document.getElementById('jenisBarang').value,
-        volume: parseFloat(document.getElementById('volume').value),
-        berat: parseFloat(document.getElementById('berat').value),
-        jumlahKontainer: parseInt(document.getElementById('jumlahKontainer').value),
-        ukuranKontainer: parseInt(document.getElementById('ukuranKontainer').value),
-        nomorKontainer: document.getElementById('nomorKontainer').value,
-        updatedAt: new Date().toISOString()
-    };
-    
-    if (editingBarangId) {
-        // Edit existing barang
-        const index = contractBarangList.findIndex(b => b.id === editingBarangId);
-        if (index !== -1) {
-            contractBarangList[index] = { ...contractBarangList[index], ...barangData };
-            showSuccess('Barang berhasil diperbarui!');
-        }
-    } else {
-        // Add new barang
-        const newId = Date.now();
-        const newBarang = {
-            id: newId,
-            ...barangData,
-            createdAt: new Date().toISOString()
-        };
-        
-        contractBarangList.push(newBarang);
-        showSuccess('Barang berhasil ditambahkan!');
-    }
-    
-    // Close modal and refresh data
-    const modal = bootstrap.Modal.getInstance(document.getElementById('addBarangModal'));
-    modal.hide();
-    
-    loadContractBarangData();
-}
-
-function editContractBarang(barangId) {
-    const barang = contractBarangList.find(b => b.id === barangId);
-    
-    if (!barang) {
-        showError('Barang tidak ditemukan!');
-        return;
-    }
-    
-    editingBarangId = barangId;
-    document.getElementById('addBarangModalTitle').textContent = 'Edit Barang Kontrak';
-    
-    // Fill form with existing data
-    document.getElementById('jenisBarang').value = barang.jenisBarang;
-    document.getElementById('volume').value = barang.volume;
-    document.getElementById('berat').value = barang.berat;
-    document.getElementById('jumlahKontainer').value = barang.jumlahKontainer;
-    document.getElementById('ukuranKontainer').value = barang.ukuranKontainer;
-    document.getElementById('nomorKontainer').value = barang.nomorKontainer;
-    
-    const modal = new bootstrap.Modal(document.getElementById('addBarangModal'));
-    modal.show();
-}
-
-function deleteContractBarang(barangId) {
-    if (confirm('Apakah Anda yakin ingin menghapus barang ini?')) {
-        contractBarangList = contractBarangList.filter(b => b.id !== barangId);
-        loadContractBarangData();
-        showSuccess('Barang berhasil dihapus!');
-    }
-}
-
-function loadContractBarangData() {
-    const tbody = document.getElementById('contractBarangTableBody');
-    const totalCount = document.getElementById('contractBarangCount');
-    
-    // Update total count
-    totalCount.textContent = contractBarangList.length;
-    
-    // Clear existing data
-    tbody.innerHTML = '';
-    
-    if (contractBarangList.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="8" class="text-center py-3">
-                    <i class="fas fa-box-open me-2"></i>
-                    Belum ada barang untuk kontrak ini
-                </td>
-            </tr>
-        `;
-        return;
-    }
-    
-    // Render barang data
-    contractBarangList.forEach((barang, index) => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${index + 1}</td>
-            <td><strong>${barang.jenisBarang}</strong></td>
-            <td>${barang.volume.toLocaleString('id-ID', { minimumFractionDigits: 2 })}</td>
-            <td>${barang.berat.toLocaleString('id-ID', { minimumFractionDigits: 2 })}</td>
-            <td>${barang.jumlahKontainer}</td>
-            <td>${barang.ukuranKontainer} ft</td>
-            <td><code>${barang.nomorKontainer}</code></td>
-            <td>
-                <div class="btn-group btn-group-sm">
-                    <button class="btn btn-outline-primary" onclick="editContractBarang(${barang.id})" title="Edit">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn btn-outline-danger" onclick="deleteContractBarang(${barang.id})" title="Hapus">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </td>
-        `;
-        tbody.appendChild(row);
-    });
 }
 
 // Refresh contracts
@@ -2045,7 +1654,7 @@ function showSuccess(message) {
     // Create a simple success notification
     const alert = document.createElement('div');
     alert.className = 'alert alert-success alert-dismissible fade show position-fixed';
-    alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; background-color: #d1e7dd !important; border-color: #badbcc !important; color: #0f5132 !important;';
+    alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
     alert.innerHTML = `
         <i class="fas fa-check-circle me-2"></i>${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -2061,24 +1670,6 @@ function showSuccess(message) {
     }, 3000);
 }
 
-function showError(message) {
-    const alert = document.createElement('div');
-    alert.className = 'alert alert-danger alert-dismissible fade show position-fixed';
-    alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; background-color: #f8d7da !important; border-color: #f5c2c7 !important; color: #842029 !important;';
-    alert.innerHTML = `
-        <i class="fas fa-exclamation-circle me-2"></i>${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    
-    document.body.appendChild(alert);
-    
-    setTimeout(() => {
-        if (alert.parentNode) {
-            alert.parentNode.removeChild(alert);
-        }
-    }, 5000);
-}
-
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', function() {
     if (document.getElementById('contractsPage')) {
@@ -2090,81 +1681,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize currency symbol updates
     initializeCurrencySymbols();
-    
-    // Initialize edit form phone validation
-    initializeEditPhoneValidation();
-    
-    // Initialize sticky topbar
-    initializeStickyTopbar();
 });
-
-// Sticky Topbar functionality
-let lastScrollTop = 0;
-let isTopbarHidden = false;
-
-function initializeStickyTopbar() {
-    const topbar = document.querySelector('.top-navbar');
-    const mainContent = document.querySelector('.main-content');
-    
-    if (!topbar || !mainContent) return;
-    
-    window.addEventListener('scroll', function() {
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        const scrollThreshold = 50; // Minimum scroll distance to trigger hide/show
-        
-        // Only trigger if scrolled more than threshold
-        if (Math.abs(scrollTop - lastScrollTop) < scrollThreshold) return;
-        
-        if (scrollTop > lastScrollTop && scrollTop > 200) {
-            // Scrolling down and past 200px - hide topbar
-            if (!isTopbarHidden) {
-                topbar.classList.add('hidden');
-                mainContent.classList.add('topbar-hidden');
-                isTopbarHidden = true;
-            }
-        } else {
-            // Scrolling up - show topbar
-            if (isTopbarHidden) {
-                topbar.classList.remove('hidden');
-                mainContent.classList.remove('topbar-hidden');
-                isTopbarHidden = false;
-            }
-        }
-        
-        lastScrollTop = scrollTop;
-    });
-}
-
-// Initialize phone validation for edit form
-function initializeEditPhoneValidation() {
-    const phoneInput = document.getElementById('editKontakResmi');
-    
-    if (phoneInput) {
-        // Prevent non-numeric input except allowed characters
-        phoneInput.addEventListener('keypress', function(e) {
-            const allowedChars = /[0-9\s\-\(\)]/;
-            if (!allowedChars.test(e.key)) {
-                e.preventDefault();
-            }
-        });
-        
-        // Clean input on paste
-        phoneInput.addEventListener('paste', function(e) {
-            setTimeout(() => {
-                let value = e.target.value;
-                value = value.replace(/[^0-9\s\-\(\)]/g, '');
-                e.target.value = value;
-            }, 0);
-        });
-        
-        // Clean input on input event
-        phoneInput.addEventListener('input', function(e) {
-            let value = e.target.value;
-            value = value.replace(/[^0-9\s\-\(\)]/g, '');
-            e.target.value = value;
-        });
-    }
-}
 
 // Function to initialize floating labels
 function initializeFloatingLabels() {
@@ -2229,37 +1746,3 @@ function initializeCurrencySymbols() {
         updateCurrencySymbols();
     }
 }
-// Initialize currency symbols for edit form
-function initializeEditCurrencySymbols() {
-    const mataUangSelect = document.getElementById('editMataUang');
-    const currencySymbol = document.getElementById('editCurrencySymbol');
-    const pajakCurrencySymbol = document.getElementById('editPajakCurrencySymbol');
-    const penaltiCurrencySymbol = document.getElementById('editPenaltiCurrencySymbol');
-    
-    // Currency symbol mapping
-    const currencyMap = {
-        'IDR': 'Rp',
-        'USD': '$',
-        'EUR': '€',
-        'SGD': 'S$'
-    };
-    
-    // Function to update currency symbols
-    function updateEditCurrencySymbols() {
-        const selectedCurrency = mataUangSelect.value;
-        const symbol = currencyMap[selectedCurrency] || 'Rp';
-        
-        if (currencySymbol) currencySymbol.textContent = symbol;
-        if (pajakCurrencySymbol) pajakCurrencySymbol.textContent = symbol;
-        if (penaltiCurrencySymbol) penaltiCurrencySymbol.textContent = symbol;
-    }
-    
-    // Add event listener for currency change
-    if (mataUangSelect) {
-        mataUangSelect.addEventListener('change', updateEditCurrencySymbols);
-        
-        // Set initial currency symbol
-        updateEditCurrencySymbols();
-    }
-}
-
