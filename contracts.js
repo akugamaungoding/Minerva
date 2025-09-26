@@ -1597,12 +1597,97 @@ function updateBulkActions() {
 
 // Bulk export
 function bulkExport() {
-    if (selectedContracts.size === 0) return;
+    if (selectedContracts.size === 0) {
+        showError('Pilih kontrak yang akan diexport terlebih dahulu!');
+        return;
+    }
     
     const selectedContractsList = Array.from(selectedContracts);
     const contractsToExport = contracts.filter(c => selectedContractsList.includes(c.id));
     
-    showSuccess(`Exporting ${contractsToExport.length} kontrak...`);
+    if (contractsToExport.length === 0) {
+        showError('Tidak ada kontrak yang dipilih!');
+        return;
+    }
+
+    // Show loading message
+    showSuccess(`Memproses export ${contractsToExport.length} kontrak...`);
+    
+    // If only one contract selected, export as single PDF
+    if (contractsToExport.length === 1) {
+        try {
+            const contract = contractsToExport[0];
+            const pdf = generateContractPDF(contract);
+            
+            // Create download link for single PDF
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(pdf.output('blob'));
+            link.download = `Kontrak_${contract.nomorKontrak || contract.id}.pdf`;
+            
+            // Trigger download
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Clean up
+            URL.revokeObjectURL(link.href);
+            
+            showSuccess('Export berhasil! Kontrak telah diexport ke file PDF.');
+            
+            // Clear selection
+            selectedContracts.clear();
+            updateBulkActions();
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            showError('Gagal membuat file PDF. Silakan coba lagi.');
+        }
+        return;
+    }
+    
+    // Multiple contracts - create ZIP file
+    const zip = new JSZip();
+    let processedCount = 0;
+    
+    // Process each selected contract
+    contractsToExport.forEach((contract, index) => {
+        try {
+            // Generate PDF for each contract
+            const pdf = generateContractPDF(contract);
+            
+            // Add PDF to ZIP with contract number as filename
+            const fileName = `Kontrak_${contract.nomorKontrak || contract.id}.pdf`;
+            zip.file(fileName, pdf.output('blob'));
+            
+            processedCount++;
+        } catch (error) {
+            console.error(`Error generating PDF for contract ${contract.id}:`, error);
+        }
+    });
+    
+    // Generate ZIP file
+    zip.generateAsync({type: 'blob'}).then(function(content) {
+        // Create download link
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(content);
+        link.download = `Kontrak_Selected_Export_${new Date().toISOString().split('T')[0]}.zip`;
+        
+        // Trigger download
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Clean up
+        URL.revokeObjectURL(link.href);
+        
+        showSuccess(`Export berhasil! ${processedCount} kontrak terpilih telah diexport ke file ZIP.`);
+        
+        // Clear selection
+        selectedContracts.clear();
+        updateBulkActions();
+    }).catch(function(error) {
+        console.error('Error creating ZIP file:', error);
+        showError('Gagal membuat file ZIP. Silakan coba lagi.');
+    });
 }
 
 // Bulk archive
@@ -1642,7 +1727,181 @@ function bulkDelete() {
 
 // Export contracts
 function exportContracts() {
-    showSuccess('Exporting semua kontrak...');
+    if (contracts.length === 0) {
+        showError('Tidak ada kontrak untuk diexport!');
+        return;
+    }
+
+    // Show loading message
+    showSuccess('Memproses export kontrak...');
+    
+    // If only one contract, export as single PDF
+    if (contracts.length === 1) {
+        try {
+            const contract = contracts[0];
+            const pdf = generateContractPDF(contract);
+            
+            // Create download link for single PDF
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(pdf.output('blob'));
+            link.download = `Kontrak_${contract.nomorKontrak || contract.id}.pdf`;
+            
+            // Trigger download
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Clean up
+            URL.revokeObjectURL(link.href);
+            
+            showSuccess('Export berhasil! Kontrak telah diexport ke file PDF.');
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            showError('Gagal membuat file PDF. Silakan coba lagi.');
+        }
+        return;
+    }
+    
+    // Multiple contracts - create ZIP file
+    const zip = new JSZip();
+    let processedCount = 0;
+    
+    // Process each contract
+    contracts.forEach((contract, index) => {
+        try {
+            // Generate PDF for each contract
+            const pdf = generateContractPDF(contract);
+            
+            // Add PDF to ZIP with contract number as filename
+            const fileName = `Kontrak_${contract.nomorKontrak || contract.id}.pdf`;
+            zip.file(fileName, pdf.output('blob'));
+            
+            processedCount++;
+        } catch (error) {
+            console.error(`Error generating PDF for contract ${contract.id}:`, error);
+        }
+    });
+    
+    // Generate ZIP file
+    zip.generateAsync({type: 'blob'}).then(function(content) {
+        // Create download link
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(content);
+        link.download = `Kontrak_Export_${new Date().toISOString().split('T')[0]}.zip`;
+        
+        // Trigger download
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Clean up
+        URL.revokeObjectURL(link.href);
+        
+        showSuccess(`Export berhasil! ${processedCount} kontrak telah diexport ke file ZIP.`);
+    }).catch(function(error) {
+        console.error('Error creating ZIP file:', error);
+        showError('Gagal membuat file ZIP. Silakan coba lagi.');
+    });
+}
+
+function generateContractPDF(contract) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // Set font
+    doc.setFont('helvetica');
+    
+    // Title
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text('DETAIL KONTRAK', 105, 20, { align: 'center' });
+    
+    // Contract number
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Nomor Kontrak: ${contract.nomorKontrak || 'N/A'}`, 20, 35);
+    
+    // Line separator
+    doc.setLineWidth(0.5);
+    doc.line(20, 40, 190, 40);
+    
+    let yPosition = 50;
+    
+    // Contract details
+    const details = [
+        { label: 'Nama Proyek', value: contract.namaProyek || contract.name || 'N/A' },
+        { label: 'Jenis Kontrak', value: contract.jenisKontrak || contract.type || 'N/A' },
+        { label: 'Status', value: getStatusLabel(contract.status) },
+        { label: 'Nama PIC', value: contract.namaPic || contract.client || contract.manager || 'N/A' },
+        { label: 'Kontak Resmi', value: contract.kontakResmi || 'N/A' },
+        { label: 'NPWP', value: contract.npwp || 'N/A' },
+        { label: 'Alamat', value: contract.alamat || 'N/A' },
+        { label: 'Nilai Kontrak', value: `${contract.mataUang || 'Rp'} ${formatCurrency(contract.nilaiKontrak || contract.value)}` },
+        { label: 'Mata Uang', value: contract.mataUang || 'IDR' },
+        { label: 'Tanggal Mulai', value: formatDate(contract.tglMulai || contract.startDate) },
+        { label: 'Tanggal Selesai', value: formatDate(contract.tglSelesai || contract.endDate) },
+        { label: 'Asuransi', value: contract.asuransi ? 'Ya' : 'Tidak' },
+        { label: 'Termin Pembayaran', value: contract.terminPembayaran || 'N/A' },
+        { label: 'Metode Pembayaran', value: contract.metodePembayaran || 'N/A' },
+        { label: 'PPN', value: `${contract.ppn || 0}%` },
+        { label: 'Pajak Lainnya', value: `${contract.mataUang || 'Rp'} ${formatCurrency(contract.pajakLainnya || 0)}` },
+        { label: 'Penalti Terlambat', value: `${contract.mataUang || 'Rp'} ${formatCurrency(contract.penaltiTerlambat || 0)}` },
+        { label: 'Hari Penalti', value: `${contract.hariPenalti || 0} hari` },
+        { label: 'Dokumen Lampiran', value: contract.dokumenLampiran || 'Tidak ada' }
+    ];
+    
+    // Add details to PDF
+    details.forEach(detail => {
+        if (yPosition > 270) {
+            doc.addPage();
+            yPosition = 20;
+        }
+        
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`${detail.label}:`, 20, yPosition);
+        
+        doc.setFont('helvetica', 'normal');
+        const text = doc.splitTextToSize(detail.value, 120);
+        doc.text(text, 80, yPosition);
+        
+        yPosition += text.length * 5 + 5;
+    });
+    
+    // Add footer
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'italic');
+    doc.text(`Dibuat pada: ${new Date().toLocaleString('id-ID')}`, 20, 285);
+    doc.text('Sistem Manajemen Kontrak', 150, 285);
+    
+    return doc;
+}
+
+// Helper functions for PDF generation
+function getStatusLabel(status) {
+    const statusLabels = {
+        'draft': 'Draft',
+        'active': 'Aktif',
+        'completed': 'Selesai',
+        'cancelled': 'Dibatalkan',
+        'expired': 'Kedaluwarsa'
+    };
+    return statusLabels[status] || status || 'N/A';
+}
+
+function formatCurrency(amount) {
+    if (!amount || isNaN(amount)) return '0';
+    return new Intl.NumberFormat('id-ID').format(amount);
+}
+
+function formatDate(dateString) {
+    if (!dateString) return 'N/A';
+    try {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('id-ID');
+    } catch (error) {
+        return dateString;
+    }
 }
 
 // Barang Management Functions

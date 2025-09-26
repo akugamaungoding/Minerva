@@ -529,8 +529,8 @@
                             <h6><i class="fas fa-paperclip me-2"></i>Dokumen Lampiran</h6>
                         </div>
                         <div class="mb-3">
-                            <input type="file" class="form-control" id="dokumenLampiran" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
-                            <small class="form-text text-muted">Upload dokumen pendukung (PDF, DOC, DOCX, JPG, PNG)</small>
+                            <input type="file" class="form-control" id="dokumenLampiran" multiple accept=".pdf,.doc,.docx,.xlsx,.xls,.csv,.jpg,.jpeg,.png,.txt,.rtf">
+                            <small class="form-text text-muted">Upload dokumen pendukung (PDF, DOC, DOCX, Excel, CSV, JPG, PNG, TXT, RTF)</small>
                         </div>
                         
                         <!-- Barang Section -->
@@ -611,11 +611,11 @@
                         <div class="upload-area" id="uploadArea">
                             <div class="upload-content">
                                 <i class="fas fa-cloud-upload-alt upload-icon"></i>
-                                <h6>Drag & Drop file Excel di sini</h6>
+                                <h6>Drag & Drop file Excel/CSV di sini</h6>
                                 <p class="text-muted">atau klik untuk memilih file</p>
-                                <input type="file" id="excelFile" accept=".xlsx,.xls" style="display: none;">
+                                <input type="file" id="excelFile" accept=".xlsx,.xls,.csv" style="display: none;">
                                 <button class="btn btn-outline-primary" onclick="document.getElementById('excelFile').click()">
-                                    <i class="fas fa-file me-2"></i>Pilih File Excel
+                                    <i class="fas fa-file me-2"></i>Pilih File Excel/CSV
                                 </button>
                             </div>
                         </div>
@@ -673,6 +673,12 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- SheetJS for Excel/CSV reading -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- jsPDF for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- JSZip for creating ZIP files -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="contracts.js"></script>
     <script>
         let currentTheme = 'light';
@@ -780,7 +786,12 @@
             fileInput.addEventListener('change', function(e) {
                 const file = e.target.files[0];
                 if (file) {
-                    handleFileSelect(file);
+                    // Check if file is Excel or CSV for data import
+                    if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls') || file.name.endsWith('.csv')) {
+                        handleFileSelect(file);
+                    } else {
+                        showError('Harap pilih file Excel (.xlsx, .xls) atau CSV (.csv) untuk import data');
+                    }
                 }
             });
 
@@ -799,10 +810,15 @@
                 e.preventDefault();
                 uploadArea.classList.remove('dragover');
                 const file = e.dataTransfer.files[0];
-                if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
-                    handleFileSelect(file);
+                if (file) {
+                    // Check if file is Excel or CSV for data import
+                    if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls') || file.name.endsWith('.csv')) {
+                        handleFileSelect(file);
+                    } else {
+                        showError('Harap pilih file Excel (.xlsx, .xls) atau CSV (.csv) untuk import data');
+                    }
                 } else {
-                    showError('Harap pilih file Excel (.xlsx atau .xls)');
+                    showError('Harap pilih file yang valid');
                 }
             });
         }
@@ -817,43 +833,121 @@
             fileInfo.style.display = 'block';
             uploadBtn.disabled = false;
 
-            // Simulate preview (in real app, you would parse the Excel file)
-            showPreview();
+            // Read the actual file
+            readFileContent(file);
         }
 
-        function showPreview() {
+        function readFileContent(file) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    let data;
+                    const fileExtension = file.name.split('.').pop().toLowerCase();
+                    
+                    if (fileExtension === 'csv') {
+                        // Parse CSV
+                        data = parseCSV(e.target.result);
+                    } else if (fileExtension === 'xlsx' || fileExtension === 'xls') {
+                        // Parse Excel
+                        const workbook = XLSX.read(e.target.result, { type: 'binary' });
+                        const sheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[sheetName];
+                        data = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    } else {
+                        showError('Format file tidak didukung. Harap gunakan Excel (.xlsx, .xls) atau CSV (.csv)');
+                        return;
+                    }
+                    
+                    if (data && data.length > 0) {
+                        showPreview(data);
+                    } else {
+                        showError('File kosong atau tidak dapat dibaca');
+                    }
+                } catch (error) {
+                    console.error('Error reading file:', error);
+                    showError('Gagal membaca file. Pastikan file tidak rusak dan formatnya benar.');
+                }
+            };
+            
+            reader.onerror = function() {
+                showError('Gagal membaca file');
+            };
+            
+            // Read file based on type
+            const fileExtension = file.name.split('.').pop().toLowerCase();
+            if (fileExtension === 'csv') {
+                reader.readAsText(file);
+            } else {
+                reader.readAsBinaryString(file);
+            }
+        }
+
+        function parseCSV(csvText) {
+            const lines = csvText.split('\n');
+            const result = [];
+            
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (line) {
+                    // Simple CSV parsing (handles basic cases)
+                    const row = line.split(',').map(cell => cell.trim().replace(/^"|"$/g, ''));
+                    result.push(row);
+                }
+            }
+            
+            return result;
+        }
+
+        function showPreview(data) {
             const previewSection = document.getElementById('previewSection');
             const previewHeaders = document.getElementById('previewHeaders');
             const previewBody = document.getElementById('previewBody');
 
-            // Sample preview data based on new structure
-            const headers = ['Nama Proyek', 'Jenis Kontrak', 'Nilai Kontrak', 'Mata Uang', 'Tanggal Mulai', 'Tanggal Selesai', 'Nama PIC'];
-            const sampleData = [
-                ['Pengiriman Logistik Jakarta', 'Logistik', 'Rp 25.000.000', 'IDR', '2024-01-15', '2024-04-15', 'John Doe'],
-                ['Penyimpanan Barang Surabaya', 'Penyimpanan', 'Rp 35.000.000', 'IDR', '2024-02-01', '2024-06-01', 'Jane Smith']
-            ];
+            if (!data || data.length === 0) {
+                showError('Tidak ada data yang ditemukan dalam file');
+                return;
+            }
 
             // Clear previous content
             previewHeaders.innerHTML = '';
             previewBody.innerHTML = '';
 
+            // Use first row as headers
+            const headers = data[0];
+            const rows = data.slice(1);
+
             // Add headers
             headers.forEach(header => {
                 const th = document.createElement('th');
-                th.textContent = header;
+                th.textContent = header || 'Kolom';
                 previewHeaders.appendChild(th);
             });
 
-            // Add sample data
-            sampleData.forEach(row => {
+            // Add data rows (limit to first 10 rows for preview)
+            const previewRows = rows.slice(0, 10);
+            previewRows.forEach(row => {
                 const tr = document.createElement('tr');
-                row.forEach(cell => {
+                headers.forEach((header, index) => {
                     const td = document.createElement('td');
-                    td.textContent = cell;
+                    td.textContent = row[index] || '';
                     tr.appendChild(td);
                 });
                 previewBody.appendChild(tr);
             });
+
+            // Show total rows info
+            if (rows.length > 10) {
+                const infoRow = document.createElement('tr');
+                const infoCell = document.createElement('td');
+                infoCell.colSpan = headers.length;
+                infoCell.textContent = `... dan ${rows.length - 10} baris lainnya`;
+                infoCell.style.textAlign = 'center';
+                infoCell.style.fontStyle = 'italic';
+                infoCell.style.color = '#6c757d';
+                infoRow.appendChild(infoCell);
+                previewBody.appendChild(infoRow);
+            }
 
             previewSection.style.display = 'block';
         }
@@ -868,32 +962,111 @@
                 return;
             }
 
-            // Simulate upload process
+            // Read and process the actual file
             const uploadBtn = document.getElementById('uploadBtn');
             const originalText = uploadBtn.innerHTML;
             
-            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Mengupload...';
+            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Memproses...';
             uploadBtn.disabled = true;
 
-            setTimeout(() => {
-                // Simulate successful upload
-                showSuccess('Data Excel berhasil diupload dan diimport!');
-                
-                // Close modal
-                const excelModal = bootstrap.Modal.getInstance(document.getElementById('excelUploadModal'));
-                excelModal.hide();
+            // Read the file content
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    let data;
+                    const fileExtension = file.name.split('.').pop().toLowerCase();
+                    
+                    if (fileExtension === 'csv') {
+                        data = parseCSV(e.target.result);
+                    } else if (fileExtension === 'xlsx' || fileExtension === 'xls') {
+                        const workbook = XLSX.read(e.target.result, { type: 'binary' });
+                        const sheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[sheetName];
+                        data = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    } else {
+                        showError('Format file tidak didukung');
+                        uploadBtn.innerHTML = originalText;
+                        uploadBtn.disabled = false;
+                        return;
+                    }
+                    
+                    if (data && data.length > 1) {
+                        // Process the data and import contracts
+                        processExcelData(data);
+                        showSuccess(`Data berhasil diimport! ${data.length - 1} kontrak telah ditambahkan.`);
+                        
+                        // Close modal
+                        const excelModal = bootstrap.Modal.getInstance(document.getElementById('excelUploadModal'));
+                        excelModal.hide();
 
-                // Reset form
-                fileInput.value = '';
-                document.getElementById('fileInfo').style.display = 'none';
-                document.getElementById('previewSection').style.display = 'none';
+                        // Reset form
+                        fileInput.value = '';
+                        document.getElementById('fileInfo').style.display = 'none';
+                        document.getElementById('previewSection').style.display = 'none';
+                        
+                        uploadBtn.innerHTML = originalText;
+                        uploadBtn.disabled = false;
+
+                        // Refresh contracts table
+                        applyFilters();
+                        updateContractStats();
+                    } else {
+                        showError('File kosong atau tidak memiliki data yang valid');
+                        uploadBtn.innerHTML = originalText;
+                        uploadBtn.disabled = false;
+                    }
+                } catch (error) {
+                    console.error('Error processing file:', error);
+                    showError('Gagal memproses file. Pastikan format file benar.');
+                    uploadBtn.innerHTML = originalText;
+                    uploadBtn.disabled = false;
+                }
+            };
+            
+            reader.onerror = function() {
+                showError('Gagal membaca file');
                 uploadBtn.innerHTML = originalText;
-                uploadBtn.disabled = true;
+                uploadBtn.disabled = false;
+            };
+            
+            // Read file based on type
+            const fileExtension = file.name.split('.').pop().toLowerCase();
+            if (fileExtension === 'csv') {
+                reader.readAsText(file);
+            } else {
+                reader.readAsBinaryString(file);
+            }
+        }
 
-                // Refresh contracts table
-                applyFilters();
-                updateContractStats();
-            }, 2000);
+        function processExcelData(data) {
+            // Skip header row
+            const rows = data.slice(1);
+            
+            rows.forEach((row, index) => {
+                try {
+                    // Create contract object from row data
+                    const contract = {
+                        id: Date.now() + index,
+                        nomorKontrak: row[0] || `KONT-${Date.now()}-${index}`,
+                        namaProyek: row[1] || `Proyek ${index + 1}`,
+                        jenisKontrak: row[2] || 'Logistik',
+                        namaPic: row[3] || 'Unknown',
+                        nilaiKontrak: parseFloat(row[4]) || 0,
+                        mataUang: row[5] || 'IDR',
+                        tglMulai: row[6] || new Date().toISOString().split('T')[0],
+                        tglSelesai: row[7] || new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                        status: 'draft',
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString()
+                    };
+                    
+                    // Add to contracts array
+                    contracts.push(contract);
+                } catch (error) {
+                    console.error(`Error processing row ${index + 1}:`, error);
+                }
+            });
         }
 
         // Show error function
@@ -1257,8 +1430,8 @@
                         </div>
                         <div class="mb-3">
                             <input type="file" class="form-control" id="editDokumenLampiran" 
-                                   multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
-                            <small class="form-text text-muted">Upload dokumen pendukung (PDF, DOC, DOCX, JPG, PNG)</small>
+                                   multiple accept=".pdf,.doc,.docx,.xlsx,.xls,.csv,.jpg,.jpeg,.png,.txt,.rtf">
+                            <small class="form-text text-muted">Upload dokumen pendukung (PDF, DOC, DOCX, Excel, CSV, JPG, PNG, TXT, RTF)</small>
                         </div>
                     </form>
                 </div>
