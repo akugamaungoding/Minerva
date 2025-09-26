@@ -723,7 +723,7 @@ function updateContractStats() {
     const pending = contracts.filter(c => c.status === 'pending').length;
     const active = contracts.filter(c => c.status === 'active').length;
     const expiring = contracts.filter(c => {
-        const endDate = new Date(c.endDate);
+        const endDate = new Date(c.tglSelesai || c.endDate);
         const today = new Date();
         const daysUntilExpiry = (endDate - today) / (1000 * 60 * 60 * 24);
         return daysUntilExpiry <= 30 && daysUntilExpiry > 0;
@@ -1178,7 +1178,7 @@ function updateContract() {
         kontakResmi: document.getElementById('editCountryCode').value + document.getElementById('editKontakResmi').value,
         namaPic: document.getElementById('editNamaPic').value,
         npwp: document.getElementById('editNpwp').value,
-        asuransi: document.getElementById('editAsuransi').value === '1',
+        asuransi: document.getElementById('editAsuransi').value === '1' ? 1 : 0,
         terminPembayaran: document.getElementById('editTerminPembayaran').value,
         metodePembayaran: document.getElementById('editMetodePembayaran').value,
         ppn: parseFloat(document.getElementById('editPpn').value),
@@ -1409,31 +1409,135 @@ function viewContract(contractId) {
 // Edit contract
 function editContract(contractId) {
     const contract = contracts.find(c => c.id === contractId);
-    if (!contract) return;
-
-    // Populate form with contract data
-    document.getElementById('contractName').value = contract.name;
-    document.getElementById('clientName').value = contract.client;
-    document.getElementById('contractType').value = contract.type;
-    document.getElementById('contractStatus').value = contract.status;
-    document.getElementById('contractValue').value = contract.value;
-    document.getElementById('startDate').value = contract.startDate;
-    document.getElementById('endDate').value = contract.endDate;
-    document.getElementById('contractDescription').value = contract.description;
-    document.getElementById('contractManager').value = contract.manager;
-
-    // Close details modal and open create modal for editing
-    const detailsModal = bootstrap.Modal.getInstance(document.getElementById('contractDetailsModal'));
-    if (detailsModal) detailsModal.hide();
-
-    // Update modal title and button
-    document.querySelector('#createContractModal .modal-title').innerHTML = '<i class="fas fa-edit me-2"></i>Edit Kontrak';
-    document.querySelector('#createContractModal .btn-primary').innerHTML = '<i class="fas fa-save me-2"></i>Update Kontrak';
+    if (!contract) {
+        showError('Kontrak tidak ditemukan!');
+        return;
+    }
     
-    window.currentContractId = contractId;
-
-    const modal = new bootstrap.Modal(document.getElementById('createContractModal'));
+    // Check if contract can be edited (only draft status)
+    if (contract.status !== 'draft') {
+        showError('Kontrak hanya dapat diedit jika status masih DRAFT!');
+        return;
+    }
+    
+    // Fill edit form with existing data
+    document.getElementById('editNamaProyek').value = contract.namaProyek || '';
+    document.getElementById('editJenisKontrak').value = contract.jenisKontrak || '';
+    document.getElementById('editTglMulai').value = contract.tglMulai || '';
+    document.getElementById('editTglSelesai').value = contract.tglSelesai || '';
+    document.getElementById('editNilaiKontrak').value = contract.nilaiKontrak || '';
+    document.getElementById('editMataUang').value = contract.mataUang || '';
+    document.getElementById('editAlamat').value = contract.alamat || '';
+    
+    // Parse phone number to extract country code and number
+    if (contract.kontakResmi) {
+        const phoneNumber = contract.kontakResmi;
+        if (phoneNumber.startsWith('+')) {
+            // Find where the country code ends (usually 2-4 digits)
+            const match = phoneNumber.match(/^(\+\d{1,4})(.*)$/);
+            if (match) {
+                document.getElementById('editCountryCode').value = match[1];
+                document.getElementById('editKontakResmi').value = match[2];
+            } else {
+                document.getElementById('editCountryCode').value = '+62';
+                document.getElementById('editKontakResmi').value = phoneNumber;
+            }
+        } else {
+            document.getElementById('editCountryCode').value = '+62';
+            document.getElementById('editKontakResmi').value = phoneNumber;
+        }
+    } else {
+        document.getElementById('editCountryCode').value = '+62';
+        document.getElementById('editKontakResmi').value = '';
+    }
+    
+    document.getElementById('editNamaPic').value = contract.namaPic || '';
+    document.getElementById('editNpwp').value = contract.npwp || '';
+    document.getElementById('editAsuransi').value = contract.asuransi ? '1' : '0';
+    document.getElementById('editTerminPembayaran').value = contract.terminPembayaran || '';
+    document.getElementById('editMetodePembayaran').value = contract.metodePembayaran || '';
+    document.getElementById('editPpn').value = contract.ppn || '';
+    document.getElementById('editPajakLainnya').value = contract.pajakLainnya || '';
+    document.getElementById('editPenaltiTerlambat').value = contract.penaltiTerlambat || '';
+    document.getElementById('editHariPenalti').value = contract.hariPenalti || '';
+    // Note: File inputs cannot have their value set programmatically for security reasons
+    // The dokumenLampiran field will show existing file names in a separate display area if needed
+    
+    // Update currency symbols for edit form
+    initializeEditCurrencySymbols();
+    
+    // Store contract ID for update
+    document.getElementById('editContractForm').setAttribute('data-edit-id', contractId);
+    
+    // Show edit contract modal
+    const modal = new bootstrap.Modal(document.getElementById('editContractModal'));
     modal.show();
+}
+
+// Update contract
+function updateContract() {
+    const form = document.getElementById('editContractForm');
+    
+    // Validate form
+    if (!form.checkValidity()) {
+        form.classList.add('was-validated');
+        return;
+    }
+    
+    // Get edit ID
+    const editId = form.getAttribute('data-edit-id');
+    if (!editId) {
+        showError('ID kontrak tidak ditemukan!');
+        return;
+    }
+    
+    // Find contract to update
+    const contractIndex = contracts.findIndex(c => c.id === parseInt(editId));
+    if (contractIndex === -1) {
+        showError('Kontrak tidak ditemukan!');
+        return;
+    }
+    
+    // Get form values
+    const updatedContract = {
+        namaProyek: document.getElementById('editNamaProyek').value,
+        jenisKontrak: document.getElementById('editJenisKontrak').value,
+        tglMulai: document.getElementById('editTglMulai').value,
+        tglSelesai: document.getElementById('editTglSelesai').value,
+        nilaiKontrak: parseFloat(document.getElementById('editNilaiKontrak').value),
+        mataUang: document.getElementById('editMataUang').value,
+        alamat: document.getElementById('editAlamat').value,
+        kontakResmi: document.getElementById('editCountryCode').value + document.getElementById('editKontakResmi').value,
+        namaPic: document.getElementById('editNamaPic').value,
+        npwp: document.getElementById('editNpwp').value,
+        asuransi: document.getElementById('editAsuransi').value === '1' ? 1 : 0,
+        terminPembayaran: document.getElementById('editTerminPembayaran').value,
+        metodePembayaran: document.getElementById('editMetodePembayaran').value,
+        ppn: parseFloat(document.getElementById('editPpn').value),
+        pajakLainnya: parseFloat(document.getElementById('editPajakLainnya').value) || 0,
+        penaltiTerlambat: parseFloat(document.getElementById('editPenaltiTerlambat').value) || 0,
+        hariPenalti: parseInt(document.getElementById('editHariPenalti').value) || 0,
+        dokumenLampiran: document.getElementById('editDokumenLampiran').value,
+        updatedAt: new Date().toISOString().split('T')[0]
+    };
+    
+    // Update contract
+    contracts[contractIndex] = { ...contracts[contractIndex], ...updatedContract };
+    
+    // Update UI
+    applyFilters();
+    updateContractStats();
+    
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('editContractModal'));
+    modal.hide();
+    
+    // Clear form
+    form.reset();
+    form.classList.remove('was-validated');
+    form.removeAttribute('data-edit-id');
+    
+    showSuccess('Kontrak berhasil diperbarui!');
 }
 
 // Delete contract
@@ -1986,6 +2090,24 @@ function showSuccess(message) {
             alert.parentNode.removeChild(alert);
         }
     }, 3000);
+}
+
+function showError(message) {
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-danger alert-dismissible fade show position-fixed';
+    alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alert.innerHTML = `
+        <i class="fas fa-exclamation-circle me-2"></i>${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(alert);
+    
+    setTimeout(() => {
+        if (alert.parentNode) {
+            alert.parentNode.removeChild(alert);
+        }
+    }, 5000);
 }
 
 // Initialize when page loads
