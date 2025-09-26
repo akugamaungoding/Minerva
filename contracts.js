@@ -2076,7 +2076,7 @@ function showSuccess(message) {
     // Create a simple success notification
     const alert = document.createElement('div');
     alert.className = 'alert alert-success alert-dismissible fade show position-fixed';
-    alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; background-color: #d1e7dd !important; border-color: #badbcc !important; color: #0f5132 !important;';
     alert.innerHTML = `
         <i class="fas fa-check-circle me-2"></i>${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -2095,7 +2095,7 @@ function showSuccess(message) {
 function showError(message) {
     const alert = document.createElement('div');
     alert.className = 'alert alert-danger alert-dismissible fade show position-fixed';
-    alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; background-color: #f8d7da !important; border-color: #f5c2c7 !important; color: #842029 !important;';
     alert.innerHTML = `
         <i class="fas fa-exclamation-circle me-2"></i>${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>

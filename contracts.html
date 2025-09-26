@@ -547,7 +547,7 @@
                         </div>
                         <div class="table-responsive">
                             <table class="table table-sm" id="contractBarangTable">
-                                <thead class="table-light">
+                                <thead>
                                     <tr>
                                         <th>No</th>
                                         <th>Jenis Barang</th>
@@ -903,7 +903,7 @@
         function showError(message) {
             const alert = document.createElement('div');
             alert.className = 'alert alert-danger alert-dismissible fade show position-fixed';
-            alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; background-color: #f8d7da !important; border-color: #f5c2c7 !important; color: #842029 !important;';
             alert.innerHTML = `
                 <i class="fas fa-exclamation-circle me-2"></i>${message}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -1010,7 +1010,7 @@
                     <!-- Barang Table -->
                     <div class="table-responsive">
                         <table class="table table-hover" id="barangTable">
-                            <thead class="table-dark">
+                            <thead>
                                 <tr>
                                     <th>No</th>
                                     <th>Jenis Barang</th>
