@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Project Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Login Section -->
+    <div id="loginSection" class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <h1><i class="fas fa-project-diagram me-2"></i>ProjectHub</h1>
+                <p>Sistem Manajemen Proyek Terintegrasi</p>
+            </div>
+            <div class="login-body">
+                <form id="loginForm">
+                    <div class="role-selector">
+                        <label class="form-label fw-bold">Pilih Role:</label>
+                        <div class="role-option active" onclick="selectRole('admin')">
+                            <input type="radio" name="role" value="admin" checked>
+                            <i class="fas fa-user-shield role-icon"></i>
+                            <span class="fw-bold">Administrator</span>
+                            <small class="d-block text-muted">Manajemen lengkap sistem</small>
+                        </div>
+                        <div class="role-option" onclick="selectRole('client')">
+                            <input type="radio" name="role" value="client">
+                            <i class="fas fa-user role-icon"></i>
+                            <span class="fw-bold">Klien</span>
+                            <small class="d-block text-muted">Akses terbatas untuk klien</small>
+                        </div>
+                    </div>
+                    
+                    <div class="form-floating">
+                        <input type="text" class="form-control" id="username" placeholder="Username" required>
+                        <label for="username"><i class="fas fa-user me-2"></i>Username</label>
+                    </div>
+                    
+                    <div class="form-floating">
+                        <input type="password" class="form-control" id="password" placeholder="Password" required>
+                        <label for="password"><i class="fas fa-lock me-2"></i>Password</label>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-login">
+                        <i class="fas fa-sign-in-alt me-2"></i>Masuk
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Section -->
+    <div id="dashboardSection" class="dashboard-container">
+        <!-- Navigation -->
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="container">
+                <a class="navbar-brand" href="#">
+                    <i class="fas fa-project-diagram me-2"></i>ProjectHub
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto" id="navMenu">
+                        <!-- Navigation items will be populated by JavaScript -->
+                    </ul>
+                    <ul class="navbar-nav">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user me-1"></i><span id="currentUser">User</span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" onclick="logout()">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                </a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="container mt-4">
+            <div class="welcome-section">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h2>Selamat Datang, <span id="welcomeUser">User</span>!</h2>
+                        <p class="mb-0">Kelola proyek Anda dengan efisien dan kolaboratif</p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <button class="btn logout-btn" onclick="logout()">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Content -->
+            <div id="dashboardContent">
+                <div class="row" id="menuGrid">
+                    <!-- Menu items will be populated by JavaScript based on role -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="main.js"></script>
+    <script src="admin.js"></script>
+    <script src="client.js"></script>
+</body>
+</html>
