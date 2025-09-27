@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Billing - Minerva</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+</head>
+<body data-theme="light" class="billing-page">
+    <div class="dashboard-container">
+        <!-- Mobile sidebar overlay -->
+        <div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+        
+        <div id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <h3>Minerva</h3>
+                <button id="sidebarToggle" class="sidebar-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <nav class="sidebar-nav">
+                <ul id="sidebarNav" class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="dashboard.html">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="contracts.html">
+                            <i class="fas fa-file-contract"></i>
+                            <span>Manajemen Kontrak</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="gps-tracking.html">
+                            <i class="fas fa-map-marked-alt"></i>
+                            <span>GPS Tracking</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="ai.html">
+                            <i class="fas fa-robot"></i>
+                            <span>AI Assistant</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="komunikasi.html">
+                            <i class="fas fa-comments"></i>
+                            <span>Komunikasi</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="billing.html">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                            <span>E-Billing</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+
+        <div id="mainContent" class="main-content">
+            <nav class="top-navbar">
+                <div class="container-fluid">
+                    <div class="row align-items-center w-100">
+                        <div class="col">
+                            <h4 class="mb-0">E-Billing</h4>
+                            <small class="text-muted d-none d-sm-inline">Kelola tagihan dan pembayaran kontrak</small>
+                        </div>
+                        <div class="col-auto d-flex gap-2">
+                            <button class="btn btn-outline-primary btn-sm" onclick="toggleLanguage()" title="Toggle Language">
+                                <i class="fas fa-globe" id="languageIcon"></i>
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm" onclick="toggleTheme()" title="Toggle Theme">
+                                <i class="fas fa-moon" id="themeIconNavbar"></i>
+                            </button>
+                            <div class="dropdown">
+                                <button class="btn btn-outline-primary dropdown-toggle btn-sm" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-user me-1"></i><span id="currentUser">User</span>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="index.html">
+                                        <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                    </a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="content-area">
+                <!-- Billing Dashboard -->
+                <div id="billingDashboard">
+                    <!-- Dashboard Stats -->
+                    <div id="billingStats">
+                        <div class="alert alert-info">
+                            <i class="fas fa-spinner fa-spin me-2"></i>
+                            Loading billing dashboard...
+                        </div>
+                    </div>
+                    
+                    <!-- Bills Table -->
+                    <div id="billsTable">
+                        <div class="alert alert-info">
+                            <i class="fas fa-spinner fa-spin me-2"></i>
+                            Loading bills table...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="billing.js"></script>
+    <script>
+        // Simple initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing billing...');
+            
+            // Set user info
+            document.getElementById('currentUser').textContent = 'Admin';
+            
+            // Initialize after a short delay
+            setTimeout(function() {
+                console.log('Initializing billing dashboard...');
+                
+                if (typeof billingSystem !== 'undefined') {
+                    console.log('BillingSystem found, rendering...');
+                    
+                    const stats = document.getElementById('billingStats');
+                    const table = document.getElementById('billsTable');
+                    
+                    if (stats) {
+                        stats.innerHTML = billingSystem.renderBillingDashboard();
+                    }
+                    
+                    if (table) {
+                        table.innerHTML = billingSystem.renderBillsTable();
+                    }
+                    
+                    console.log('Billing dashboard rendered successfully');
+                } else {
+                    console.error('BillingSystem not found');
+                    document.getElementById('billingStats').innerHTML = '<div class="alert alert-danger">Error: BillingSystem not loaded</div>';
+                    document.getElementById('billsTable').innerHTML = '<div class="alert alert-danger">Error: BillingSystem not loaded</div>';
+                }
+            }, 500);
+        });
+    </script>
+</body>
+</html>

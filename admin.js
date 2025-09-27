@@ -1,22 +1,23 @@
 const adminMenuItems = [
-    { name: 'Dasbor', icon: 'fas fa-tachometer-alt', href: '#dashboard', color: 'primary' },
-    { name: 'Manajemen Proyek', icon: 'fas fa-tasks', href: '#projects', color: 'success' },
-    { name: 'Komunikasi', icon: 'fas fa-comments', href: '#communication', color: 'info' },
-    { name: 'AI Assistant', icon: 'fas fa-robot', href: '#ai', color: 'warning' },
-    { name: 'QR Scanner', icon: 'fas fa-qrcode', href: 'scan.html', color: 'primary' }
+    { name: 'Dashboard', icon: 'fas fa-tachometer-alt', href: 'dashboard.html', color: 'primary' },
+    { name: 'Manajemen Kontrak', icon: 'fas fa-file-contract', href: 'contracts.html', color: 'success' },
+    { name: 'GPS Tracking', icon: 'fas fa-map-marked-alt', href: 'gps-tracking.html', color: 'info' },
+    { name: 'AI Assistant', icon: 'fas fa-robot', href: 'ai.html', color: 'warning' },
+        { name: 'Komunikasi', icon: 'fas fa-comments', href: 'komunikasi.html', color: 'info' },
+        { name: 'E-Billing', icon: 'fas fa-file-invoice-dollar', href: 'billing.html', color: 'success' },
 ];
 
 const adminDashboardItems = [
     { 
-        name: 'Dasbor', 
+        name: 'Dashboard', 
         icon: 'fas fa-tachometer-alt', 
         description: 'Tinjauan umum proyek dan statistik',
         color: 'primary'
     },
     { 
-        name: 'Manajemen Proyek', 
-        icon: 'fas fa-tasks', 
-        description: 'Kelola proyek, tim, dan tugas',
+        name: 'Manajemen Kontrak', 
+        icon: 'fas fa-file-contract', 
+        description: 'Kelola semua kontrak proyek',
         color: 'success'
     },
     { 
@@ -35,8 +36,7 @@ const adminDashboardItems = [
         name: 'QR Scanner', 
         icon: 'fas fa-qrcode', 
         description: 'Scan QR untuk melihat kontrak',
-        color: 'success',
-        href: 'scan.html'
+        color: 'success'
     }
 ];
 
@@ -74,14 +74,17 @@ function openAdminModule(moduleName) {
         case 'dasbor':
             showPage('dashboard');
             break;
-        case 'manajemen_proyek':
-            showPage('projects');
+        case 'manajemen_kontrak':
+            window.location.href = 'contracts.html';
             break;
         case 'komunikasi':
             showPage('communication');
             break;
         case 'ai_assistant':
-            showPage('ai');
+            window.location.href = 'ai.html';
+            break;
+        case 'scanner':
+            showPage('scanner');
             break;
         default:
             showPage('dashboard');

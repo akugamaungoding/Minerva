@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Billing Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <h1>Test Billing Dashboard</h1>
+        
+        <!-- Test Stats -->
+        <div id="billingStats"></div>
+        
+        <!-- Test Table -->
+        <div id="billsTable"></div>
+        
+        <!-- Debug Info -->
+        <div class="mt-4">
+            <h5>Debug Information:</h5>
+            <div id="debugInfo"></div>
+        </div>
+    </div>
+    
+    <script src="billing.js"></script>
+    <script>
+        // Test billing system
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded');
+            console.log('billingSystem:', typeof billingSystem);
+            
+            const debugDiv = document.getElementById('debugInfo');
+            debugDiv.innerHTML = `
+                <p>BillingSystem available: ${typeof billingSystem !== 'undefined' ? 'Yes' : 'No'}</p>
+                <p>Bills count: ${typeof billingSystem !== 'undefined' ? billingSystem.bills.length : 'N/A'}</p>
+                <p>Contracts count: ${typeof billingSystem !== 'undefined' ? billingSystem.contracts.length : 'N/A'}</p>
+            `;
+            
+            if (typeof billingSystem !== 'undefined') {
+                // Render dashboard
+                const stats = document.getElementById('billingStats');
+                const table = document.getElementById('billsTable');
+                
+                if (stats) {
+                    stats.innerHTML = billingSystem.renderBillingDashboard();
+                }
+                
+                if (table) {
+                    table.innerHTML = billingSystem.renderBillsTable();
+                }
+            } else {
+                console.error('BillingSystem not available');
+            }
+        });
+    </script>
+</body>
+</html>

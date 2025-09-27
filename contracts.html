@@ -4,23 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manajemen Kontrak - Minerva</title>
+    
+    <!-- Favicon and Logo -->
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="apple-touch-icon" href="logo.png">
+    <link rel="shortcut icon" href="logo.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="styles.css" rel="stylesheet">
 </head>
 <body data-theme="light" class="contracts-page">
     <div class="dashboard-container">
+        <!-- Mobile sidebar overlay -->
+        <div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+        
         <div id="sidebar" class="sidebar">
             <div class="sidebar-header">
                 <h3>Minerva</h3>
-                <button id="sidebarToggle" class="sidebar-toggle">
-                    <i class="fas fa-bars"></i>
+                <!-- Mobile sidebar close button -->
+                <button id="mobileSidebarClose" class="mobile-sidebar-close" onclick="toggleSidebar()">
+                    <i class="fas fa-times"></i>
                 </button>
+                <!-- Desktop sidebar toggle hidden - focus on mobile only -->
+                <!-- <button id="sidebarToggle" class="sidebar-toggle">
+                    <i class="fas fa-bars"></i>
+                </button> -->
             </div>
             <nav class="sidebar-nav">
                 <ul id="sidebarNav" class="nav flex-column">
                     <li class="nav-item">
-                        <a class="nav-link" href="index.html">
+                        <a class="nav-link" href="dashboard.html">
                             <i class="fas fa-tachometer-alt"></i>
                             <span>Dashboard</span>
                         </a>
@@ -32,17 +45,30 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#communication">
+                        <a class="nav-link" href="gps-tracking.html">
+                            <i class="fas fa-map-marked-alt"></i>
+                            <span>GPS Tracking</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="ai.html">
+                            <i class="fas fa-robot"></i>
+                            <span>AI Assistant</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="komunikasi.html">
                             <i class="fas fa-comments"></i>
                             <span>Komunikasi</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#ai">
-                            <i class="fas fa-robot"></i>
-                            <span>AI Assistant</span>
+                        <a class="nav-link" href="billing.html">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                            <span>E-Billing</span>
                         </a>
                     </li>
+
                 </ul>
             </nav>
         </div>
@@ -52,16 +78,32 @@
                 <div class="container-fluid">
                     <div class="row align-items-center w-100%">
                         <div class="col">
-                            <h4 class="mb-0">Manajemen Kontrak</h4>
-                            <small class="text-muted d-none d-sm-inline">Kelola semua kontrak proyek dengan efisien</small>
+                            <div class="d-flex align-items-center">
+                                <!-- Mobile sidebar toggle button - moved to leftmost position -->
+                                <button id="mobileSidebarToggle" class="mobile-sidebar-toggle me-3" onclick="toggleSidebar()">
+                                    <i class="fas fa-bars"></i>
+                                </button>
+                                <img src="logo.png" alt="Logo" class="navbar-logo me-3" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="logo-fallback" style="display: none;">M</div>
+                                <div>
+                                    <h4 class="mb-0">Manajemen Kontrak</h4>
+                                    <small class="text-muted d-none d-sm-inline">Kelola semua kontrak proyek dengan efisien</small>
+                                </div>
+                            </div>
                         </div>
                         <div class="col-auto d-flex gap-2">
+                            <button class="btn btn-outline-info btn-sm" onclick="showActivityLog()" title="Activity Log">
+                                <i class="fas fa-history"></i>
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm" title="Toggle Language">
+                                <i class="fas fa-globe" id="languageIcon"></i>
+                            </button>
                             <button class="btn btn-outline-primary btn-sm" onclick="toggleTheme()" title="Toggle Theme">
                                 <i class="fas fa-moon" id="themeIconNavbar"></i>
                             </button>
                             <div class="dropdown">
                                 <button class="btn btn-outline-primary dropdown-toggle btn-sm" type="button" data-bs-toggle="dropdown">
-                                    <i class="fas fa-user me-1"></i><span id="currentUser">User</span>
+                                    <i class="fas fa-user me-1"></i><span id="currentUser">username</span>
                                 </button>
                                 <ul class="dropdown-menu">
                                     <li><a class="dropdown-item" href="#" onclick="logout()">
@@ -87,6 +129,57 @@
             <button class="btn btn-outline-info" onclick="refreshContracts()">
                 <i class="fas fa-sync me-2"></i><span class="d-none d-sm-inline">Refresh</span><span class="d-inline d-sm-none">Refresh</span>
             </button>
+        </div>
+
+        <!-- QR Scanner Section -->
+        <div class="qr-scanner-section mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-qrcode me-2"></i>QR Scanner
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3 align-items-center">
+                        <div class="col-12 col-md-6">
+                            <div class="d-flex gap-2 mb-3">
+                                <button id="startCameraBtn" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-camera me-2"></i>Start Camera
+                                </button>
+                                <button id="stopCameraBtn" class="btn btn-danger btn-sm d-none">
+                                    <i class="fas fa-stop me-2"></i>Stop Camera
+                                </button>
+                                <button id="uploadImageBtn" class="btn btn-success btn-sm">
+                                    <i class="fas fa-upload me-2"></i>Upload Image
+                                </button>
+                                <button id="pasteImageBtn" class="btn btn-info btn-sm">
+                                    <i class="fas fa-paste me-2"></i>Paste Image
+                                </button>
+                            </div>
+                            <input type="file" id="qrFileInput" accept="image/*" style="display: none;">
+                            <div id="previewWrapper" style="display: none;" class="mb-3">
+                                <div class="position-relative">
+                                    <img id="imagePreview" class="img-fluid rounded d-none" style="max-height: 200px;">
+                                    <video id="videoPreview" class="img-fluid rounded d-none" autoplay playsinline style="max-height: 200px;"></video>
+                                    <canvas id="qrCanvas" style="display: none;"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <div class="qr-result">
+                                <label class="form-label">Hasil Scan QR:</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="qrScanResult" placeholder="Hasil scan QR akan muncul di sini..." readonly>
+                                    <button class="btn btn-outline-secondary" type="button" onclick="clearQRResult()">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                <small class="text-muted">QR code yang berhasil di-scan akan otomatis masuk ke pencarian kontrak</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Contract Stats -->
@@ -177,25 +270,23 @@
 
         <!-- Contracts Table -->
         <div class="contracts-table-container">
-            <div class="table-responsive">
-                 <table class="table table-hover contracts-table">
-                                 <thead>
-                                     <tr>
-                                         <th class="d-sm-table-cell">
-                                             <input type="checkbox" id="selectAllContracts" onchange="toggleSelectAll()">
-                                         </th>
-                                         <th>No. Kontrak</th>
-                                         <th>Nama Proyek</th>
-                                         <th class="d-md-table-cell">Jenis</th>
-                                         <th class="d-md-table-cell">Nama PIC</th>
-                                         <th class="d-sm-table-cell">Nilai Kontrak</th>
-                                         <th class="d-md-table-cell">Mata Uang</th>
-                                         <th class="d-md-table-cell">Tanggal Mulai</th>
-                                         <th class="d-md-table-cell">Tanggal Selesai</th>
-                                         <th>Status</th>
-                                         <th>Aksi</th>
-                                     </tr>
-                                 </thead>
+            <div class="table-responsive" style="overflow-x: auto; overflow-y: visible;">
+                <table class="table table-hover contracts-table" style="min-width: 1200px; width: 100%;">
+                    <thead class="table-dark sticky-top">
+                        <tr>
+                            <th style="min-width: 50px; position: sticky; left: 0;  z-index: 10;">
+                                <input type="checkbox" id="selectAllContracts" onchange="toggleSelectAll()">
+                            </th>
+                            <th style="min-width: 150px;">No. Kontrak</th>
+                            <th style="min-width: 200px;">Nama Proyek</th>
+                            <th style="min-width: 120px;">Jenis</th>
+                            <th style="min-width: 150px;">Nilai Kontrak</th>
+                            <th style="min-width: 130px;">Tanggal Mulai</th>
+                            <th style="min-width: 130px;">Tanggal Selesai</th>
+                            <th style="min-width: 100px;">Status</th>
+                            <th style="min-width: 300px; position: sticky; right: 0; ; z-index: 10;">Aksi</th>
+                        </tr>
+                    </thead>
                     <tbody id="contractsTableBody">
                         <!-- Contract rows will be populated here -->
                     </tbody>
@@ -238,6 +329,88 @@
                             <!-- Pagination items will be generated by JavaScript -->
                         </ul>
                     </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rules Information Modal -->
+    <div class="modal fade" id="rulesInfoModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-info-circle me-2"></i>Aturan dan Ketentuan Kontrak</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-primary text-white">
+                                    <h6 class="mb-0"><i class="fas fa-shipping-fast me-2"></i>Standar Kepabeanan & Karantina</h6>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-unstyled mb-0">
+                                        <li><i class="fas fa-check text-success me-2"></i>Semua barang harus memiliki dokumen kepabeanan yang lengkap</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Pemeriksaan karantina wajib dilakukan untuk barang tertentu</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Dokumen import/export harus sesuai dengan regulasi yang berlaku</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Tarif bea masuk dan pajak harus dihitung dengan benar</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-warning text-dark">
+                                    <h6 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Aturan Keselamatan & Keamanan</h6>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-unstyled mb-0">
+                                        <li><i class="fas fa-check text-success me-2"></i>Standar keamanan transportasi harus dipatuhi</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Prosedur keselamatan kerja wajib diterapkan</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Asuransi kargo harus sesuai dengan nilai barang</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Protokol keamanan gudang dan penyimpanan</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-danger text-white">
+                                    <h6 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Ketentuan Risiko & Force Majeure</h6>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-unstyled mb-0">
+                                        <li><i class="fas fa-check text-success me-2"></i>Risiko kerugian menjadi tanggung jawab pihak yang bersangkutan</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Force majeure meliputi bencana alam, perang, dan kebijakan pemerintah</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Pemberitahuan force majeure maksimal 7 hari kerja</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Pembagian risiko harus jelas dan tertulis</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Syarat Perpanjangan atau Terminasi</h6>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-unstyled mb-0">
+                                        <li><i class="fas fa-check text-success me-2"></i>Perpanjangan kontrak harus disetujui 30 hari sebelum berakhir</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Terminasi dini memerlukan pemberitahuan 60 hari sebelumnya</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Denda terminasi dini sesuai dengan ketentuan kontrak</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Penyelesaian kewajiban harus tuntas sebelum terminasi</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-primary" onclick="proceedToMethodSelection()">
+                        <i class="fas fa-arrow-right me-2"></i>Lanjutkan
+                    </button>
                 </div>
             </div>
         </div>
@@ -529,8 +702,40 @@
                             <h6><i class="fas fa-paperclip me-2"></i>Dokumen Lampiran</h6>
                         </div>
                         <div class="mb-3">
-                            <input type="file" class="form-control" id="dokumenLampiran" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
-                            <small class="form-text text-muted">Upload dokumen pendukung (PDF, DOC, DOCX, JPG, PNG)</small>
+                            <input type="file" class="form-control" id="dokumenLampiran" multiple accept=".pdf,.doc,.docx,.xlsx,.xls,.csv,.jpg,.jpeg,.png,.txt,.rtf">
+                            <small class="form-text text-muted">Upload dokumen pendukung (PDF, DOC, DOCX, Excel, CSV, JPG, PNG, TXT, RTF)</small>
+                        </div>
+                        
+                        <!-- Barang Section -->
+                        <div class="section-header mb-3 mt-4">
+                            <h6><i class="fas fa-boxes me-2"></i>Daftar Barang</h6>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <button type="button" class="btn btn-outline-primary" onclick="addBarangToContract()">
+                                <i class="fas fa-plus me-2"></i>Tambah Barang
+                            </button>
+                            <span class="text-muted">
+                                Total: <span id="contractBarangCount">0</span> barang
+                            </span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-sm" id="contractBarangTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>No</th>
+                                        <th>Jenis Barang</th>
+                                        <th>Volume (m³)</th>
+                                        <th>Berat (kg)</th>
+                                        <th>Jumlah Kontainer</th>
+                                        <th>Ukuran (ft)</th>
+                                        <th>Nomor Kontainer</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="contractBarangTableBody">
+                                    <!-- Barang data will be populated here -->
+                                </tbody>
+                            </table>
                         </div>
                     </form>
                 </div>
@@ -579,11 +784,11 @@
                         <div class="upload-area" id="uploadArea">
                             <div class="upload-content">
                                 <i class="fas fa-cloud-upload-alt upload-icon"></i>
-                                <h6>Drag & Drop file Excel di sini</h6>
+                                <h6>Drag & Drop file Excel/CSV di sini</h6>
                                 <p class="text-muted">atau klik untuk memilih file</p>
-                                <input type="file" id="excelFile" accept=".xlsx,.xls" style="display: none;">
+                                <input type="file" id="excelFile" accept=".xlsx,.xls,.csv" style="display: none;">
                                 <button class="btn btn-outline-primary" onclick="document.getElementById('excelFile').click()">
-                                    <i class="fas fa-file me-2"></i>Pilih File Excel
+                                    <i class="fas fa-file me-2"></i>Pilih File Excel/CSV
                                 </button>
                             </div>
                         </div>
@@ -631,9 +836,6 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                    <button type="button" class="btn btn-warning" onclick="editContract()">
-                        <i class="fas fa-edit me-2"></i>Edit
-                    </button>
                     <button type="button" class="btn btn-danger" onclick="deleteContract()">
                         <i class="fas fa-trash me-2"></i>Hapus
                     </button>
@@ -644,7 +846,678 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- SheetJS for Excel/CSV reading -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- jsPDF for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- JSZip for creating ZIP files -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <!-- jsQR for QR code scanning -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    <!-- SweetAlert2 for enhanced alerts -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="contracts.js"></script>
+    <style>
+        /* Risk Analysis Styles */
+        .risk-stat {
+            text-align: center;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .risk-stat.high-risk {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .risk-stat.medium-risk {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .risk-stat.low-risk {
+            background-color: #d1e7dd;
+            color: #0f5132;
+            border: 1px solid #badbcc;
+        }
+        
+        .heatmap-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 5px;
+            margin-top: 10px;
+        }
+        
+        .heatmap-item {
+            padding: 10px;
+            text-align: center;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .heatmap-item:hover {
+            transform: scale(1.05);
+        }
+        
+        .heatmap-item.high-risk {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        .heatmap-item.medium-risk {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        
+        .heatmap-item.low-risk {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .clause-analysis {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .clause-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+        
+        .clause-item.success {
+            background-color: #d1e7dd;
+            border-left-color: #28a745;
+        }
+        
+        .clause-item.danger {
+            background-color: #f8d7da;
+            border-left-color: #dc3545;
+        }
+        
+        .clause-item.warning {
+            background-color: #fff3cd;
+            border-left-color: #ffc107;
+        }
+        
+        .clause-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        
+        /* Approval Workflow Styles */
+        .approval-levels {
+            margin-top: 15px;
+        }
+        
+        .level-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .level-item.completed {
+            color: #28a745;
+        }
+        
+        .level-item i {
+            margin-right: 10px;
+            width: 20px;
+        }
+        
+        .timeline-approval {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .approval-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+        
+        .approval-item.success {
+            background-color: #d1e7dd;
+            border-left-color: #28a745;
+        }
+        
+        .approval-item.danger {
+            background-color: #f8d7da;
+            border-left-color: #dc3545;
+        }
+        
+        .approval-marker {
+            margin-right: 15px;
+            margin-top: 5px;
+        }
+        
+        .approval-content h6 {
+            margin-bottom: 5px;
+        }
+        
+        /* Timeline Styles */
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: #dee2e6;
+        }
+        
+        .timeline-item {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .timeline-marker {
+            position: absolute;
+            left: -22px;
+            top: 5px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #6c757d;
+            border: 3px solid white;
+            box-shadow: 0 0 0 2px #dee2e6;
+        }
+        
+        .timeline-item.completed .timeline-marker {
+            background-color: #28a745;
+        }
+        
+        .timeline-content {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .timeline-content h6 {
+            margin-bottom: 5px;
+            color: #495057;
+        }
+        
+        /* Version Control Styles */
+        .version-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .version-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+        }
+        
+        .version-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .version-number {
+            font-weight: bold;
+            color: #007bff;
+        }
+        
+        .version-date {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+        
+        .version-changes {
+            margin-bottom: 5px;
+            color: #495057;
+        }
+        
+        .version-author {
+            color: #6c757d;
+            font-style: italic;
+        }
+        
+        /* Workflow Styles */
+        .workflow-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .workflow-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+        
+        .workflow-item.approved {
+            background-color: #d1e7dd;
+            border-left-color: #28a745;
+        }
+        
+        .workflow-item.rejected {
+            background-color: #f8d7da;
+            border-left-color: #dc3545;
+        }
+        
+        .workflow-marker {
+            margin-right: 15px;
+            margin-top: 5px;
+        }
+        
+        .workflow-content h6 {
+            margin-bottom: 5px;
+        }
+        
+        /* Flexible Table Styles */
+        .contracts-table-container {
+            position: relative;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .table-responsive {
+            position: relative;
+            overflow-x: auto;
+            overflow-y: visible;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+            scrollbar-color: #6c757d #f8f9fa;
+        }
+        
+        .table-responsive::-webkit-scrollbar {
+            height: 8px;
+        }
+        
+        .table-responsive::-webkit-scrollbar-track {
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        
+        .table-responsive::-webkit-scrollbar-thumb {
+            background: #6c757d;
+            border-radius: 4px;
+        }
+        
+        .table-responsive::-webkit-scrollbar-thumb:hover {
+            background: #495057;
+        }
+        
+        .contracts-table {
+            margin-bottom: 0;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        
+        .contracts-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background-color: #0d6efd;
+            color: white;
+            border-bottom: 2px solid #dee2e6;
+            font-weight: 600;
+            text-align: center;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+        
+        .contracts-table tbody tr {
+            transition: background-color 0.2s ease;
+        }
+        
+        .contracts-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .contracts-table tbody tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        .contracts-table tbody tr:nth-child(even):hover {
+            background-color: #e9ecef;
+        }
+        
+        .contracts-table td {
+            vertical-align: middle;
+            border-bottom: 1px solid #dee2e6;
+            padding: 12px 8px;
+        }
+        
+        .contracts-table th {
+            padding: 12px 8px;
+        }
+        
+        /* Sticky column styles */
+        .contracts-table th:first-child,
+        .contracts-table td:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 5;
+            background-color: #0d6efd;
+            color: white;
+            border-right: 2px solid #dee2e6;
+        }
+        
+        .contracts-table tbody tr td:first-child {
+            background-color: white;
+            color: inherit;
+        }
+        
+        .contracts-table tbody tr:nth-child(even) td:first-child {
+            background-color: #f8f9fa;
+        }
+        
+        .contracts-table tbody tr:hover td:first-child {
+            background-color: #f8f9fa;
+        }
+        
+        .contracts-table tbody tr:nth-child(even):hover td:first-child {
+            background-color: #e9ecef;
+        }
+        
+        .contracts-table th:last-child,
+        .contracts-table td:last-child {
+            position: sticky;
+            right: 0;
+            z-index: 5;
+            background-color: #0d6efd;
+            color: white;
+            border-left: 2px solid #dee2e6;
+        }
+        
+        .contracts-table tbody tr td:last-child {
+            background-color: white;
+            color: inherit;
+        }
+        
+        .contracts-table tbody tr:nth-child(even) td:last-child {
+            background-color: #f8f9fa;
+        }
+        
+        .contracts-table tbody tr:hover td:last-child {
+            background-color: #f8f9fa;
+        }
+        
+        .contracts-table tbody tr:nth-child(even):hover td:last-child {
+            background-color: #e9ecef;
+        }
+        
+        /* Action buttons responsive */
+        .action-buttons-small {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2px;
+            justify-content: flex-start;
+            align-items: center;
+        }
+        
+        .action-buttons-small .btn {
+            margin: 1px;
+            padding: 4px 6px;
+            font-size: 0.75rem;
+            line-height: 1.2;
+            transition: all 0.2s ease;
+            border-width: 1px;
+        }
+        
+        /* Enhanced action button colors */
+        .action-buttons-small .btn-outline-primary {
+            color: #0d6efd;
+            border-color: #0d6efd;
+        }
+        
+        .action-buttons-small .btn-outline-primary:hover {
+            background-color: #0d6efd;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(13, 110, 253, 0.3);
+        }
+        
+        .action-buttons-small .btn-outline-info {
+            color: #0dcaf0;
+            border-color: #0dcaf0;
+        }
+        
+        .action-buttons-small .btn-outline-info:hover {
+            background-color: #0dcaf0;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(13, 202, 240, 0.3);
+        }
+        
+        .action-buttons-small .btn-outline-warning {
+            color: #ffc107;
+            border-color: #ffc107;
+        }
+        
+        .action-buttons-small .btn-outline-warning:hover {
+            background-color: #ffc107;
+            color: #212529;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(255, 193, 7, 0.3);
+        }
+        
+        .action-buttons-small .btn-outline-success {
+            color: #198754;
+            border-color: #198754;
+        }
+        
+        .action-buttons-small .btn-outline-success:hover {
+            background-color: #198754;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(25, 135, 84, 0.3);
+        }
+        
+        .action-buttons-small .btn-outline-secondary {
+            color: #6c757d;
+            border-color: #6c757d;
+        }
+        
+        .action-buttons-small .btn-outline-secondary:hover {
+            background-color: #6c757d;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(108, 117, 125, 0.3);
+        }
+        
+        .action-buttons-small .btn-outline-danger {
+            color: #dc3545;
+            border-color: #dc3545;
+        }
+        
+        .action-buttons-small .btn-outline-danger:hover {
+            background-color: #dc3545;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+        }
+        
+        /* Icon styling */
+        .action-buttons-small .btn i {
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        /* Disabled state */
+        .action-buttons-small .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .contracts-table-container {
+                margin: 0 -15px;
+                border-radius: 0;
+                border-left: none;
+                border-right: none;
+            }
+            
+            .action-buttons-small {
+                flex-direction: column;
+                gap: 1px;
+            }
+            
+            .action-buttons-small .btn {
+                width: 100%;
+                margin: 1px 0;
+            }
+        }
+        
+        /* Loading state */
+        .table-loading {
+            position: relative;
+        }
+        
+        .table-loading::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        /* Empty state */
+        .table-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6c757d;
+        }
+        
+        .table-empty i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        /* Scroll Indicators */
+        .scroll-indicator {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 20;
+            transition: all 0.3s ease;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+        
+        .scroll-indicator:hover {
+            background: rgba(0, 0, 0, 0.9);
+            transform: translateY(-50%) scale(1.1);
+        }
+        
+        .scroll-indicator-left {
+            left: 10px;
+        }
+        
+        .scroll-indicator-right {
+            right: 10px;
+        }
+        
+        .scroll-indicator i {
+            font-size: 14px;
+        }
+        
+        /* Table container positioning for indicators */
+        .contracts-table-container {
+            position: relative;
+        }
+        
+        /* Mobile scroll indicators */
+        @media (max-width: 768px) {
+            .scroll-indicator {
+                width: 35px;
+                height: 35px;
+            }
+            
+            .scroll-indicator i {
+                font-size: 12px;
+            }
+        }
+        
+        /* Logo styling */
+        .navbar-logo {
+            height: 30px;
+            width: auto;
+            max-width: 80px;
+            object-fit: contain;
+            transition: transform 0.2s ease;
+        }
+        
+        .navbar-logo:hover {
+            transform: scale(1.05);
+        }
+        
+        @media (max-width: 768px) {
+            .navbar-logo {
+                height: 25px;
+                max-width: 60px;
+            }
+        }
+        
+        /* Logo fallback */
+        .navbar-logo:not([src]) {
+            display: none;
+        }
+        
+        .logo-fallback {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #0d6efd, #0dcaf0);
+            border-radius: 8px;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+    </style>
     <script>
         let currentTheme = 'light';
 
@@ -701,6 +1574,21 @@
             }
         }
 
+        // Show rules info modal first
+        function showCreateContractModal() {
+            const rulesModal = new bootstrap.Modal(document.getElementById('rulesInfoModal'));
+            rulesModal.show();
+        }
+
+        // Proceed to method selection after rules
+        function proceedToMethodSelection() {
+            const rulesModal = bootstrap.Modal.getInstance(document.getElementById('rulesInfoModal'));
+            rulesModal.hide();
+            
+            const methodModal = new bootstrap.Modal(document.getElementById('methodSelectionModal'));
+            methodModal.show();
+        }
+
         // Method selection functions
         function selectMethod(method) {
             const methodModal = bootstrap.Modal.getInstance(document.getElementById('methodSelectionModal'));
@@ -751,7 +1639,12 @@
             fileInput.addEventListener('change', function(e) {
                 const file = e.target.files[0];
                 if (file) {
-                    handleFileSelect(file);
+                    // Check if file is Excel or CSV for data import
+                    if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls') || file.name.endsWith('.csv')) {
+                        handleFileSelect(file);
+                    } else {
+                        showError('Harap pilih file Excel (.xlsx, .xls) atau CSV (.csv) untuk import data');
+                    }
                 }
             });
 
@@ -770,10 +1663,15 @@
                 e.preventDefault();
                 uploadArea.classList.remove('dragover');
                 const file = e.dataTransfer.files[0];
-                if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
-                    handleFileSelect(file);
+                if (file) {
+                    // Check if file is Excel or CSV for data import
+                    if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls') || file.name.endsWith('.csv')) {
+                        handleFileSelect(file);
+                    } else {
+                        showError('Harap pilih file Excel (.xlsx, .xls) atau CSV (.csv) untuk import data');
+                    }
                 } else {
-                    showError('Harap pilih file Excel (.xlsx atau .xls)');
+                    showError('Harap pilih file yang valid');
                 }
             });
         }
@@ -788,43 +1686,121 @@
             fileInfo.style.display = 'block';
             uploadBtn.disabled = false;
 
-            // Simulate preview (in real app, you would parse the Excel file)
-            showPreview();
+            // Read the actual file
+            readFileContent(file);
         }
 
-        function showPreview() {
+        function readFileContent(file) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    let data;
+                    const fileExtension = file.name.split('.').pop().toLowerCase();
+                    
+                    if (fileExtension === 'csv') {
+                        // Parse CSV
+                        data = parseCSV(e.target.result);
+                    } else if (fileExtension === 'xlsx' || fileExtension === 'xls') {
+                        // Parse Excel
+                        const workbook = XLSX.read(e.target.result, { type: 'binary' });
+                        const sheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[sheetName];
+                        data = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    } else {
+                        showError('Format file tidak didukung. Harap gunakan Excel (.xlsx, .xls) atau CSV (.csv)');
+                        return;
+                    }
+                    
+                    if (data && data.length > 0) {
+                        showPreview(data);
+                    } else {
+                        showError('File kosong atau tidak dapat dibaca');
+                    }
+                } catch (error) {
+                    console.error('Error reading file:', error);
+                    showError('Gagal membaca file. Pastikan file tidak rusak dan formatnya benar.');
+                }
+            };
+            
+            reader.onerror = function() {
+                showError('Gagal membaca file');
+            };
+            
+            // Read file based on type
+            const fileExtension = file.name.split('.').pop().toLowerCase();
+            if (fileExtension === 'csv') {
+                reader.readAsText(file);
+            } else {
+                reader.readAsBinaryString(file);
+            }
+        }
+
+        function parseCSV(csvText) {
+            const lines = csvText.split('\n');
+            const result = [];
+            
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (line) {
+                    // Simple CSV parsing (handles basic cases)
+                    const row = line.split(',').map(cell => cell.trim().replace(/^"|"$/g, ''));
+                    result.push(row);
+                }
+            }
+            
+            return result;
+        }
+
+        function showPreview(data) {
             const previewSection = document.getElementById('previewSection');
             const previewHeaders = document.getElementById('previewHeaders');
             const previewBody = document.getElementById('previewBody');
 
-            // Sample preview data based on new structure
-            const headers = ['Nama Proyek', 'Jenis Kontrak', 'Nilai Kontrak', 'Mata Uang', 'Tanggal Mulai', 'Tanggal Selesai', 'Nama PIC'];
-            const sampleData = [
-                ['Pengiriman Logistik Jakarta', 'Logistik', 'Rp 25.000.000', 'IDR', '2024-01-15', '2024-04-15', 'John Doe'],
-                ['Penyimpanan Barang Surabaya', 'Penyimpanan', 'Rp 35.000.000', 'IDR', '2024-02-01', '2024-06-01', 'Jane Smith']
-            ];
+            if (!data || data.length === 0) {
+                showError('Tidak ada data yang ditemukan dalam file');
+                return;
+            }
 
             // Clear previous content
             previewHeaders.innerHTML = '';
             previewBody.innerHTML = '';
 
+            // Use first row as headers
+            const headers = data[0];
+            const rows = data.slice(1);
+
             // Add headers
             headers.forEach(header => {
                 const th = document.createElement('th');
-                th.textContent = header;
+                th.textContent = header || 'Kolom';
                 previewHeaders.appendChild(th);
             });
 
-            // Add sample data
-            sampleData.forEach(row => {
+            // Add data rows (limit to first 10 rows for preview)
+            const previewRows = rows.slice(0, 10);
+            previewRows.forEach(row => {
                 const tr = document.createElement('tr');
-                row.forEach(cell => {
+                headers.forEach((header, index) => {
                     const td = document.createElement('td');
-                    td.textContent = cell;
+                    td.textContent = row[index] || '';
                     tr.appendChild(td);
                 });
                 previewBody.appendChild(tr);
             });
+
+            // Show total rows info
+            if (rows.length > 10) {
+                const infoRow = document.createElement('tr');
+                const infoCell = document.createElement('td');
+                infoCell.colSpan = headers.length;
+                infoCell.textContent = `... dan ${rows.length - 10} baris lainnya`;
+                infoCell.style.textAlign = 'center';
+                infoCell.style.fontStyle = 'italic';
+                infoCell.style.color = '#6c757d';
+                infoRow.appendChild(infoCell);
+                previewBody.appendChild(infoRow);
+            }
 
             previewSection.style.display = 'block';
         }
@@ -839,39 +1815,118 @@
                 return;
             }
 
-            // Simulate upload process
+            // Read and process the actual file
             const uploadBtn = document.getElementById('uploadBtn');
             const originalText = uploadBtn.innerHTML;
             
-            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Mengupload...';
+            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Memproses...';
             uploadBtn.disabled = true;
 
-            setTimeout(() => {
-                // Simulate successful upload
-                showSuccess('Data Excel berhasil diupload dan diimport!');
-                
-                // Close modal
-                const excelModal = bootstrap.Modal.getInstance(document.getElementById('excelUploadModal'));
-                excelModal.hide();
+            // Read the file content
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    let data;
+                    const fileExtension = file.name.split('.').pop().toLowerCase();
+                    
+                    if (fileExtension === 'csv') {
+                        data = parseCSV(e.target.result);
+                    } else if (fileExtension === 'xlsx' || fileExtension === 'xls') {
+                        const workbook = XLSX.read(e.target.result, { type: 'binary' });
+                        const sheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[sheetName];
+                        data = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    } else {
+                        showError('Format file tidak didukung');
+                        uploadBtn.innerHTML = originalText;
+                        uploadBtn.disabled = false;
+                        return;
+                    }
+                    
+                    if (data && data.length > 1) {
+                        // Process the data and import contracts
+                        processExcelData(data);
+                        showSuccess(`Data berhasil diimport! ${data.length - 1} kontrak telah ditambahkan.`);
+                        
+                        // Close modal
+                        const excelModal = bootstrap.Modal.getInstance(document.getElementById('excelUploadModal'));
+                        excelModal.hide();
 
-                // Reset form
-                fileInput.value = '';
-                document.getElementById('fileInfo').style.display = 'none';
-                document.getElementById('previewSection').style.display = 'none';
+                        // Reset form
+                        fileInput.value = '';
+                        document.getElementById('fileInfo').style.display = 'none';
+                        document.getElementById('previewSection').style.display = 'none';
+                        
+                        uploadBtn.innerHTML = originalText;
+                        uploadBtn.disabled = false;
+
+                        // Refresh contracts table
+                        applyFilters();
+                        updateContractStats();
+                    } else {
+                        showError('File kosong atau tidak memiliki data yang valid');
+                        uploadBtn.innerHTML = originalText;
+                        uploadBtn.disabled = false;
+                    }
+                } catch (error) {
+                    console.error('Error processing file:', error);
+                    showError('Gagal memproses file. Pastikan format file benar.');
+                    uploadBtn.innerHTML = originalText;
+                    uploadBtn.disabled = false;
+                }
+            };
+            
+            reader.onerror = function() {
+                showError('Gagal membaca file');
                 uploadBtn.innerHTML = originalText;
-                uploadBtn.disabled = true;
+                uploadBtn.disabled = false;
+            };
+            
+            // Read file based on type
+            const fileExtension = file.name.split('.').pop().toLowerCase();
+            if (fileExtension === 'csv') {
+                reader.readAsText(file);
+            } else {
+                reader.readAsBinaryString(file);
+            }
+        }
 
-                // Refresh contracts table
-                applyFilters();
-                updateContractStats();
-            }, 2000);
+        function processExcelData(data) {
+            // Skip header row
+            const rows = data.slice(1);
+            
+            rows.forEach((row, index) => {
+                try {
+                    // Create contract object from row data
+                    const contract = {
+                        id: Date.now() + index,
+                        nomorKontrak: row[0] || `KONT-${Date.now()}-${index}`,
+                        namaProyek: row[1] || `Proyek ${index + 1}`,
+                        jenisKontrak: row[2] || 'Logistik',
+                        namaPic: row[3] || 'Unknown',
+                        nilaiKontrak: parseFloat(row[4]) || 0,
+                        mataUang: row[5] || 'IDR',
+                        tglMulai: row[6] || new Date().toISOString().split('T')[0],
+                        tglSelesai: row[7] || new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                        status: 'draft',
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString()
+                    };
+                    
+                    // Add to contracts array
+                    contracts.push(contract);
+                } catch (error) {
+                    console.error(`Error processing row ${index + 1}:`, error);
+                }
+            });
         }
 
         // Show error function
         function showError(message) {
             const alert = document.createElement('div');
             alert.className = 'alert alert-danger alert-dismissible fade show position-fixed';
-            alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; background-color: #f8d7da !important; border-color: #f5c2c7 !important; color: #842029 !important;';
             alert.innerHTML = `
                 <i class="fas fa-exclamation-circle me-2"></i>${message}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -935,18 +1990,257 @@
             return countryCode + phoneNumber;
         }
 
+        // QR Scanner functionality
+        function initializeQRScanner() {
+            const startCameraBtn = document.getElementById("startCameraBtn");
+            const stopCameraBtn = document.getElementById("stopCameraBtn");
+            const uploadImageBtn = document.getElementById("uploadImageBtn");
+            const pasteImageBtn = document.getElementById("pasteImageBtn");
+            const fileInput = document.getElementById("qrFileInput");
+
+            if (startCameraBtn) startCameraBtn.addEventListener("click", startCamera);
+            if (stopCameraBtn) stopCameraBtn.addEventListener("click", stopCamera);
+            if (uploadImageBtn) uploadImageBtn.addEventListener("click", () => fileInput.click());
+            if (fileInput) fileInput.addEventListener("change", handleQRUpload);
+            if (pasteImageBtn) pasteImageBtn.addEventListener("click", handleClipboardRead);
+            document.addEventListener("paste", handleClipboardPasteEvent);
+        }
+
+        function handleQRUpload(e) {
+            const file = e.target.files && e.target.files[0] ? e.target.files[0] : e?.dataTransfer?.files?.[0];
+            if (!file) return;
+            showImagePreviewAndScan(file);
+        }
+
+        function showImagePreviewAndScan(file) {
+            const previewWrapper = document.getElementById("previewWrapper");
+            const imgEl = document.getElementById("imagePreview");
+            const videoEl = document.getElementById("videoPreview");
+            stopCamera();
+            const reader = new FileReader();
+            reader.onload = function() {
+                imgEl.src = reader.result;
+                previewWrapper.style.display = "block";
+                imgEl.classList.remove("d-none");
+                videoEl.classList.add("d-none");
+                setTimeout(() => decodeImageElement(imgEl), 50);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function decodeImageElement(imgEl){
+            const canvas = document.getElementById("qrCanvas");
+            const ctx = canvas.getContext("2d");
+            const width = imgEl.naturalWidth || imgEl.width;
+            const height = imgEl.naturalHeight || imgEl.height;
+            if (!width || !height) return;
+            canvas.width = width;
+            canvas.height = height;
+            ctx.drawImage(imgEl, 0, 0, width, height);
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imageData.data, canvas.width, canvas.height);
+            if (code) {
+                onQrDecoded(code, canvas);
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'QR Code tidak terbaca dari gambar',
+                    confirmButtonText: 'OK'
+                });
+            }
+        }
+
+        async function startCamera(){
+            try {
+                stopCamera();
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+                const videoEl = document.getElementById("videoPreview");
+                const previewWrapper = document.getElementById("previewWrapper");
+                const imgEl = document.getElementById("imagePreview");
+                videoEl.srcObject = stream;
+                await videoEl.play();
+                previewWrapper.style.display = "block";
+                videoEl.classList.remove("d-none");
+                imgEl.classList.add("d-none");
+                document.getElementById("stopCameraBtn").classList.remove("d-none");
+                window.__cameraStream = stream;
+                window.__scanning = true;
+                scanLoop();
+            } catch(err){
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Kamera tidak terdeteksi atau izin ditolak',
+                    confirmButtonText: 'OK'
+                });
+            }
+        }
+
+        function stopCamera(){
+            window.__scanning = false;
+            if (window.__rafId) {
+                cancelAnimationFrame(window.__rafId);
+                window.__rafId = null;
+            }
+            if (window.__cameraStream) {
+                window.__cameraStream.getTracks().forEach(t => t.stop());
+                window.__cameraStream = null;
+            }
+            const stopBtn = document.getElementById("stopCameraBtn");
+            if (stopBtn) stopBtn.classList.add("d-none");
+        }
+
+        function scanLoop(){
+            if (!window.__scanning) return;
+            const videoEl = document.getElementById("videoPreview");
+            const canvas = document.getElementById("qrCanvas");
+            const ctx = canvas.getContext("2d");
+            if (videoEl.readyState === videoEl.HAVE_ENOUGH_DATA) {
+                canvas.width = videoEl.videoWidth;
+                canvas.height = videoEl.videoHeight;
+                ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, canvas.width, canvas.height);
+                if (code) {
+                    window.__scanning = false;
+                    onQrDecoded(code, canvas);
+                    stopCamera();
+                    return;
+                }
+            }
+            window.__rafId = requestAnimationFrame(scanLoop);
+        }
+
+        function onQrDecoded(code, sourceCanvas){
+            // Generate ulang QR berdasarkan payload yang terbaca
+            try {
+                showGeneratedQrImage(code.data);
+            } catch(_e) {
+                // abaikan jika gagal generate
+            }
+
+            // Set hasil scan ke input search menggunakan data mentah
+            const searchInput = document.getElementById("contractSearch");
+            const qrResultInput = document.getElementById("qrScanResult");
+            
+            if (searchInput) {
+                searchInput.value = code.data;
+            }
+            if (qrResultInput) {
+                qrResultInput.value = code.data;
+            }
+            
+            // Trigger search
+            applyFilters();
+            
+            showSuccess(`QR Code berhasil di-scan! Data: ${code.data}`);
+        }
+
+        function showGeneratedQrImage(rawString){
+            const previewWrapper = document.getElementById("previewWrapper");
+            const imgEl = document.getElementById("imagePreview");
+            const videoEl = document.getElementById("videoPreview");
+            // Gunakan API yang sama seperti halaman generate, ukuran lebih kecil agar pas di preview
+            const size = '160x160';
+            const apiUrl = 'https://api.qrserver.com/v1/create-qr-code/?data=' + encodeURIComponent(rawString) + '&size=' + size;
+            imgEl.src = apiUrl;
+            previewWrapper.style.display = "block";
+            imgEl.classList.remove("d-none");
+            videoEl.classList.add("d-none");
+        }
+
+        async function handleClipboardRead(){
+            if (!navigator.clipboard || !navigator.clipboard.read) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Peringatan',
+                    text: 'Clipboard image API tidak didukung. Coba tekan Ctrl+V pada halaman ini.',
+                    confirmButtonText: 'OK'
+                });
+                return;
+            }
+            try {
+                const items = await navigator.clipboard.read();
+                for (const item of items) {
+                    for (const type of item.types) {
+                        if (type.startsWith("image/")) {
+                            const blob = await item.getType(type);
+                            showImagePreviewAndScan(blob);
+                            return;
+                        }
+                    }
+                }
+                alert("Tidak ada gambar pada clipboard");
+            } catch(err){
+                alert("Gagal membaca clipboard. Pastikan beri izin clipboard.");
+            }
+        }
+
+        function handleClipboardPasteEvent(e){
+            if (!e.clipboardData) return;
+            const items = e.clipboardData.items;
+            for (let i = 0; i < items.length; i++) {
+                const it = items[i];
+                if (it.type && it.type.startsWith("image/")) {
+                    const file = it.getAsFile();
+                    if (file) {
+                        showImagePreviewAndScan(file);
+                        e.preventDefault();
+                        return;
+                    }
+                }
+            }
+        }
+
+        function clearQRResult() {
+            const qrResultInput = document.getElementById("qrScanResult");
+            const searchInput = document.getElementById("contractSearch");
+            
+            if (qrResultInput) {
+                qrResultInput.value = "";
+            }
+            if (searchInput) {
+                searchInput.value = "";
+            }
+            
+            // Clear preview
+            const previewWrapper = document.getElementById("previewWrapper");
+            if (previewWrapper) {
+                previewWrapper.style.display = "none";
+            }
+            
+            // Trigger search to show all contracts
+            applyFilters();
+        }
+
         // Initialize everything on page load
         document.addEventListener('DOMContentLoaded', function() {
             loadTheme();
             initializeSidebar();
             initializeContracts();
+            initializeQRScanner();
             setupFileUpload();
             initializePhoneValidation();
             
             // Load user info if available
-            const user = localStorage.getItem('user') || 'User';
+            const user = localStorage.getItem('user') || '';
             document.getElementById('currentUser').textContent = user;
         });
+
+        // Mobile sidebar toggle function
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            
+            if (sidebar.classList.contains('show')) {
+                sidebar.classList.remove('show');
+                overlay.classList.remove('show');
+            } else {
+                sidebar.classList.add('show');
+                overlay.classList.add('show');
+            }
+        }
     </script>
 
     <!-- Barang Details Modal -->
@@ -998,6 +2292,246 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Contract Modal -->
+    <div class="modal fade" id="editContractModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-edit me-2"></i>Edit Kontrak
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editContractForm" novalidate>
+                        <!-- Informasi Dasar Kontrak -->
+                        <div class="section-header mb-3">
+                            <h6><i class="fas fa-info-circle me-2"></i>Informasi Dasar Kontrak</h6>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editNamaProyek" class="form-label">
+                                    <i class="fas fa-project-diagram me-2"></i>Nama Proyek
+                                </label>
+                                <input type="text" class="form-control" id="editNamaProyek" 
+                                       placeholder="Masukkan nama proyek atau logistik" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editJenisKontrak" class="form-label">
+                                    <i class="fas fa-file-contract me-2"></i>Jenis Kontrak
+                                </label>
+                                <select class="form-select" id="editJenisKontrak" required>
+                                    <option value="">Pilih jenis kontrak</option>
+                                    <option value="Logistik">Logistik</option>
+                                    <option value="Penyimpanan">Penyimpanan</option>
+                                    <option value="Bongkar Muat">Bongkar Muat</option>
+                                    <option value="Transportasi">Transportasi</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editTglMulai" class="form-label">
+                                    <i class="fas fa-calendar-alt me-2"></i>Tanggal Mulai
+                                </label>
+                                <input type="date" class="form-control" id="editTglMulai" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editTglSelesai" class="form-label">
+                                    <i class="fas fa-calendar-check me-2"></i>Tanggal Selesai
+                                </label>
+                                <input type="date" class="form-control" id="editTglSelesai" required>
+                            </div>
+                        </div>
+
+                        <!-- Nilai Kontrak -->
+                        <div class="section-header mb-3 mt-4">
+                            <h6><i class="fas fa-dollar-sign me-2"></i>Nilai Kontrak</h6>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editNilaiKontrak" class="form-label">
+                                    <i class="fas fa-money-bill-wave me-2"></i>Nilai Kontrak
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text" id="editCurrencySymbol">Rp</span>
+                                    <input type="number" class="form-control" id="editNilaiKontrak" 
+                                           step="0.01" placeholder="Masukkan nilai kontrak" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editMataUang" class="form-label">
+                                    <i class="fas fa-coins me-2"></i>Mata Uang
+                                </label>
+                                <select class="form-select" id="editMataUang" required>
+                                    <option value="">Pilih mata uang</option>
+                                    <option value="IDR">IDR (Rupiah)</option>
+                                    <option value="USD">USD (Dollar)</option>
+                                    <option value="EUR">EUR (Euro)</option>
+                                    <option value="SGD">SGD (Singapore Dollar)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Informasi Perusahaan -->
+                        <div class="section-header mb-3 mt-4">
+                            <h6><i class="fas fa-building me-2"></i>Informasi Perusahaan</h6>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="editAlamat" class="form-label">
+                                    <i class="fas fa-map-marker-alt me-2"></i>Alamat
+                                </label>
+                                <textarea class="form-control" id="editAlamat" rows="3" 
+                                          placeholder="Masukkan alamat lengkap perusahaan"></textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editKontakResmi" class="form-label">
+                                    <i class="fas fa-phone me-2"></i>Kontak Resmi
+                                </label>
+                                <div class="input-group">
+                                    <select class="form-select" id="editCountryCode" style="max-width: 120px;">
+                                        <option value="+62">🇮🇩 +62</option>
+                                        <option value="+1">🇺🇸 +1</option>
+                                        <option value="+44">🇬🇧 +44</option>
+                                        <option value="+65">🇸🇬 +65</option>
+                                        <option value="+60">🇲🇾 +60</option>
+                                        <option value="+66">🇹🇭 +66</option>
+                                        <option value="+63">🇵🇭 +63</option>
+                                        <option value="+84">🇻🇳 +84</option>
+                                    </select>
+                                    <input type="tel" class="form-control" id="editKontakResmi" 
+                                           placeholder="Masukkan nomor telepon" pattern="[0-9\s\-\(\)]+" 
+                                           title="Hanya angka, spasi, tanda hubung, dan tanda kurung yang diperbolehkan" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editNamaPic" class="form-label">
+                                    <i class="fas fa-user me-2"></i>Nama PIC
+                                </label>
+                                <input type="text" class="form-control" id="editNamaPic" 
+                                       placeholder="Nama lengkap Person in Charge" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editNpwp" class="form-label">
+                                    <i class="fas fa-id-card me-2"></i>NPWP
+                                </label>
+                                <input type="text" class="form-control" id="editNpwp" 
+                                       placeholder="Nomor Pokok Wajib Pajak">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editAsuransi" class="form-label">
+                                    <i class="fas fa-shield-alt me-2"></i>Asuransi
+                                </label>
+                                <select class="form-select" id="editAsuransi" required>
+                                    <option value="0">Tidak</option>
+                                    <option value="1">Ya</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Informasi Pembayaran -->
+                        <div class="section-header mb-3 mt-4">
+                            <h6><i class="fas fa-credit-card me-2"></i>Informasi Pembayaran</h6>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editTerminPembayaran" class="form-label">
+                                    <i class="fas fa-calendar-week me-2"></i>Termin Pembayaran
+                                </label>
+                                <select class="form-select" id="editTerminPembayaran" required>
+                                    <option value="">Pilih termin pembayaran</option>
+                                    <option value="DP">DP (Down Payment)</option>
+                                    <option value="Cicilan">Cicilan</option>
+                                    <option value="Pelunasan">Pelunasan</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editMetodePembayaran" class="form-label">
+                                    <i class="fas fa-money-check-alt me-2"></i>Metode Pembayaran
+                                </label>
+                                <select class="form-select" id="editMetodePembayaran" required>
+                                    <option value="">Pilih metode pembayaran</option>
+                                    <option value="Transfer Bank">Transfer Bank</option>
+                                    <option value="LC">LC (Letter of Credit)</option>
+                                    <option value="Cash">Cash</option>
+                                    <option value="Cheque">Cheque</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Pajak dan Penalti -->
+                        <div class="section-header mb-3 mt-4">
+                            <h6><i class="fas fa-percentage me-2"></i>Pajak dan Penalti</h6>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="editPpn" class="form-label">
+                                    <i class="fas fa-receipt me-2"></i>PPN (%)
+                                </label>
+                                <input type="number" class="form-control" id="editPpn" 
+                                       step="0.01" value="11.00" placeholder="11.00" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="editPajakLainnya" class="form-label">
+                                    <i class="fas fa-plus-circle me-2"></i>Pajak Lainnya
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text" id="editPajakCurrencySymbol">Rp</span>
+                                    <input type="number" class="form-control" id="editPajakLainnya" 
+                                           step="0.01" value="0" placeholder="Nilai pajak tambahan (opsional)">
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="editPenaltiTerlambat" class="form-label">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>Penalti Terlambat
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text" id="editPenaltiCurrencySymbol">Rp</span>
+                                    <input type="number" class="form-control" id="editPenaltiTerlambat" 
+                                           step="0.01" value="0" placeholder="Nilai penalti per hari (opsional)">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editHariPenalti" class="form-label">
+                                    <i class="fas fa-clock me-2"></i>Hari Penalti
+                                </label>
+                                <input type="number" class="form-control" id="editHariPenalti" 
+                                       value="0" placeholder="Jumlah hari keterlambatan (opsional)">
+                            </div>
+                        </div>
+
+                        <!-- Dokumen Lampiran -->
+                        <div class="section-header mb-3 mt-4">
+                            <h6><i class="fas fa-paperclip me-2"></i>Dokumen Lampiran</h6>
+                        </div>
+                        <div class="mb-3">
+                            <input type="file" class="form-control" id="editDokumenLampiran" 
+                                   multiple accept=".pdf,.doc,.docx,.xlsx,.xls,.csv,.jpg,.jpeg,.png,.txt,.rtf">
+                            <small class="form-text text-muted">Upload dokumen pendukung (PDF, DOC, DOCX, Excel, CSV, JPG, PNG, TXT, RTF)</small>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-primary" onclick="updateContract()">
+                        <i class="fas fa-save me-2"></i>Update Kontrak
+                    </button>
                 </div>
             </div>
         </div>
@@ -1081,6 +2615,143 @@
             </div>
         </div>
     </div>
+
+    <!-- Risk Analysis Modal -->
+    <div class="modal fade" id="riskAnalysisModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-chart-heat me-2"></i>Analisis Risiko Kontrak
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Risk Summary</h6>
+                            <div id="riskSummary"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Risk Heatmap</h6>
+                            <div id="riskHeatmap"></div>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <h6>Clause Analysis</h6>
+                        <div id="clauseAnalysis"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeline & Version Control Modal -->
+    <div class="modal fade" id="timelineModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-history me-2"></i>Timeline & Version Control
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="nav nav-tabs" id="timelineTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="timeline-tab" data-bs-toggle="tab" data-bs-target="#timeline" type="button" role="tab">
+                                <i class="fas fa-clock me-2"></i>Timeline
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="version-tab" data-bs-toggle="tab" data-bs-target="#version" type="button" role="tab">
+                                <i class="fas fa-code-branch me-2"></i>Version Control
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="approval-tab" data-bs-toggle="tab" data-bs-target="#approval" type="button" role="tab">
+                                <i class="fas fa-clipboard-check me-2"></i>Approval Workflow
+                            </button>
+                        </li>
+                    </ul>
+                    <div class="tab-content" id="timelineTabContent">
+                        <div class="tab-pane fade show active" id="timeline" role="tabpanel">
+                            <div id="contractTimeline"></div>
+                        </div>
+                        <div class="tab-pane fade" id="version" role="tabpanel">
+                            <div id="versionControl"></div>
+                        </div>
+                        <div class="tab-pane fade" id="approval" role="tabpanel">
+                            <div id="approvalWorkflow"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Log Modal -->
+    <div class="modal fade" id="activityLogModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-history me-2"></i>Log Aktivitas User
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <input type="date" class="form-control" id="logDateFilter" onchange="filterActivityLog()">
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-select" id="logUserFilter" onchange="filterActivityLog()">
+                                <option value="all">Semua User</option>
+                                <option value="admin">Admin</option>
+                                <option value="client">Client</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-select" id="logActionFilter" onchange="filterActivityLog()">
+                                <option value="all">Semua Aksi</option>
+                                <option value="login">Login</option>
+                                <option value="logout">Logout</option>
+                                <option value="create">Buat</option>
+                                <option value="update">Update</option>
+                                <option value="delete">Hapus</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Waktu</th>
+                                    <th>User</th>
+                                    <th>Aksi</th>
+                                    <th>Deskripsi</th>
+                                    <th>IP Address</th>
+                                </tr>
+                            </thead>
+                            <tbody id="activityLogTable">
+                                <!-- Activity log entries will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-primary" onclick="exportActivityLog()">Export Log</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
-

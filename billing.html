@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Billing - Minerva</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+    <style>
+        /* Logo styling */
+        .navbar-logo {
+            height: 30px;
+            width: auto;
+            max-width: 80px;
+            object-fit: contain;
+            transition: transform 0.2s ease;
+        }
+        
+        .navbar-logo:hover {
+            transform: scale(1.05);
+        }
+        
+        @media (max-width: 768px) {
+            .navbar-logo {
+                height: 25px;
+                max-width: 60px;
+            }
+        }
+        
+        /* Logo fallback */
+        .navbar-logo:not([src]) {
+            display: none;
+        }
+        
+        .logo-fallback {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #0d6efd, #0dcaf0);
+            border-radius: 8px;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .payment-method-card {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .payment-method-card:hover {
+            border-color: #007bff;
+            box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
+        }
+        
+        .payment-method-card.selected {
+            border-color: #007bff;
+            background-color: #f8f9ff;
+        }
+        
+        .payment-method-icon {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .bill-card {
+            transition: transform 0.2s ease;
+        }
+        
+        .bill-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .status-badge {
+            font-size: 0.8rem;
+            padding: 0.5rem 1rem;
+        }
+        
+        .amount-display {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .due-date {
+            font-size: 0.9rem;
+        }
+        
+        .overdue {
+            color: #dc3545;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body data-theme="light" class="billing-page">
+    <div class="dashboard-container">
+        <!-- Mobile sidebar overlay -->
+        <div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+        
+        <div id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <h3>Minerva</h3>
+                <!-- Mobile sidebar close button -->
+                <button id="mobileSidebarClose" class="mobile-sidebar-close" onclick="toggleSidebar()">
+                    <i class="fas fa-times"></i>
+                </button>
+                <!-- Desktop sidebar toggle hidden - focus on mobile only -->
+                <!-- <button id="sidebarToggle" class="sidebar-toggle">
+                    <i class="fas fa-bars"></i>
+                </button> -->
+            </div>
+            <nav class="sidebar-nav">
+                <ul id="sidebarNav" class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="dashboard.html">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="contracts.html">
+                            <i class="fas fa-file-contract"></i>
+                            <span>Manajemen Kontrak</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="gps-tracking.html">
+                            <i class="fas fa-map-marked-alt"></i>
+                            <span>GPS Tracking</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="ai.html">
+                            <i class="fas fa-robot"></i>
+                            <span>AI Assistant</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="komunikasi.html">
+                            <i class="fas fa-comments"></i>
+                            <span>Komunikasi</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="billing.html">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                            <span>E-Billing</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+
+        <div id="mainContent" class="main-content">
+            <nav class="top-navbar">
+                <div class="container-fluid">
+                    <div class="row align-items-center w-100">
+                        <div class="col">
+                            <div class="d-flex align-items-center">
+                                <!-- Mobile sidebar toggle button - moved to leftmost position -->
+                                <button id="mobileSidebarToggle" class="mobile-sidebar-toggle me-3" onclick="toggleSidebar()">
+                                    <i class="fas fa-bars"></i>
+                                </button>
+                                <img src="logo.png" alt="Logo" class="navbar-logo me-3" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="logo-fallback" style="display: none;">M</div>
+                                <div>
+                                    <h4 class="mb-0" data-translate="e_billing">E-Billing</h4>
+                                    <small class="text-muted d-none d-sm-inline" data-translate="billing_description">Kelola tagihan dan pembayaran kontrak</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-auto d-flex gap-2">
+                            <button class="btn btn-outline-info btn-sm" onclick="showActivityLog()" title="Activity Log">
+                                <i class="fas fa-history"></i>
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm" onclick="toggleLanguage()" title="Toggle Language">
+                                <i class="fas fa-globe" id="languageIcon"></i>
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm" onclick="toggleTheme()" title="Toggle Theme">
+                                <i class="fas fa-moon" id="themeIconNavbar"></i>
+                            </button>
+                            <div class="dropdown">
+                                <button class="btn btn-outline-primary dropdown-toggle btn-sm" type="button" data-bs-toggle="dropdown">
+                                    <span id="currentUser">User</span>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="index.html">
+                                        <i class="fas fa-sign-out-alt me-2"></i><span data-translate="logout">Logout</span>
+                                    </a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="content-area">
+                <!-- AI Actions Bar -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card bg-gradient-primary text-white">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <h5 class="mb-2">
+                                            <i class="fas fa-robot me-2"></i>AI Assistant untuk Billing
+                                        </h5>
+                                        <p class="mb-0">Gunakan AI untuk menganalisis data billing, prediksi pembayaran, dan rekomendasi strategi</p>
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        <button class="btn btn-light me-2" onclick="analyzeBillingData()">
+                                            <i class="fas fa-chart-line me-1"></i>Analisis Data
+                                        </button>
+                                        <button class="btn btn-outline-light" onclick="predictPayments()">
+                                            <i class="fas fa-crystal-ball me-1"></i>Prediksi Payment
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Billing Dashboard -->
+                <div id="billingDashboard">
+                    <!-- Dashboard Stats -->
+                    <div id="billingStats"></div>
+                    
+                    <!-- Payment Methods Section -->
+                    <div class="row mb-4">
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Available Payment Methods</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row" id="paymentMethods">
+                                        <!-- Payment methods will be loaded here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">AI Insights</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="aiInsights">
+                                        <div class="alert alert-info">
+                                            <i class="fas fa-lightbulb me-2"></i>
+                                            <strong>Tip:</strong> Gunakan AI untuk menganalisis pola pembayaran
+                                        </div>
+                                        <div class="alert alert-warning">
+                                            <i class="fas fa-exclamation-triangle me-2"></i>
+                                            <strong>Alert:</strong> 3 bills akan jatuh tempo dalam 3 hari
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Bills Table -->
+                    <div id="billsTable"></div>
+                    
+                    <!-- Payment History -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Payment History</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="paymentHistory">
+                                        <!-- Payment history will be loaded here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Generate Bill Modal -->
+    <div class="modal fade" id="generateBillModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-file-invoice me-2"></i>Generate New Bill
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="generateBillForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="contractSelect" class="form-label">Select Contract</label>
+                                    <select class="form-select" id="contractSelect" required>
+                                        <option value="">Choose contract...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="dueDate" class="form-label">Due Date</label>
+                                    <input type="date" class="form-control" id="dueDate" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="billDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="billDescription" rows="3" placeholder="Enter bill description..."></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Bill Items</label>
+                            <div id="billItems">
+                                <div class="bill-item row mb-2">
+                                    <div class="col-md-5">
+                                        <input type="text" class="form-control" placeholder="Item description" required>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" class="form-control" placeholder="Qty" min="1" value="1" required>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <input type="number" class="form-control" placeholder="Unit Price" min="0" required>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeBillItem(this)">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="addBillItem()">
+                                <i class="fas fa-plus me-2"></i>Add Item
+                            </button>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-8"></div>
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h6>Total Amount</h6>
+                                        <h4 class="text-primary" id="totalAmount">Rp 0</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="generateBill()">Generate Bill</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div class="modal fade" id="paymentModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-credit-card me-2"></i>Make Payment
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Bill Information</h6>
+                            <table class="table table-sm">
+                                <tr><td><strong>Bill ID:</strong></td><td id="paymentBillId">-</td></tr>
+                                <tr><td><strong>Amount:</strong></td><td id="paymentAmount">-</td></tr>
+                                <tr><td><strong>Due Date:</strong></td><td id="paymentDueDate">-</td></tr>
+                                <tr><td><strong>Client:</strong></td><td id="paymentClient">-</td></tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Payment Method</h6>
+                            <select class="form-select" id="paymentMethodSelect" onchange="showPaymentDetails()">
+                                <option value="">Pilih metode pembayaran...</option>
+                            </select>
+                            
+                            <!-- Bank Transfer Details -->
+                            <div id="bankTransferDetails" class="mt-3" style="display: none;">
+                                <div class="alert alert-info">
+                                    <h6><i class="fas fa-university me-2"></i>Transfer Bank</h6>
+                                    <p class="mb-2"><strong>Bank:</strong> Bank Mandiri</p>
+                                    <p class="mb-2"><strong>No. Rekening:</strong> 1234567890</p>
+                                    <p class="mb-2"><strong>Atas Nama:</strong> PT. Minerva Logistics</p>
+                                    <p class="mb-0"><strong>Jumlah:</strong> <span id="transferAmount">Rp 0</span></p>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="paymentProof" class="form-label">Upload Bukti Transfer</label>
+                                    <input type="file" class="form-control" id="paymentProof" accept="image/*,.pdf" required>
+                                    <small class="text-muted">Format: JPG, PNG, PDF (Max 5MB)</small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="transferDate" class="form-label">Tanggal Transfer</label>
+                                    <input type="date" class="form-control" id="transferDate" required>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="transferNote" class="form-label">Catatan Transfer</label>
+                                    <textarea class="form-control" id="transferNote" rows="2" placeholder="Masukkan catatan transfer (opsional)"></textarea>
+                                </div>
+                            </div>
+                            
+                            <!-- Other Payment Methods -->
+                            <div id="otherPaymentDetails" class="mt-3" style="display: none;">
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Pembayaran Online:</strong> Anda akan diarahkan ke halaman pembayaran eksternal.
+                                </div>
+                            </div>
+                            
+                            <div class="mt-3">
+                                <h6>Payment Summary</h6>
+                                <div class="card">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <span>Amount:</span>
+                                            <span id="summaryAmount">Rp 0</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between">
+                                            <span>Fee:</span>
+                                            <span id="summaryFee">Rp 0</span>
+                                        </div>
+                                        <hr>
+                                        <div class="d-flex justify-content-between">
+                                            <strong>Total:</strong>
+                                            <strong id="summaryTotal">Rp 0</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="processPayment()" id="processPaymentBtn">Process Payment</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bill Details Modal -->
+    <div class="modal fade" id="billDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-file-invoice me-2"></i>Bill Details
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="billDetailsContent">
+                        <!-- Bill details will be loaded here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="downloadBill()">Download PDF</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Analysis Modal -->
+    <div class="modal fade" id="aiAnalysisModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-robot me-2"></i>AI Analysis - Billing Data
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="aiAnalysisContent">
+                        <!-- AI analysis content will be loaded here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="exportAnalysis()">Export Report</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Predictions Modal -->
+    <div class="modal fade" id="aiPredictionsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-crystal-ball me-2"></i>AI Predictions - Payment Forecast
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="aiPredictionsContent">
+                        <!-- AI predictions content will be loaded here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="exportPredictions()">Export Forecast</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="translations.js"></script>
+    <script src="common.js"></script>
+    <script src="billing.js"></script>
+    <script>
+        // Initialize billing page
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Billing page loaded');
+            
+            const currentUser = localStorage.getItem('currentUser') || localStorage.getItem('user') || 'User';
+            const currentRole = localStorage.getItem('currentRole') || 'client';
+            const theme = localStorage.getItem('theme') || 'light';
+            const language = localStorage.getItem('language') || 'id';
+            
+            document.getElementById('currentUser').textContent = currentUser;
+            
+            // Apply theme
+            if (theme === 'dark') {
+                document.body.classList.add('dark-theme');
+                document.getElementById('themeIconNavbar').className = 'fas fa-sun';
+            }
+            
+            // Initialize billing dashboard with delay
+            setTimeout(initializeBillingDashboard, 100);
+        });
+        
+        // Initialize billing dashboard
+        function initializeBillingDashboard() {
+            console.log('Initializing billing dashboard...');
+            
+            // Wait for billingSystem to be available
+            if (typeof billingSystem === 'undefined') {
+                console.log('BillingSystem not ready, retrying...');
+                setTimeout(initializeBillingDashboard, 100);
+                return;
+            }
+            
+            console.log('BillingSystem ready, rendering dashboard...');
+            
+            const dashboard = document.getElementById('billingDashboard');
+            const stats = document.getElementById('billingStats');
+            const table = document.getElementById('billsTable');
+            const paymentMethods = document.getElementById('paymentMethods');
+            const paymentHistory = document.getElementById('paymentHistory');
+            
+            console.log('Elements found:', {
+                dashboard: !!dashboard,
+                stats: !!stats,
+                table: !!table,
+                paymentMethods: !!paymentMethods,
+                paymentHistory: !!paymentHistory
+            });
+            
+            try {
+                if (stats) {
+                    console.log('Rendering billing stats...');
+                    stats.innerHTML = billingSystem.renderBillingDashboard();
+                }
+                
+                if (table) {
+                    console.log('Rendering bills table...');
+                    table.innerHTML = billingSystem.renderBillsTable();
+                }
+                
+                if (paymentMethods) {
+                    console.log('Rendering payment methods...');
+                    paymentMethods.innerHTML = billingSystem.renderPaymentMethods();
+                }
+                
+                if (paymentHistory) {
+                    console.log('Rendering payment history...');
+                    paymentHistory.innerHTML = billingSystem.renderPaymentHistory();
+                }
+                
+                console.log('Billing dashboard initialized successfully');
+            } catch (error) {
+                console.error('Error initializing billing dashboard:', error);
+                
+                // Fallback content
+                if (stats) {
+                    stats.innerHTML = '<div class="alert alert-danger">Error loading billing stats</div>';
+                }
+                if (table) {
+                    table.innerHTML = '<div class="alert alert-danger">Error loading bills table</div>';
+                }
+                if (paymentMethods) {
+                    paymentMethods.innerHTML = '<div class="alert alert-danger">Error loading payment methods</div>';
+                }
+                if (paymentHistory) {
+                    paymentHistory.innerHTML = '<div class="alert alert-danger">Error loading payment history</div>';
+                }
+            }
+        }
+        
+        // Add bill item
+        function addBillItem() {
+            const billItems = document.getElementById('billItems');
+            const newItem = document.createElement('div');
+            newItem.className = 'bill-item row mb-2';
+            newItem.innerHTML = `
+                <div class="col-md-5">
+                    <input type="text" class="form-control" placeholder="Item description" required>
+                </div>
+                <div class="col-md-2">
+                    <input type="number" class="form-control" placeholder="Qty" min="1" value="1" required>
+                </div>
+                <div class="col-md-3">
+                    <input type="number" class="form-control" placeholder="Unit Price" min="0" required>
+                </div>
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeBillItem(this)">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            billItems.appendChild(newItem);
+        }
+        
+        // Remove bill item
+        function removeBillItem(button) {
+            button.closest('.bill-item').remove();
+            calculateTotal();
+        }
+        
+        // Calculate total amount
+        function calculateTotal() {
+            const items = document.querySelectorAll('.bill-item');
+            let total = 0;
+            
+            items.forEach(item => {
+                const qty = parseFloat(item.querySelector('input[type="number"]:nth-of-type(1)').value) || 0;
+                const price = parseFloat(item.querySelector('input[type="number"]:nth-of-type(2)').value) || 0;
+                total += qty * price;
+            });
+            
+            document.getElementById('totalAmount').textContent = `Rp ${total.toLocaleString('id-ID')}`;
+        }
+        
+        // Generate bill
+        function generateBill() {
+            const contractId = document.getElementById('contractSelect').value;
+            const dueDate = new Date(document.getElementById('dueDate').value);
+            const description = document.getElementById('billDescription').value;
+            
+            const items = [];
+            document.querySelectorAll('.bill-item').forEach(item => {
+                const desc = item.querySelector('input[type="text"]').value;
+                const qty = parseFloat(item.querySelector('input[type="number"]:nth-of-type(1)').value);
+                const price = parseFloat(item.querySelector('input[type="number"]:nth-of-type(2)').value);
+                
+                if (desc && qty && price) {
+                    items.push({
+                        description: desc,
+                        quantity: qty,
+                        unitPrice: price,
+                        total: qty * price
+                    });
+                }
+            });
+            
+            if (items.length === 0) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: 'Please add at least one bill item!'
+                });
+                return;
+            }
+            
+            try {
+                const bill = billingSystem.generateBill(contractId, items, dueDate);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: `Bill ${bill.id} has been generated successfully!`
+                });
+                
+                // Close modal and refresh dashboard
+                const modal = bootstrap.Modal.getInstance(document.getElementById('generateBillModal'));
+                modal.hide();
+                initializeBillingDashboard();
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: error.message
+                });
+            }
+        }
+        
+        // AI Functions
+        function analyzeBillingData() {
+            if (typeof billingSystem !== 'undefined') {
+                billingSystem.analyzeBillingData();
+            } else {
+                Swal.fire('Error', 'Billing system not loaded', 'error');
+            }
+        }
+        
+        function predictPayments() {
+            if (typeof billingSystem !== 'undefined') {
+                billingSystem.predictPayments();
+            } else {
+                Swal.fire('Error', 'Billing system not loaded', 'error');
+            }
+        }
+        
+        function exportAnalysis() {
+            Swal.fire('Export', 'Fitur export analysis akan segera tersedia!', 'info');
+        }
+        
+        function exportPredictions() {
+            Swal.fire('Export', 'Fitur export predictions akan segera tersedia!', 'info');
+        }
+        
+        // Payment Functions
+        function selectPaymentMethod(methodId) {
+            const method = billingSystem.paymentMethods.find(m => m.id === methodId);
+            if (method) {
+                console.log('Selected payment method:', method);
+                // Update UI to show selected method
+                document.querySelectorAll('.payment-method-card').forEach(card => {
+                    card.classList.remove('selected');
+                });
+                event.currentTarget.classList.add('selected');
+                
+                // Store selected method
+                window.selectedPaymentMethod = methodId;
+            }
+        }
+        
+        function viewPaymentDetails(paymentId) {
+            const payment = billingSystem.payments.find(p => p.id === paymentId);
+            if (payment) {
+                Swal.fire({
+                    title: 'Payment Details',
+                    html: `
+                        <div class="text-start">
+                            <p><strong>Payment ID:</strong> ${payment.id}</p>
+                            <p><strong>Bill ID:</strong> ${payment.billId}</p>
+                            <p><strong>Amount:</strong> Rp ${payment.amount.toLocaleString('id-ID')}</p>
+                            <p><strong>Method:</strong> ${payment.methodName || billingSystem.paymentMethods.find(m => m.id === payment.method)?.name}</p>
+                            <p><strong>Status:</strong> ${payment.status}</p>
+                            <p><strong>Created:</strong> ${payment.createdAt.toLocaleString('id-ID')}</p>
+                            ${payment.paidAt ? `<p><strong>Paid At:</strong> ${payment.paidAt.toLocaleString('id-ID')}</p>` : ''}
+                        </div>
+                    `,
+                    icon: 'info'
+                });
+            }
+        }
+        
+        function downloadReceipt(paymentId) {
+            Swal.fire('Download', `Download receipt untuk payment ${paymentId} akan segera tersedia!`, 'info');
+        }
+        
+        // Payment Functions
+        function showPaymentModal(billId) {
+            const bill = billingSystem.bills.find(b => b.id === billId);
+            if (bill) {
+                document.getElementById('paymentBillId').textContent = bill.id;
+                document.getElementById('paymentAmount').textContent = `Rp ${bill.amount.toLocaleString('id-ID')}`;
+                document.getElementById('paymentDueDate').textContent = bill.dueDate.toLocaleDateString('id-ID');
+                document.getElementById('paymentClient').textContent = bill.clientName;
+                
+                const paymentMethodSelect = document.getElementById('paymentMethodSelect');
+                paymentMethodSelect.innerHTML = '<option value="">Pilih metode pembayaran...</option>';
+                billingSystem.paymentMethods.forEach(method => {
+                    const option = document.createElement('option');
+                    option.value = method.id;
+                    option.textContent = `${method.name} ${method.fee > 0 ? `(Fee: Rp ${method.fee.toLocaleString('id-ID')})` : '(No Fee)'}`;
+                    paymentMethodSelect.appendChild(option);
+                });
+                
+                updatePaymentSummary();
+                new bootstrap.Modal(document.getElementById('paymentModal')).show();
+            }
+        }
+        
+        function processPayment() {
+            const billId = document.getElementById('paymentBillId').textContent;
+            const method = document.getElementById('paymentMethodSelect').value;
+            
+            if (!method) {
+                Swal.fire('Error', 'Pilih metode pembayaran!', 'error');
+                return;
+            }
+            
+            // Validate bank transfer requirements
+            if (method === 'bank_transfer') {
+                const paymentProof = document.getElementById('paymentProof').files[0];
+                const transferDate = document.getElementById('transferDate').value;
+                
+                if (!paymentProof) {
+                    Swal.fire('Error', 'Upload bukti transfer terlebih dahulu!', 'error');
+                    return;
+                }
+                
+                if (!transferDate) {
+                    Swal.fire('Error', 'Pilih tanggal transfer!', 'error');
+                    return;
+                }
+                
+                // Validate file size (5MB max)
+                if (paymentProof.size > 5 * 1024 * 1024) {
+                    Swal.fire('Error', 'Ukuran file maksimal 5MB!', 'error');
+                    return;
+                }
+            }
+            
+            const bill = billingSystem.bills.find(b => b.id === billId);
+            const paymentMethod = billingSystem.paymentMethods.find(m => m.id === method);
+            
+            if (bill && paymentMethod) {
+                const payment = {
+                    id: `PAY-${String(billingSystem.payments.length + 1).padStart(3, '0')}`,
+                    billId: billId,
+                    amount: bill.amount,
+                    method: method,
+                    methodName: paymentMethod.name,
+                    status: method === 'bank_transfer' ? 'pending_verification' : 'processing',
+                    transactionId: `TXN-${Date.now()}`,
+                    paidAt: null,
+                    createdAt: new Date(),
+                    clientInfo: {
+                        name: bill.clientName,
+                        email: bill.clientEmail,
+                        phone: bill.clientPhone
+                    },
+                    fee: paymentMethod.fee,
+                    totalAmount: bill.amount + paymentMethod.fee,
+                    transferInfo: method === 'bank_transfer' ? {
+                        bank: 'Bank Mandiri',
+                        accountNumber: '1234567890',
+                        accountName: 'PT. Minerva Logistics',
+                        transferDate: document.getElementById('transferDate').value,
+                        transferNote: document.getElementById('transferNote').value,
+                        proofFile: document.getElementById('paymentProof').files[0]?.name
+                    } : null
+                };
+                
+                billingSystem.payments.push(payment);
+                
+                if (method === 'bank_transfer') {
+                    Swal.fire({
+                        title: 'Payment Proof Submitted!',
+                        text: `Payment ${payment.id} telah dikirim untuk verifikasi. Tim kami akan memverifikasi bukti transfer dalam 1-2 hari kerja.`,
+                        icon: 'success',
+                        confirmButtonText: 'OK'
+                    });
+                    
+                    // Close modal and refresh
+                    bootstrap.Modal.getInstance(document.getElementById('paymentModal')).hide();
+                    initializeBillingDashboard();
+                } else {
+                    // Simulate online payment processing
+                    setTimeout(() => {
+                        payment.status = 'completed';
+                        payment.paidAt = new Date();
+                        bill.status = 'paid';
+                        bill.updatedAt = new Date();
+                        Swal.fire('Success', `Payment ${payment.id} berhasil!`, 'success');
+                        bootstrap.Modal.getInstance(document.getElementById('paymentModal')).hide();
+                        initializeBillingDashboard();
+                    }, 2000);
+                    
+                    Swal.fire('Processing', 'Payment sedang diproses...', 'info');
+                }
+            }
+        }
+        
+        function showPaymentDetails() {
+            const method = document.getElementById('paymentMethodSelect').value;
+            const bankTransferDetails = document.getElementById('bankTransferDetails');
+            const otherPaymentDetails = document.getElementById('otherPaymentDetails');
+            const processBtn = document.getElementById('processPaymentBtn');
+            
+            // Hide all details first
+            bankTransferDetails.style.display = 'none';
+            otherPaymentDetails.style.display = 'none';
+            
+            if (method === 'bank_transfer') {
+                bankTransferDetails.style.display = 'block';
+                processBtn.textContent = 'Submit Payment Proof';
+                updateTransferAmount();
+            } else if (method) {
+                otherPaymentDetails.style.display = 'block';
+                processBtn.textContent = 'Process Payment';
+            } else {
+                processBtn.textContent = 'Process Payment';
+            }
+            
+            updatePaymentSummary();
+        }
+        
+        function updateTransferAmount() {
+            const amount = parseFloat(document.getElementById('paymentAmount').textContent.replace(/[^\d]/g, ''));
+            const method = document.getElementById('paymentMethodSelect').value;
+            
+            if (method === 'bank_transfer' && amount) {
+                const paymentMethod = billingSystem.paymentMethods.find(m => m.id === method);
+                const fee = paymentMethod ? paymentMethod.fee : 0;
+                const total = amount + fee;
+                
+                document.getElementById('transferAmount').textContent = `Rp ${total.toLocaleString('id-ID')}`;
+            }
+        }
+        
+        function updatePaymentSummary() {
+            const method = document.getElementById('paymentMethodSelect').value;
+            const amount = parseFloat(document.getElementById('paymentAmount').textContent.replace(/[^\d]/g, ''));
+            
+            if (method && amount) {
+                const paymentMethod = billingSystem.paymentMethods.find(m => m.id === method);
+                const fee = paymentMethod ? paymentMethod.fee : 0;
+                const total = amount + fee;
+                
+                document.getElementById('summaryAmount').textContent = `Rp ${amount.toLocaleString('id-ID')}`;
+                document.getElementById('summaryFee').textContent = `Rp ${fee.toLocaleString('id-ID')}`;
+                document.getElementById('summaryTotal').textContent = `Rp ${total.toLocaleString('id-ID')}`;
+            }
+        }
+        
+        // Add event listeners
+        document.addEventListener('input', function(e) {
+            if (e.target.closest('.bill-item')) {
+                calculateTotal();
+            }
+            if (e.target.id === 'paymentMethodSelect') {
+                updatePaymentSummary();
+            }
+        });
+        
+        // Activity Log Functions
+        function showActivityLog() {
+            const modal = new bootstrap.Modal(document.getElementById('activityLogModal'));
+            modal.show();
+            loadActivityLog();
+        }
+
+        function loadActivityLog() {
+            const activityLogTable = document.getElementById('activityLogTable');
+            if (!activityLogTable) return;
+            
+            // Dummy activity log data for billing
+            const activityLogs = [
+                {
+                    timestamp: '2024-01-15 15:30:25',
+                    user: 'Admin',
+                    action: 'Login',
+                    description: 'User berhasil login ke sistem billing',
+                    ipAddress: '192.168.1.100'
+                },
+                {
+                    timestamp: '2024-01-15 15:25:10',
+                    user: 'Client',
+                    action: 'Create',
+                    description: 'Membuat tagihan baru untuk kontrak #KTR-001',
+                    ipAddress: '192.168.1.101'
+                },
+                {
+                    timestamp: '2024-01-15 15:20:45',
+                    user: 'Admin',
+                    action: 'Update',
+                    description: 'Memperbarui status pembayaran #PAY-001 menjadi Lunas',
+                    ipAddress: '192.168.1.100'
+                },
+                {
+                    timestamp: '2024-01-15 15:15:30',
+                    user: 'Client',
+                    action: 'View',
+                    description: 'Melihat detail tagihan #BILL-002',
+                    ipAddress: '192.168.1.101'
+                },
+                {
+                    timestamp: '2024-01-15 15:10:15',
+                    user: 'Admin',
+                    action: 'Delete',
+                    description: 'Menghapus tagihan #BILL-003 yang sudah expired',
+                    ipAddress: '192.168.1.100'
+                },
+                {
+                    timestamp: '2024-01-15 15:05:00',
+                    user: 'Client',
+                    action: 'Export',
+                    description: 'Export laporan pembayaran ke PDF',
+                    ipAddress: '192.168.1.101'
+                },
+                {
+                    timestamp: '2024-01-15 15:00:30',
+                    user: 'Admin',
+                    action: 'Create',
+                    description: 'Membuat metode pembayaran baru: Virtual Account',
+                    ipAddress: '192.168.1.100'
+                },
+                {
+                    timestamp: '2024-01-15 14:55:20',
+                    user: 'Client',
+                    action: 'Update',
+                    description: 'Memperbarui informasi rekening pembayaran',
+                    ipAddress: '192.168.1.101'
+                },
+                {
+                    timestamp: '2024-01-15 14:50:10',
+                    user: 'Admin',
+                    action: 'View',
+                    description: 'Melihat laporan keuangan bulanan',
+                    ipAddress: '192.168.1.100'
+                },
+                {
+                    timestamp: '2024-01-15 14:45:55',
+                    user: 'Client',
+                    action: 'Logout',
+                    description: 'User logout dari sistem billing',
+                    ipAddress: '192.168.1.101'
+                }
+            ];
+            
+            let tableHTML = '';
+            activityLogs.forEach(log => {
+                const actionClass = getActionClass(log.action);
+                tableHTML += `
+                    <tr>
+                        <td>${log.timestamp}</td>
+                        <td><span class="badge bg-${log.user === 'Admin' ? 'primary' : 'info'}">${log.user}</span></td>
+                        <td><span class="badge ${actionClass}">${log.action}</span></td>
+                        <td>${log.description}</td>
+                        <td><code>${log.ipAddress}</code></td>
+                    </tr>
+                `;
+            });
+            
+            activityLogTable.innerHTML = tableHTML;
+        }
+
+        function getActionClass(action) {
+            const classes = {
+                'Login': 'bg-success',
+                'Logout': 'bg-secondary',
+                'Create': 'bg-primary',
+                'Update': 'bg-warning',
+                'Delete': 'bg-danger',
+                'View': 'bg-info',
+                'Export': 'bg-dark'
+            };
+            return classes[action] || 'bg-secondary';
+        }
+
+        function filterActivityLog() {
+            const dateFilter = document.getElementById('logDateFilter').value;
+            const userFilter = document.getElementById('logUserFilter').value;
+            const actionFilter = document.getElementById('logActionFilter').value;
+            
+            // For now, just reload the data (in real implementation, you'd filter the data)
+            loadActivityLog();
+            
+            // Show filter applied message
+            showSuccess(`Filter diterapkan: ${dateFilter ? 'Tanggal: ' + dateFilter : ''} ${userFilter !== 'all' ? 'User: ' + userFilter : ''} ${actionFilter !== 'all' ? 'Aksi: ' + actionFilter : ''}`);
+        }
+
+        function exportActivityLog() {
+            // Simulate export functionality
+            showSuccess('Activity log berhasil diexport ke file CSV!');
+        }
+    </script>
+    
+    <!-- Activity Log Modal -->
+    <div class="modal fade" id="activityLogModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-history me-2"></i>Log Aktivitas User
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <input type="date" class="form-control" id="logDateFilter" onchange="filterActivityLog()">
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-select" id="logUserFilter" onchange="filterActivityLog()">
+                                <option value="all">Semua User</option>
+                                <option value="admin">Admin</option>
+                                <option value="client">Client</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-select" id="logActionFilter" onchange="filterActivityLog()">
+                                <option value="all">Semua Aksi</option>
+                                <option value="login">Login</option>
+                                <option value="logout">Logout</option>
+                                <option value="create">Buat</option>
+                                <option value="update">Update</option>
+                                <option value="delete">Hapus</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Waktu</th>
+                                    <th>User</th>
+                                    <th>Aksi</th>
+                                    <th>Deskripsi</th>
+                                    <th>IP Address</th>
+                                </tr>
+                            </thead>
+                            <tbody id="activityLogTable">
+                                <!-- Activity log entries will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-primary" onclick="exportActivityLog()">Export Log</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

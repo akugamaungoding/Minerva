@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Simple - Minerva</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 10px 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        .stat-number {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .stat-label {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            font-weight: 500;
+        }
+        .chart-container {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin: 20px 0;
+            border: 1px solid #e9ecef;
+        }
+        .chart-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+            text-align: center;
+        }
+        .recent-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            border-left: 4px solid #007bff;
+        }
+        .notification-item {
+            background: #fff;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            border-left: 4px solid #28a745;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .notification-item.warning {
+            border-left-color: #ffc107;
+        }
+        .notification-item.danger {
+            border-left-color: #dc3545;
+        }
+        .notification-item.info {
+            border-left-color: #17a2b8;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container-fluid py-4">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="text-center mb-4">
+                    <i class="fas fa-tachometer-alt me-3"></i>Dashboard Minerva
+                </h1>
+            </div>
+        </div>
+        
+        <!-- Stats Grid -->
+        <div class="row mb-5">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalProjects">47</div>
+                    <div class="stat-label">Total Projects</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="stat-card">
+                    <div class="stat-number" id="activeProjects">23</div>
+                    <div class="stat-label">Active Projects</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalContracts">89</div>
+                    <div class="stat-label">Total Contracts</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalRevenue">2.45B</div>
+                    <div class="stat-label">Total Revenue</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Additional Stats -->
+        <div class="row mb-5">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="stat-card">
+                    <div class="stat-number" id="completedTasks">156</div>
+                    <div class="stat-label">Completed Tasks</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="stat-card">
+                    <div class="stat-number" id="teamMembers">28</div>
+                    <div class="stat-label">Team Members</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="stat-card">
+                    <div class="stat-number" id="pendingBills">12</div>
+                    <div class="stat-label">Pending Bills</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="stat-card">
+                    <div class="stat-number" id="completedPayments">234</div>
+                    <div class="stat-label">Completed Payments</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Charts -->
+        <div class="row mb-5">
+            <div class="col-lg-4 mb-4">
+                <div class="chart-container">
+                    <div class="chart-title">Contract Status</div>
+                    <canvas id="contractStatusChart" width="400" height="300"></canvas>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="chart-container">
+                    <div class="chart-title">Risk Analysis</div>
+                    <canvas id="riskChart" width="400" height="300"></canvas>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="chart-container">
+                    <div class="chart-title">Project Progress</div>
+                    <canvas id="progressChart" width="400" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Data -->
+        <div class="row mb-5">
+            <div class="col-lg-4 mb-4">
+                <div class="chart-container">
+                    <h5 class="mb-3"><i class="fas fa-project-diagram me-2"></i>Recent Projects</h5>
+                    <div id="recentProjectsList">
+                        <div class="recent-item">
+                            <h6>Pengiriman Logistik Jakarta</h6>
+                            <p class="mb-1">Client: PT. Maju Jaya</p>
+                            <div class="progress mb-2">
+                                <div class="progress-bar" style="width: 75%">75%</div>
+                            </div>
+                            <small class="text-muted">Due: 15 Feb 2024</small>
+                        </div>
+                        <div class="recent-item">
+                            <h6>Cold Storage Medan</h6>
+                            <p class="mb-1">Client: CV. Medan Fresh</p>
+                            <div class="progress mb-2">
+                                <div class="progress-bar bg-warning" style="width: 60%">60%</div>
+                            </div>
+                            <small class="text-muted">Due: 10 Feb 2024</small>
+                        </div>
+                        <div class="recent-item">
+                            <h6>Warehouse Management Bandung</h6>
+                            <p class="mb-1">Client: PT. Bandung Storage</p>
+                            <div class="progress mb-2">
+                                <div class="progress-bar bg-success" style="width: 100%">100%</div>
+                            </div>
+                            <small class="text-muted">Completed</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="chart-container">
+                    <h5 class="mb-3"><i class="fas fa-file-contract me-2"></i>Recent Contracts</h5>
+                    <div id="recentContractsList">
+                        <div class="recent-item">
+                            <h6>KONTRAK_15012024_001</h6>
+                            <p class="mb-1">PT. Maju Jaya - Pengiriman Logistik</p>
+                            <span class="badge bg-success">Active</span>
+                            <small class="text-muted d-block">Value: Rp 500,000,000</small>
+                        </div>
+                        <div class="recent-item">
+                            <h6>KONTRAK_10012024_005</h6>
+                            <p class="mb-1">CV. Medan Fresh - Cold Storage</p>
+                            <span class="badge bg-success">Active</span>
+                            <small class="text-muted d-block">Value: Rp 400,000,000</small>
+                        </div>
+                        <div class="recent-item">
+                            <h6>KONTRAK_05012024_006</h6>
+                            <p class="mb-1">PT. Bandung Storage - Warehouse</p>
+                            <span class="badge bg-info">Completed</span>
+                            <small class="text-muted d-block">Value: Rp 600,000,000</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="chart-container">
+                    <h5 class="mb-3"><i class="fas fa-credit-card me-2"></i>Recent Payments</h5>
+                    <div id="recentPaymentsList">
+                        <div class="recent-item">
+                            <h6>PAY-001</h6>
+                            <p class="mb-1">PT. Maju Jaya - Bank Transfer</p>
+                            <span class="badge bg-success">Completed</span>
+                            <small class="text-muted d-block">Amount: Rp 50,000,000</small>
+                        </div>
+                        <div class="recent-item">
+                            <h6>PAY-002</h6>
+                            <p class="mb-1">CV. Sukses Mandiri - Credit Card</p>
+                            <span class="badge bg-success">Completed</span>
+                            <small class="text-muted d-block">Amount: Rp 25,000,000</small>
+                        </div>
+                        <div class="recent-item">
+                            <h6>PAY-003</h6>
+                            <p class="mb-1">PT. Batam Logistics - E-Wallet</p>
+                            <span class="badge bg-warning">Processing</span>
+                            <small class="text-muted d-block">Amount: Rp 100,000,000</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Notifications -->
+        <div class="row">
+            <div class="col-12">
+                <div class="chart-container">
+                    <h5 class="mb-3"><i class="fas fa-bell me-2"></i>Notifications</h5>
+                    <div id="notificationsList">
+                        <div class="notification-item">
+                            <h6><i class="fas fa-check-circle me-2"></i>Payment Received</h6>
+                            <p class="mb-0">Payment of Rp 50,000,000 received from PT. Maju Jaya</p>
+                            <small class="text-muted">1 hour ago</small>
+                        </div>
+                        <div class="notification-item warning">
+                            <h6><i class="fas fa-exclamation-triangle me-2"></i>Contract Expiring Soon</h6>
+                            <p class="mb-0">Contract #KONTRAK_30012024_008 expires in 5 days</p>
+                            <small class="text-muted">2 hours ago</small>
+                        </div>
+                        <div class="notification-item info">
+                            <h6><i class="fas fa-truck me-2"></i>Delivery Completed</h6>
+                            <p class="mb-0">Delivery to Surabaya completed successfully</p>
+                            <small class="text-muted">3 hours ago</small>
+                        </div>
+                        <div class="notification-item danger">
+                            <h6><i class="fas fa-wrench me-2"></i>Maintenance Required</h6>
+                            <p class="mb-0">Vehicle #VH-015 requires brake system maintenance</p>
+                            <small class="text-muted">4 hours ago</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Initialize charts when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded, initializing charts...');
+            
+            // Wait a bit for Chart.js to be ready
+            setTimeout(initializeCharts, 500);
+        });
+        
+        function initializeCharts() {
+            console.log('Initializing charts...');
+            
+            if (typeof Chart === 'undefined') {
+                console.log('Chart.js not loaded, retrying...');
+                setTimeout(initializeCharts, 200);
+                return;
+            }
+            
+            // Contract Status Chart
+            const contractStatusCtx = document.getElementById('contractStatusChart');
+            if (contractStatusCtx) {
+                try {
+                    new Chart(contractStatusCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Active', 'Pending', 'Completed', 'Expired'],
+                            datasets: [{
+                                data: [34, 12, 55, 8],
+                                backgroundColor: ['#28a745', '#ffc107', '#17a2b8', '#dc3545'],
+                                borderWidth: 2,
+                                borderColor: '#fff'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom'
+                                }
+                            }
+                        }
+                    });
+                    console.log('Contract status chart created');
+                } catch (error) {
+                    console.error('Error creating contract status chart:', error);
+                }
+            }
+            
+            // Risk Chart
+            const riskCtx = document.getElementById('riskChart');
+            if (riskCtx) {
+                try {
+                    new Chart(riskCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Low', 'Medium', 'High', 'Critical'],
+                            datasets: [{
+                                label: 'Risk Level',
+                                data: [15, 8, 3, 1],
+                                backgroundColor: ['#28a745', '#ffc107', '#fd7e14', '#dc3545'],
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                    console.log('Risk chart created');
+                } catch (error) {
+                    console.error('Error creating risk chart:', error);
+                }
+            }
+            
+            // Progress Chart
+            const progressCtx = document.getElementById('progressChart');
+            if (progressCtx) {
+                try {
+                    new Chart(progressCtx, {
+                        type: 'line',
+                        data: {
+                            labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6'],
+                            datasets: [{
+                                label: 'Project Progress (%)',
+                                data: [20, 35, 50, 65, 80, 95],
+                                borderColor: '#007bff',
+                                backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                                tension: 0.4,
+                                fill: true
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 100,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return value + '%';
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    console.log('Progress chart created');
+                } catch (error) {
+                    console.error('Error creating progress chart:', error);
+                }
+            }
+            
+            console.log('All charts initialized successfully');
+        }
+    </script>
+</body>
+</html>

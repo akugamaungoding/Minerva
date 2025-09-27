@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Assistant - Minerva</title>
+    
+    <!-- Favicon and Logo -->
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="apple-touch-icon" href="logo.png">
+    <link rel="shortcut icon" href="logo.png">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+    <style>
+        /* Logo styling */
+        .navbar-logo {
+            height: 30px;
+            width: auto;
+            max-width: 80px;
+            object-fit: contain;
+            transition: transform 0.2s ease;
+        }
+        
+        .navbar-logo:hover {
+            transform: scale(1.05);
+        }
+        
+        @media (max-width: 768px) {
+            .navbar-logo {
+                height: 25px;
+                max-width: 60px;
+            }
+        }
+        
+        /* Logo fallback */
+        .navbar-logo:not([src]) {
+            display: none;
+        }
+        
+        .logo-fallback {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #0d6efd, #0dcaf0);
+            border-radius: 8px;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        /* Ensure single-column layout and no top header spacing */
+        .main-content.topbar-hidden { margin-top: 0; }
+    </style>
+    <meta http-equiv="Content-Security-Policy" content="connect-src 'self' data: blob: http://localhost:* https://api.openai.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#0400DE">
+
+</head>
+<body data-theme="light">
+    <div class="dashboard-container">
+        <!-- Mobile sidebar overlay -->
+        <div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+        
+        <div id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <h3>Minerva</h3>
+                <!-- Mobile sidebar close button -->
+                <button id="mobileSidebarClose" class="mobile-sidebar-close" onclick="toggleSidebar()">
+                    <i class="fas fa-times"></i>
+                </button>
+                <!-- Desktop sidebar toggle hidden - focus on mobile only -->
+                <!-- <button id="sidebarToggle" class="sidebar-toggle">
+                    <i class="fas fa-bars"></i>
+                </button> -->
+            </div>
+            <nav class="sidebar-nav">
+                <ul id="sidebarNav" class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="dashboard.html">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="contracts.html">
+                            <i class="fas fa-file-contract"></i>
+                            <span>Manajemen Kontrak</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="gps-tracking.html">
+                            <i class="fas fa-map-marked-alt"></i>
+                            <span>GPS Tracking</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="ai.html">
+                            <i class="fas fa-robot"></i>
+                            <span>AI Assistant</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="komunikasi.html">
+                            <i class="fas fa-comments"></i>
+                            <span>Komunikasi</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="billing.html">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                            <span>E-Billing</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+
+        <div id="mainContent" class="main-content">
+            <nav class="top-navbar">
+                <div class="container-fluid">
+                    <div class="row align-items-center w-100">
+                        <div class="col">
+                            <div class="d-flex align-items-center">
+                                <!-- Mobile sidebar toggle button - moved to leftmost position -->
+                                <button id="mobileSidebarToggle" class="mobile-sidebar-toggle me-3" onclick="toggleSidebar()">
+                                    <i class="fas fa-bars"></i>
+                                </button>
+                                <img src="logo.png" alt="Logo" class="navbar-logo me-3" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="logo-fallback" style="display: none;">M</div>
+                                <div>
+                                    <h4 class="mb-0" data-translate="ai_assistant">AI Assistant</h4>
+                                    <small class="text-muted d-none d-sm-inline" data-translate="ai_description">Asisten AI untuk analisis dan rekomendasi</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-auto d-flex gap-2">
+                            <button class="btn btn-outline-info btn-sm" onclick="showActivityLog()" title="Activity Log">
+                                <i class="fas fa-history"></i>
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm" onclick="toggleLanguage()" title="Toggle Language">
+                                <i class="fas fa-globe" id="languageIcon"></i>
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm" onclick="toggleTheme()" title="Toggle Theme">
+                                <i class="fas fa-moon" id="themeIconNavbar"></i>
+                            </button>
+                            <div class="dropdown">
+                                <button class="btn btn-outline-primary dropdown-toggle btn-sm" type="button" data-bs-toggle="dropdown">
+                                    <span id="currentUser">User</span>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="index.html">
+                                        <i class="fas fa-sign-out-alt me-2"></i><span data-translate="logout">Logout</span>
+                                    </a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="content-area">
+                <div id="aiPage" class="page-container active"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="translations.js"></script>
+    <script src="common.js"></script>
+    <script src="contracts.js"></script>
+    <script src="ai.js"></script>
+    
+    <!-- Contract Picker Modal -->
+    <div class="modal fade" id="contractPickerModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-file-contract me-2"></i>Pilih Kontrak untuk Analisis</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="input-group mb-2">
+                        <input id="pickerSearch" class="form-control" placeholder="Cari nomor atau judul kontrak...">
+                        <button id="pickerSearchBtn" class="btn btn-outline-primary"><i class="fas fa-search"></i></button>
+                    </div>
+                    <div class="list-group" id="pickerResults" style="max-height: 360px; overflow:auto;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Log Modal -->
+    <div class="modal fade" id="activityLogModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-history me-2"></i>Log Aktivitas User
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <input type="date" class="form-control" id="logDateFilter" onchange="filterActivityLog()">
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-select" id="logUserFilter" onchange="filterActivityLog()">
+                                <option value="all">Semua User</option>
+                                <option value="admin">Admin</option>
+                                <option value="client">Client</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-select" id="logActionFilter" onchange="filterActivityLog()">
+                                <option value="all">Semua Aksi</option>
+                                <option value="login">Login</option>
+                                <option value="logout">Logout</option>
+                                <option value="create">Buat</option>
+                                <option value="update">Update</option>
+                                <option value="delete">Hapus</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Waktu</th>
+                                    <th>User</th>
+                                    <th>Aksi</th>
+                                    <th>Deskripsi</th>
+                                    <th>IP Address</th>
+                                </tr>
+                            </thead>
+                            <tbody id="activityLogTable">
+                                <!-- Activity log entries will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-primary" onclick="exportActivityLog()">Export Log</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div class="modal fade" id="changePasswordModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-key me-2"></i>Ganti Password
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="changePasswordForm">
+                        <div class="mb-3">
+                            <label for="currentPassword" class="form-label">Password Saat Ini</label>
+                            <input type="password" class="form-control" id="currentPassword" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="newPassword" class="form-label">Password Baru</label>
+                            <input type="password" class="form-control" id="newPassword" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="confirmPassword" class="form-label">Konfirmasi Password</label>
+                            <input type="password" class="form-control" id="confirmPassword" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-primary" onclick="changePassword()">Ganti Password</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+    <script>
+        let currentTheme = 'light';
+
+        function toggleTheme() {
+            currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            localStorage.setItem('theme', currentTheme);
+        }
+
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            currentTheme = savedTheme;
+            document.documentElement.setAttribute('data-theme', currentTheme);
+        }
+
+        function initializeSidebar() {
+            const toggleBtn = document.getElementById('sidebarToggle');
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', function() {
+                    sidebar.classList.toggle('collapsed');
+                    mainContent.classList.toggle('expanded');
+                });
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            localStorage.removeItem('role');
+            window.location.href = 'index.html';
+        }
+
+        // Activity Log Functions
+        function showActivityLog() {
+            const modal = new bootstrap.Modal(document.getElementById('activityLogModal'));
+            modal.show();
+            loadActivityLog();
+        }
+
+        function loadActivityLog() {
+            const activityLogTable = document.getElementById('activityLogTable');
+            if (!activityLogTable) return;
+            
+            // Dummy activity log data for AI
+            const activityLogs = [
+                {
+                    timestamp: '2024-01-15 18:30:25',
+                    user: 'Admin',
+                    action: 'Login',
+                    description: 'User berhasil login ke sistem AI',
+                    ipAddress: '192.168.1.100'
+                },
+                {
+                    timestamp: '2024-01-15 18:25:10',
+                    user: 'Client',
+                    action: 'Create',
+                    description: 'Menggunakan AI untuk analisis kontrak',
+                    ipAddress: '192.168.1.101'
+                },
+                {
+                    timestamp: '2024-01-15 18:20:45',
+                    user: 'Admin',
+                    action: 'Update',
+                    description: 'Memperbarui konfigurasi AI model',
+                    ipAddress: '192.168.1.100'
+                },
+                {
+                    timestamp: '2024-01-15 18:15:30',
+                    user: 'Client',
+                    action: 'View',
+                    description: 'Melihat rekomendasi AI untuk proyek',
+                    ipAddress: '192.168.1.101'
+                },
+                {
+                    timestamp: '2024-01-15 18:10:15',
+                    user: 'Admin',
+                    action: 'Delete',
+                    description: 'Menghapus data training AI yang tidak valid',
+                    ipAddress: '192.168.1.100'
+                },
+                {
+                    timestamp: '2024-01-15 18:05:00',
+                    user: 'Client',
+                    action: 'Export',
+                    description: 'Export laporan analisis AI ke PDF',
+                    ipAddress: '192.168.1.101'
+                },
+                {
+                    timestamp: '2024-01-15 18:00:30',
+                    user: 'Admin',
+                    action: 'Create',
+                    description: 'Membuat model AI baru untuk prediksi',
+                    ipAddress: '192.168.1.100'
+                },
+                {
+                    timestamp: '2024-01-15 17:55:20',
+                    user: 'Client',
+                    action: 'Update',
+                    description: 'Memperbarui preferensi AI assistant',
+                    ipAddress: '192.168.1.101'
+                },
+                {
+                    timestamp: '2024-01-15 17:50:10',
+                    user: 'Admin',
+                    action: 'View',
+                    description: 'Melihat performa AI model',
+                    ipAddress: '192.168.1.100'
+                },
+                {
+                    timestamp: '2024-01-15 17:45:55',
+                    user: 'Client',
+                    action: 'Logout',
+                    description: 'User logout dari sistem AI',
+                    ipAddress: '192.168.1.101'
+                }
+            ];
+            
+            let tableHTML = '';
+            activityLogs.forEach(log => {
+                const actionClass = getActionClass(log.action);
+                tableHTML += `
+                    <tr>
+                        <td>${log.timestamp}</td>
+                        <td><span class="badge bg-${log.user === 'Admin' ? 'primary' : 'info'}">${log.user}</span></td>
+                        <td><span class="badge ${actionClass}">${log.action}</span></td>
+                        <td>${log.description}</td>
+                        <td><code>${log.ipAddress}</code></td>
+                    </tr>
+                `;
+            });
+            
+            activityLogTable.innerHTML = tableHTML;
+        }
+
+        function getActionClass(action) {
+            const classes = {
+                'Login': 'bg-success',
+                'Logout': 'bg-secondary',
+                'Create': 'bg-primary',
+                'Update': 'bg-warning',
+                'Delete': 'bg-danger',
+                'View': 'bg-info',
+                'Export': 'bg-dark'
+            };
+            return classes[action] || 'bg-secondary';
+        }
+
+        function filterActivityLog() {
+            const dateFilter = document.getElementById('logDateFilter').value;
+            const userFilter = document.getElementById('logUserFilter').value;
+            const actionFilter = document.getElementById('logActionFilter').value;
+            
+            // For now, just reload the data (in real implementation, you'd filter the data)
+            loadActivityLog();
+            
+            // Show filter applied message
+            showSuccess(`Filter diterapkan: ${dateFilter ? 'Tanggal: ' + dateFilter : ''} ${userFilter !== 'all' ? 'User: ' + userFilter : ''} ${actionFilter !== 'all' ? 'Aksi: ' + actionFilter : ''}`);
+        }
+
+        function exportActivityLog() {
+            // Simulate export functionality
+            showSuccess('Activity log berhasil diexport ke file CSV!');
+        }
+
+        function showChangePasswordModal() {
+            const modal = new bootstrap.Modal(document.getElementById('changePasswordModal'));
+            modal.show();
+        }
+
+        function changePassword() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (newPassword !== confirmPassword) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Password baru dan konfirmasi password tidak cocok!',
+                    confirmButtonText: 'OK'
+                });
+                return;
+            }
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: 'Password berhasil diubah!',
+                confirmButtonText: 'OK'
+            });
+            
+            const modal = bootstrap.Modal.getInstance(document.getElementById('changePasswordModal'));
+            modal.hide();
+        }
+
+        function showSuccess(message) {
+            // Simple success notification
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-success alert-dismissible fade show position-fixed';
+            alert.style.top = '20px';
+            alert.style.right = '20px';
+            alert.style.zIndex = '9999';
+            alert.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 3000);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTheme();
+            loadLanguage();
+            initializeSidebar();
+            loadAIPage();
+            
+            // Load user info
+            const currentUser = localStorage.getItem('currentUser') || localStorage.getItem('user') || 'User';
+            document.getElementById('currentUser').textContent = currentUser;
+        });
+
+        // Mobile sidebar toggle function
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            
+            if (sidebar.classList.contains('show')) {
+                sidebar.classList.remove('show');
+                overlay.classList.remove('show');
+            } else {
+                sidebar.classList.add('show');
+                overlay.classList.add('show');
+            }
+        }
+    </script>
+</body>
+</html>
+
+

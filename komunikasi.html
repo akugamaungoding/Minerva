@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Komunikasi - Minerva</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+    <style>
+        /* Logo styling */
+        .navbar-logo {
+            height: 30px;
+            width: auto;
+            max-width: 80px;
+            object-fit: contain;
+            transition: transform 0.2s ease;
+        }
+        
+        .navbar-logo:hover {
+            transform: scale(1.05);
+        }
+        
+        @media (max-width: 768px) {
+            .navbar-logo {
+                height: 25px;
+                max-width: 60px;
+            }
+        }
+        
+        /* Logo fallback */
+        .navbar-logo:not([src]) {
+            display: none;
+        }
+        
+        .logo-fallback {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #0d6efd, #0dcaf0);
+            border-radius: 8px;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        /* Chat Enhancement Styles */
+        .chat-input-container {
+            position: relative;
+            background: white;
+            border-top: 1px solid #dee2e6;
+            padding: 15px;
+        }
+        
+        .chat-input-row {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+        }
+        
+        .chat-input-group {
+            flex: 1;
+            position: relative;
+        }
+        
+        .chat-input {
+            width: 100%;
+            border: 1px solid #ced4da;
+            border-radius: 25px;
+            padding: 12px 50px 12px 20px;
+            resize: none;
+            max-height: 120px;
+            min-height: 45px;
+        }
+        
+        .chat-input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+        
+        .chat-toolbar {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            gap: 5px;
+        }
+        
+        .chat-toolbar-btn {
+            background: none;
+            border: none;
+            color: #6c757d;
+            padding: 5px;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .chat-toolbar-btn:hover {
+            background: #f8f9fa;
+            color: #007bff;
+        }
+        
+        .chat-toolbar-btn.active {
+            background: #007bff;
+            color: white;
+        }
+        
+        .emoji-picker {
+            position: absolute;
+            bottom: 100%;
+            right: 0;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            max-width: 300px;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+        
+        .emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 5px;
+        }
+        
+        .emoji-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            padding: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+        
+        .emoji-btn:hover {
+            background: #f8f9fa;
+        }
+        
+        .gif-picker {
+            position: absolute;
+            bottom: 100%;
+            right: 0;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            width: 300px;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+        
+        .gif-item {
+            cursor: pointer;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        
+        .gif-item img {
+            width: 100%;
+            height: auto;
+        }
+        
+        .voice-recorder {
+            position: absolute;
+            bottom: 100%;
+            right: 0;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            width: 250px;
+            display: none;
+        }
+        
+        .voice-recorder.recording {
+            background: #fff3cd;
+            border-color: #ffc107;
+        }
+        
+        .voice-visualizer {
+            width: 100%;
+            height: 50px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .voice-bar {
+            width: 4px;
+            background: #007bff;
+            margin: 0 1px;
+            border-radius: 2px;
+            animation: voiceWave 0.5s ease-in-out infinite alternate;
+        }
+        
+        @keyframes voiceWave {
+            0% { height: 10px; }
+            100% { height: 30px; }
+        }
+        
+        .message-actions {
+            position: absolute;
+            top: -10px;
+            right: 10px;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 15px;
+            padding: 5px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: none;
+            gap: 5px;
+        }
+        
+        .message-item:hover .message-actions {
+            display: flex;
+        }
+        
+        .message-action-btn {
+            background: none;
+            border: none;
+            color: #6c757d;
+            padding: 5px;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .message-action-btn:hover {
+            background: #f8f9fa;
+            color: #007bff;
+        }
+        
+        .attachment-preview {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 5px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .attachment-icon {
+            width: 40px;
+            height: 40px;
+            background: #007bff;
+            color: white;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .attachment-info {
+            flex: 1;
+        }
+        
+        .attachment-name {
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+        
+        .attachment-size {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        
+        .voice-message {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 15px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .voice-play-btn {
+            background: #2196f3;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        
+        .voice-duration {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .gif-message img {
+            max-width: 200px;
+            border-radius: 10px;
+        }
+        
+        .emoji-message {
+            font-size: 2rem;
+            text-align: center;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Mobile sidebar overlay -->
+        <div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+        
+        <div id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <h3>Minerva</h3>
+                <!-- Mobile sidebar close button -->
+                <button id="mobileSidebarClose" class="mobile-sidebar-close" onclick="toggleSidebar()">
+                    <i class="fas fa-times"></i>
+                </button>
+                <!-- Desktop sidebar toggle hidden - focus on mobile only -->
+                <!-- <button id="sidebarToggle" class="sidebar-toggle">
+                    <i class="fas fa-bars"></i>
+                </button> -->
+            </div>
+            <nav class="sidebar-nav">
+                <ul id="sidebarNav" class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="dashboard.html">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="contracts.html">
+                            <i class="fas fa-file-contract"></i>
+                            <span>Manajemen Kontrak</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="gps-tracking.html">
+                            <i class="fas fa-map-marked-alt"></i>
+                            <span>GPS Tracking</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="ai.html">
+                            <i class="fas fa-robot"></i>
+                            <span>AI Assistant</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="komunikasi.html">
+                            <i class="fas fa-comments"></i>
+                            <span>Komunikasi</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="billing.html">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                            <span>E-Billing</span>
+                        </a>
+                    </li>
+
+                </ul>
+            </nav>
+        </div>
+
+        <div id="mainContent" class="main-content">
+            <nav class="top-navbar">
+                <div class="container-fluid">
+                    <div class="row align-items-center w-100">
+                        <div class="col">
+                            <div class="d-flex align-items-center">
+                                <!-- Mobile sidebar toggle button - moved to leftmost position -->
+                                <button id="mobileSidebarToggle" class="mobile-sidebar-toggle me-3" onclick="toggleSidebar()">
+                                    <i class="fas fa-bars"></i>
+                                </button>
+                                <img src="logo.png" alt="Logo" class="navbar-logo me-3" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="logo-fallback" style="display: none;">M</div>
+                                <div>
+                                    <h4 class="mb-0" data-translate="komunikasi">Komunikasi</h4>
+                                    <small class="text-muted d-none d-sm-inline" data-translate="komunikasi_description">Chat dan kolaborasi tim proyek</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-auto d-flex gap-2">
+                            <button class="btn btn-outline-info btn-sm" onclick="showActivityLog()" title="Activity Log">
+                                <i class="fas fa-history"></i>
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm" onclick="toggleLanguage()" title="Toggle Language">
+                                <i class="fas fa-globe" id="languageIcon"></i>
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm" onclick="toggleTheme()" title="Toggle Theme">
+                                <i class="fas fa-moon" id="themeIconNavbar"></i>
+                            </button>
+                            <div class="dropdown">
+                                <button class="btn btn-outline-primary dropdown-toggle btn-sm" type="button" data-bs-toggle="dropdown">
+                                    <span id="currentUser">User</span>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="index.html">
+                                        <i class="fas fa-sign-out-alt me-2"></i><span data-translate="logout">Logout</span>
+                                    </a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="content-area">
+                <div id="komunikasiPage" class="page-container active">
+                    <!-- Komunikasi Content - Exact match with communication.js -->
+                    <div id="communicationPage">
+                        <!-- Content will be dynamically loaded by ChatInterface -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="translations.js"></script>
+    <script src="common.js"></script>
+    <script src="communication.js"></script>
+    <script>
+        // Theme dan language sudah didefinisikan di common.js
+        
+        // Global variables for communication
+        let currentRole = 'client'; // Default role, will be updated from localStorage
+        
+        // Make currentRole globally available for communication.js
+        window.currentRole = currentRole;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load user info if available
+            const user = localStorage.getItem('currentUser') || localStorage.getItem('user') || 'User';
+            document.getElementById('currentUser').textContent = user;
+            
+            // Get user role from localStorage
+            currentRole = localStorage.getItem('currentRole') || localStorage.getItem('role') || 'client';
+            
+            // Update global currentRole for communication.js
+            window.currentRole = currentRole;
+            
+            // Debug log
+            console.log('Komunikasi - Role detected:', currentRole);
+            console.log('Komunikasi - User:', user);
+            console.log('Komunikasi - localStorage currentRole:', localStorage.getItem('currentRole'));
+            console.log('Komunikasi - localStorage role:', localStorage.getItem('role'));
+            console.log('Komunikasi - window.currentRole:', window.currentRole);
+            
+            // Initialize Communication using ChatInterface - Exact match with communication.js
+            // Delay to ensure currentRole is set globally
+            setTimeout(() => {
+                if (typeof loadCommunicationPage === 'function') {
+                    loadCommunicationPage();
+                }
+            }, 100);
+        });
+        
+        // Activity Log Functions
+        function showActivityLog() {
+            const modal = new bootstrap.Modal(document.getElementById('activityLogModal'));
+            modal.show();
+            loadActivityLog();
+        }
+
+        function loadActivityLog() {
+            const activityLogTable = document.getElementById('activityLogTable');
+            if (!activityLogTable) return;
+            
+            // Dummy activity log data for communication
+            const activityLogs = [
+                {
+                    timestamp: '2024-01-15 16:30:25',
+                    user: 'Admin',
+                    action: 'Login',
+                    description: 'User berhasil login ke sistem komunikasi',
+                    ipAddress: '192.168.1.100'
+                },
+                {
+                    timestamp: '2024-01-15 16:25:10',
+                    user: 'Client',
+                    action: 'Create',
+                    description: 'Mengirim pesan baru ke channel #proyek-jembatan',
+                    ipAddress: '192.168.1.101'
+                },
+                {
+                    timestamp: '2024-01-15 16:20:45',
+                    user: 'Admin',
+                    action: 'Update',
+                    description: 'Memperbarui status pesan menjadi dibaca',
+                    ipAddress: '192.168.1.100'
+                },
+                {
+                    timestamp: '2024-01-15 16:15:30',
+                    user: 'Client',
+                    action: 'View',
+                    description: 'Melihat detail pesan dari tim proyek',
+                    ipAddress: '192.168.1.101'
+                },
+                {
+                    timestamp: '2024-01-15 16:10:15',
+                    user: 'Admin',
+                    action: 'Delete',
+                    description: 'Menghapus pesan yang tidak pantas',
+                    ipAddress: '192.168.1.100'
+                },
+                {
+                    timestamp: '2024-01-15 16:05:00',
+                    user: 'Client',
+                    action: 'Export',
+                    description: 'Export riwayat chat ke PDF',
+                    ipAddress: '192.168.1.101'
+                },
+                {
+                    timestamp: '2024-01-15 16:00:30',
+                    user: 'Admin',
+                    action: 'Create',
+                    description: 'Membuat channel baru: #update-proyek',
+                    ipAddress: '192.168.1.100'
+                },
+                {
+                    timestamp: '2024-01-15 15:55:20',
+                    user: 'Client',
+                    action: 'Update',
+                    description: 'Memperbarui profil pengguna',
+                    ipAddress: '192.168.1.101'
+                },
+                {
+                    timestamp: '2024-01-15 15:50:10',
+                    user: 'Admin',
+                    action: 'View',
+                    description: 'Melihat laporan aktivitas komunikasi',
+                    ipAddress: '192.168.1.100'
+                },
+                {
+                    timestamp: '2024-01-15 15:45:55',
+                    user: 'Client',
+                    action: 'Logout',
+                    description: 'User logout dari sistem komunikasi',
+                    ipAddress: '192.168.1.101'
+                }
+            ];
+            
+            let tableHTML = '';
+            activityLogs.forEach(log => {
+                const actionClass = getActionClass(log.action);
+                tableHTML += `
+                    <tr>
+                        <td>${log.timestamp}</td>
+                        <td><span class="badge bg-${log.user === 'Admin' ? 'primary' : 'info'}">${log.user}</span></td>
+                        <td><span class="badge ${actionClass}">${log.action}</span></td>
+                        <td>${log.description}</td>
+                        <td><code>${log.ipAddress}</code></td>
+                    </tr>
+                `;
+            });
+            
+            activityLogTable.innerHTML = tableHTML;
+        }
+
+        function getActionClass(action) {
+            const classes = {
+                'Login': 'bg-success',
+                'Logout': 'bg-secondary',
+                'Create': 'bg-primary',
+                'Update': 'bg-warning',
+                'Delete': 'bg-danger',
+                'View': 'bg-info',
+                'Export': 'bg-dark'
+            };
+            return classes[action] || 'bg-secondary';
+        }
+
+        function filterActivityLog() {
+            const dateFilter = document.getElementById('logDateFilter').value;
+            const userFilter = document.getElementById('logUserFilter').value;
+            const actionFilter = document.getElementById('logActionFilter').value;
+            
+            // For now, just reload the data (in real implementation, you'd filter the data)
+            loadActivityLog();
+            
+            // Show filter applied message
+            showSuccess(`Filter diterapkan: ${dateFilter ? 'Tanggal: ' + dateFilter : ''} ${userFilter !== 'all' ? 'User: ' + userFilter : ''} ${actionFilter !== 'all' ? 'Aksi: ' + actionFilter : ''}`);
+        }
+
+        function exportActivityLog() {
+            // Simulate export functionality
+            showSuccess('Activity log berhasil diexport ke file CSV!');
+        }
+    </script>
+    
+    <!-- Activity Log Modal -->
+    <div class="modal fade" id="activityLogModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-history me-2"></i>Log Aktivitas User
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <input type="date" class="form-control" id="logDateFilter" onchange="filterActivityLog()">
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-select" id="logUserFilter" onchange="filterActivityLog()">
+                                <option value="all">Semua User</option>
+                                <option value="admin">Admin</option>
+                                <option value="client">Client</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-select" id="logActionFilter" onchange="filterActivityLog()">
+                                <option value="all">Semua Aksi</option>
+                                <option value="login">Login</option>
+                                <option value="logout">Logout</option>
+                                <option value="create">Buat</option>
+                                <option value="update">Update</option>
+                                <option value="delete">Hapus</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Waktu</th>
+                                    <th>User</th>
+                                    <th>Aksi</th>
+                                    <th>Deskripsi</th>
+                                    <th>IP Address</th>
+                                </tr>
+                            </thead>
+                            <tbody id="activityLogTable">
+                                <!-- Activity log entries will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-primary" onclick="exportActivityLog()">Export Log</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

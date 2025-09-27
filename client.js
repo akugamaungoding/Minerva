@@ -1,14 +1,15 @@
 const clientMenuItems = [
-    { name: 'Dasbor', icon: 'fas fa-tachometer-alt', href: '#dashboard', color: 'primary' },
-    { name: 'Manajemen Kontrak', icon: 'fas fa-file-contract', href: '#contracts', color: 'success'},
-    { name: 'Komunikasi', icon: 'fas fa-comments', href: '#communication', color: 'info' },
-    { name: 'AI Assistant', icon: 'fas fa-robot', href: '#ai', color: 'warning' },
-    { name: 'QR Scanner', icon: 'fas fa-qrcode', href: 'scan.html', color: 'primary' }
+    { name: 'Dashboard', icon: 'fas fa-tachometer-alt', href: 'dashboard.html', color: 'primary' },
+    { name: 'Manajemen Kontrak', icon: 'fas fa-file-contract', href: 'contracts.html', color: 'success'},
+    { name: 'GPS Tracking', icon: 'fas fa-map-marked-alt', href: 'gps-tracking.html', color: 'info' },
+    { name: 'AI Assistant', icon: 'fas fa-robot', href: 'ai.html', color: 'warning' },
+        { name: 'Komunikasi', icon: 'fas fa-comments', href: 'komunikasi.html', color: 'info' },
+        { name: 'E-Billing', icon: 'fas fa-file-invoice-dollar', href: 'billing.html', color: 'success' },
 ];
 
 const clientDashboardItems = [
     { 
-        name: 'Dasbor', 
+        name: 'Dashboard', 
         icon: 'fas fa-tachometer-alt', 
         description: 'Tinjauan proyek Anda',
         color: 'primary'
@@ -35,8 +36,7 @@ const clientDashboardItems = [
         name: 'QR Scanner', 
         icon: 'fas fa-qrcode', 
         description: 'Scan QR untuk melihat kontrak',
-        color: 'success',
-        href: 'scan.html'
+        color: 'success'
     }
 ];
 
@@ -85,10 +85,10 @@ function openClientModule(moduleName) {
             showPage('communication');
             break;
         case 'ai_assistant':
-            showPage('ai');
+            window.location.href = 'ai.html';
             break;
-        case 'scannerPage':
-            window.location.href = 'scan.html';
+        case 'scanner':
+            showPage('scanner');
             break;
         default:
             showPage('dashboard');

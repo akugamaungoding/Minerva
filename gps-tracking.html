@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPS Tracking - Minerva</title>
+    
+    <!-- Favicon and Logo -->
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="apple-touch-icon" href="logo.png">
+    <link rel="shortcut icon" href="logo.png">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="styles.css" rel="stylesheet">
+    <style>
+        /* Logo styling */
+        .navbar-logo {
+            height: 30px;
+            width: auto;
+            max-width: 80px;
+            object-fit: contain;
+            transition: transform 0.2s ease;
+        }
+        
+        .navbar-logo:hover {
+            transform: scale(1.05);
+        }
+        
+        @media (max-width: 768px) {
+            .navbar-logo {
+                height: 25px;
+                max-width: 60px;
+            }
+        }
+        
+        /* Logo fallback */
+        .navbar-logo:not([src]) {
+            display: none;
+        }
+        
+        .logo-fallback {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #0d6efd, #0dcaf0);
+            border-radius: 8px;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        #map {
+            height: 70vh;
+            width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tracking-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .container-status {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        
+        .container-status:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .status-in-transit {
+            background-color: #cff4fc;
+            color: #055160;
+        }
+        
+        .status-delivered {
+            background-color: #d1e7dd;
+            color: #0f5132;
+        }
+        
+        .status-delayed {
+            background-color: #fff3cd;
+            color: #664d03;
+        }
+        
+        .status-deviated {
+            background-color: #f8d7da;
+            color: #842029;
+        }
+        
+        .alert-item {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        
+        .alert-item.high {
+            background: #f8d7da;
+            border-left-color: #dc3545;
+        }
+        
+        .progress-bar-container {
+            background: #e9ecef;
+            border-radius: 10px;
+            height: 8px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+        
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+        
+        .gps-sidebar {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            height: 70vh;
+            overflow-y: auto;
+        }
+        
+        .map-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .legend {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .stats-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .stats-card h4 {
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .stats-card small {
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body data-theme="light" class="gps-tracking-page">
+    <div class="dashboard-container">
+        <!-- Mobile sidebar overlay -->
+        <div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+        
+        <div id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <h3>Minerva</h3>
+                <!-- Mobile sidebar close button -->
+                <button id="mobileSidebarClose" class="mobile-sidebar-close" onclick="toggleSidebar()">
+                    <i class="fas fa-times"></i>
+                </button>
+                <!-- Desktop sidebar toggle hidden - focus on mobile only -->
+                <!-- <button id="sidebarToggle" class="sidebar-toggle">
+                    <i class="fas fa-bars"></i>
+                </button> -->
+            </div>
+            <nav class="sidebar-nav">
+                <ul id="sidebarNav" class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="dashboard.html">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="contracts.html">
+                            <i class="fas fa-file-contract"></i>
+                            <span>Manajemen Kontrak</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="gps-tracking.html">
+                            <i class="fas fa-map-marked-alt"></i>
+                            <span>GPS Tracking</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="ai.html">
+                            <i class="fas fa-robot"></i>
+                            <span>AI Assistant</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="komunikasi.html">
+                            <i class="fas fa-comments"></i>
+                            <span>Komunikasi</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="billing.html">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                            <span>E-Billing</span>
+                        </a>
+                    </li>
+
+                </ul>
+            </nav>
+        </div>
+
+        <div id="mainContent" class="main-content">
+            <nav class="top-navbar">
+                <div class="container-fluid">
+                    <div class="row align-items-center w-100">
+                        <div class="col">
+                            <div class="d-flex align-items-center">
+                                <!-- Mobile sidebar toggle button - moved to leftmost position -->
+                                <button id="mobileSidebarToggle" class="mobile-sidebar-toggle me-3" onclick="toggleSidebar()">
+                                    <i class="fas fa-bars"></i>
+                                </button>
+                                <img src="logo.png" alt="Logo" class="navbar-logo me-3" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="logo-fallback" style="display: none;">M</div>
+                                <div>
+                                    <h4 class="mb-0" data-translate="gps_tracking">GPS Tracking</h4>
+                                    <small class="text-muted d-none d-sm-inline" data-translate="gps_description">Pantau posisi real-time semua kontainer yang sedang dalam perjalanan</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-auto d-flex gap-2">
+                            <button class="btn btn-outline-info btn-sm" onclick="showActivityLog()" title="Activity Log">
+                                <i class="fas fa-history"></i>
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm" onclick="toggleLanguage()" title="Toggle Language">
+                                <i class="fas fa-globe" id="languageIcon"></i>
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm" onclick="toggleTheme()" title="Toggle Theme">
+                                <i class="fas fa-moon" id="themeIconNavbar"></i>
+                            </button>
+                            <div class="dropdown">
+                                <button class="btn btn-outline-primary dropdown-toggle btn-sm" type="button" data-bs-toggle="dropdown">
+                                    <span id="currentUser">User</span>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="index.html">
+                                        <i class="fas fa-sign-out-alt me-2"></i><span data-translate="logout">Logout</span>
+                                    </a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="content-area">
+                <!-- Header Stats -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <h4 id="totalContainers">0</h4>
+                            <small data-translate="total_containers">Total Kontainer</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <h4 id="activeTracking">0</h4>
+                            <small data-translate="active_tracking">Aktif</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <h4 id="alertsCount">0</h4>
+                            <small data-translate="alerts_count">Alert</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <h4 id="deliveredCount">0</h4>
+                            <small data-translate="delivered_count">Terkirim</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- GPS Sidebar -->
+                    <div class="col-md-3">
+                        <div class="gps-sidebar">
+                            <h5 class="mb-4">
+                                <i class="fas fa-map-marked-alt me-2"></i><span data-translate="gps_tracking">GPS Tracking</span>
+                            </h5>
+                            
+                            <!-- Filter Controls -->
+                            <div class="mb-4">
+                                <h6 data-translate="filter_containers">Filter Kontainer</h6>
+                                <select class="form-select form-select-sm mb-2" id="contractFilter">
+                                    <option value="" data-translate="all_contracts">Semua Kontrak</option>
+                                </select>
+                                <select class="form-select form-select-sm mb-2" id="statusFilter">
+                                    <option value="" data-translate="all_status">Semua Status</option>
+                                    <option value="in_transit" data-translate="in_transit">Dalam Perjalanan</option>
+                                    <option value="delivered" data-translate="delivered">Terkirim</option>
+                                    <option value="delayed" data-translate="delayed">Terlambat</option>
+                                    <option value="deviated" data-translate="deviated">Menyimpang</option>
+                                </select>
+                                <button class="btn btn-primary btn-sm w-100" onclick="refreshTracking()">
+                                    <i class="fas fa-sync-alt me-2"></i><span data-translate="refresh">Refresh</span>
+                                </button>
+                            </div>
+                            
+                            <!-- Container List -->
+                            <div class="mb-4">
+                                <h6 data-translate="container_list">Daftar Kontainer</h6>
+                                <div id="containerList">
+                                    <!-- Container items will be populated here -->
+                                </div>
+                            </div>
+                            
+                            <!-- Alerts -->
+                            <div>
+                                <h6 data-translate="latest_alerts">Alert Terbaru</h6>
+                                <div id="alertsList">
+                                    <!-- Alerts will be populated here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Main Content -->
+                    <div class="col-md-9">
+                        <!-- Map Container -->
+                        <div class="position-relative">
+                            <div id="map"></div>
+                            
+                            <!-- Map Controls -->
+                            <div class="map-controls">
+                                <button class="btn btn-sm btn-outline-primary me-2" onclick="centerMap()" title="Center Map">
+                                    <i class="fas fa-crosshairs"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-success" onclick="toggleAutoRefresh()" title="Toggle Auto Refresh">
+                                    <i class="fas fa-play" id="autoRefreshIcon"></i>
+                                </button>
+                            </div>
+                            
+                            <!-- Legend -->
+                            <div class="legend">
+                                <h6 data-translate="container_status">Status Kontainer</h6>
+                                <div class="legend-item">
+                                    <div class="legend-color" style="background-color: #17a2b8;"></div>
+                                    <span data-translate="in_transit">Dalam Perjalanan</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color" style="background-color: #28a745;"></div>
+                                    <span data-translate="delivered">Terkirim</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color" style="background-color: #ffc107;"></div>
+                                    <span data-translate="delayed">Terlambat</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color" style="background-color: #dc3545;"></div>
+                                    <span data-translate="deviated">Menyimpang</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Container Details Modal -->
+    <div class="modal fade" id="containerDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-box me-2"></i><span data-translate="container_details">Detail Kontainer</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="containerDetailsContent">
+                        <!-- Content will be populated here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-translate="close">Tutup</button>
+                    <button type="button" class="btn btn-primary" onclick="viewContractDetails()" data-translate="view_contract">Lihat Kontrak</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Log Modal -->
+    <div class="modal fade" id="activityLogModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-history me-2"></i><span data-translate="activity_log">Log Aktivitas</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="activity-log">
+                        <div class="activity-item">
+                            <div class="activity-icon">
+                                <i class="fas fa-map-marked-alt"></i>
+                            </div>
+                            <div class="activity-content">
+                                <h6 data-translate="gps_accessed">GPS Tracking Accessed</h6>
+                                <p class="text-muted mb-0" data-translate="gps_description">User accessed GPS tracking page</p>
+                                <small class="text-muted" id="activityTimestamp"></small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-translate="close">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div class="modal fade" id="changePasswordModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-key me-2"></i><span data-translate="change_password">Ganti Password</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="changePasswordForm">
+                        <div class="mb-3">
+                            <label for="currentPassword" class="form-label" data-translate="current_password">Password Saat Ini</label>
+                            <input type="password" class="form-control" id="currentPassword" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="newPassword" class="form-label" data-translate="new_password">Password Baru</label>
+                            <input type="password" class="form-control" id="newPassword" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="confirmPassword" class="form-label" data-translate="confirm_password">Konfirmasi Password</label>
+                            <input type="password" class="form-control" id="confirmPassword" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-translate="cancel">Batal</button>
+                    <button type="button" class="btn btn-primary" onclick="changePassword()" data-translate="change_password">Ganti Password</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="translations.js"></script>
+    <script src="common.js"></script>
+    <script src="gps-tracking.js"></script>
+    <script>
+        // Initialize user info and theme
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentUser = localStorage.getItem('currentUser') || 'User';
+            const currentRole = localStorage.getItem('currentRole') || 'client';
+            const theme = localStorage.getItem('theme') || 'light';
+            const language = localStorage.getItem('language') || 'id';
+            
+            document.getElementById('currentUser').textContent = currentUser;
+            document.getElementById('userRole').textContent = currentRole.toUpperCase();
+            document.getElementById('languageText').textContent = language.toUpperCase();
+            
+            // Set activity timestamp
+            document.getElementById('activityTimestamp').textContent = new Date().toLocaleString('id-ID');
+            
+            // Apply theme
+            if (theme === 'dark') {
+                document.body.classList.add('dark-theme');
+                document.getElementById('themeIconNavbar').className = 'fas fa-sun';
+            }
+            
+            // Apply translations
+            applyTranslations();
+            
+            // Initialize GPS tracking
+            initializeGPSTracking();
+        });
+        
+        // Show activity log
+        function showActivityLog() {
+            const modal = new bootstrap.Modal(document.getElementById('activityLogModal'));
+            modal.show();
+        }
+        
+        // Show change password modal
+        function showChangePasswordModal() {
+            const modal = new bootstrap.Modal(document.getElementById('changePasswordModal'));
+            modal.show();
+        }
+        
+        // Change password
+        function changePassword() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (newPassword !== confirmPassword) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: 'Password baru dan konfirmasi password tidak cocok!'
+                });
+                return;
+            }
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: 'Password berhasil diubah!',
+                timer: 2000,
+                showConfirmButton: false
+            });
+            
+            const modal = bootstrap.Modal.getInstance(document.getElementById('changePasswordModal'));
+            modal.hide();
+        }
+    </script>
+</body>
+</html>

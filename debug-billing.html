@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Billing</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <h1>Debug Billing System</h1>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <h3>System Status</h3>
+                <div id="systemStatus"></div>
+            </div>
+            <div class="col-md-6">
+                <h3>Data Counts</h3>
+                <div id="dataCounts"></div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-12">
+                <h3>Billing Stats</h3>
+                <div id="billingStats"></div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-12">
+                <h3>Bills Table</h3>
+                <div id="billsTable"></div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-12">
+                <h3>Console Logs</h3>
+                <div id="consoleLogs" style="background: #f8f9fa; padding: 15px; border-radius: 5px; font-family: monospace; max-height: 300px; overflow-y: auto;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Capture console logs
+        const originalLog = console.log;
+        const originalError = console.error;
+        const logs = [];
+        
+        console.log = function(...args) {
+            logs.push('LOG: ' + args.join(' '));
+            originalLog.apply(console, args);
+            updateConsoleLogs();
+        };
+        
+        console.error = function(...args) {
+            logs.push('ERROR: ' + args.join(' '));
+            originalError.apply(console, args);
+            updateConsoleLogs();
+        };
+        
+        function updateConsoleLogs() {
+            const logsDiv = document.getElementById('consoleLogs');
+            if (logsDiv) {
+                logsDiv.innerHTML = logs.slice(-20).join('<br>');
+                logsDiv.scrollTop = logsDiv.scrollHeight;
+            }
+        }
+    </script>
+    
+    <script src="billing.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded');
+            
+            // Check system status
+            const systemStatus = document.getElementById('systemStatus');
+            const dataCounts = document.getElementById('dataCounts');
+            
+            if (typeof billingSystem !== 'undefined') {
+                systemStatus.innerHTML = '<div class="alert alert-success">✅ BillingSystem loaded successfully</div>';
+                
+                dataCounts.innerHTML = `
+                    <div class="alert alert-info">
+                        <strong>Contracts:</strong> ${billingSystem.contracts.length}<br>
+                        <strong>Bills:</strong> ${billingSystem.bills.length}<br>
+                        <strong>Payments:</strong> ${billingSystem.payments.length}
+                    </div>
+                `;
+                
+                // Render dashboard
+                const stats = document.getElementById('billingStats');
+                const table = document.getElementById('billsTable');
+                
+                if (stats) {
+                    try {
+                        stats.innerHTML = billingSystem.renderBillingDashboard();
+                        console.log('Stats rendered successfully');
+                    } catch (error) {
+                        console.error('Error rendering stats:', error);
+                        stats.innerHTML = '<div class="alert alert-danger">Error rendering stats: ' + error.message + '</div>';
+                    }
+                }
+                
+                if (table) {
+                    try {
+                        table.innerHTML = billingSystem.renderBillsTable();
+                        console.log('Table rendered successfully');
+                    } catch (error) {
+                        console.error('Error rendering table:', error);
+                        table.innerHTML = '<div class="alert alert-danger">Error rendering table: ' + error.message + '</div>';
+                    }
+                }
+                
+            } else {
+                systemStatus.innerHTML = '<div class="alert alert-danger">❌ BillingSystem not loaded</div>';
+                dataCounts.innerHTML = '<div class="alert alert-warning">No data available</div>';
+            }
+        });
+    </script>
+</body>
+</html>

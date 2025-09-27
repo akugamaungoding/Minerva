@@ -33,7 +33,7 @@ const sampleContracts = [
         penaltiTerlambat: 100000,
         hariPenalti: 7,
         dokumenLampiran: 'kontrak_logistik_jakarta.pdf',
-        status: 'active',
+        status: 'draft',
         createdAt: '2024-01-10',
         updatedAt: '2024-01-15'
     },
@@ -89,7 +89,7 @@ const sampleContracts = [
         penaltiTerlambat: 200000,
         hariPenalti: 5,
         dokumenLampiran: 'kontrak_bongkar_muat.pdf',
-        status: 'completed',
+        status: 'expired',
         createdAt: '2023-11-20',
         updatedAt: '2024-01-31'
     },
@@ -723,7 +723,7 @@ function updateContractStats() {
     const pending = contracts.filter(c => c.status === 'pending').length;
     const active = contracts.filter(c => c.status === 'active').length;
     const expiring = contracts.filter(c => {
-        const endDate = new Date(c.endDate);
+        const endDate = new Date(c.tglSelesai || c.endDate);
         const today = new Date();
         const daysUntilExpiry = (endDate - today) / (1000 * 60 * 60 * 24);
         return daysUntilExpiry <= 30 && daysUntilExpiry > 0;
@@ -878,47 +878,74 @@ function renderContractsTable() {
     paginatedContracts.forEach(contract => {
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td>
+            <td style="position: sticky; left: 0; background-color: white; z-index: 5; border-right: 1px solid #dee2e6; min-width: 50px;">
                 <input type="checkbox" class="contract-checkbox" value="${contract.id}" 
                        onchange="toggleContractSelection(${contract.id})">
             </td>
-            <td>
+            <td style="min-width: 150px;">
                 <strong>${contract.nomorKontrak || `#${contract.id}`}</strong>
             </td>
-            <td>
+            <td style="min-width: 200px;">
                 <strong>${contract.namaProyek || contract.name}</strong>
                 ${contract.description ? `<br><small class="text-muted">${contract.description}</small>` : ''}
             </td>
-            <td>
+            <td style="min-width: 120px;">
                 <span class="type-badge type-${(contract.jenisKontrak || contract.type).toLowerCase().replace(' ', '_')}">
                     ${contract.jenisKontrak || getTypeLabel(contract.type)}
                 </span>
             </td>
-            <td>${contract.namaPic || contract.client}</td>
-            <td class="contract-value">${contract.mataUang || 'Rp'} ${formatCurrency(contract.nilaiKontrak || contract.value)}</td>
-            <td class="text-center">
-                <span class="badge bg-secondary">${contract.mataUang || 'IDR'}</span>
-            </td>
-            <td class="contract-dates">${formatDate(contract.tglMulai || contract.startDate)}</td>
-            <td class="contract-dates">${formatDate(contract.tglSelesai || contract.endDate)}</td>
-            <td>
+            <td style="min-width: 150px;" class="contract-value">${contract.mataUang || 'Rp'} ${formatCurrency(contract.nilaiKontrak || contract.value)}</td>
+            <td style="min-width: 130px;" class="contract-dates">${formatDate(contract.tglMulai || contract.startDate)}</td>
+            <td style="min-width: 130px;" class="contract-dates">${formatDate(contract.tglSelesai || contract.endDate)}</td>
+            <td style="min-width: 100px;">
                 <span class="status-badge status-${contract.status}">
                     ${getStatusLabel(contract.status)}
                 </span>
             </td>
-            <td>
-                <div class="action-buttons-small">
+            <td style="min-width: 300px; position: sticky; right: 0; background-color: white; z-index: 5; border-left: 1px solid #dee2e6;">
+                <div class="action-buttons-small" style="display: flex; flex-wrap: wrap; gap: 2px;">
                     <button class="btn btn-sm btn-outline-primary" onclick="viewContract(${contract.id})" title="Lihat Detail">
                         <i class="fas fa-eye"></i>
                     </button>
                     <button class="btn btn-sm btn-outline-info" onclick="viewBarang(${contract.id})" title="Lihat Barang">
                         <i class="fas fa-boxes"></i>
                     </button>
-                    <button class="btn btn-sm btn-outline-warning" onclick="editContract(${contract.id})" title="Edit">
+                    <button class="btn btn-sm btn-outline-warning" 
+                            onclick="editContract(${contract.id})" 
+                            title="Edit Kontrak"
+                            ${contract.status !== 'draft' ? 'disabled' : ''}>
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="deleteContract(${contract.id})" title="Hapus">
-                        <i class="fas fa-trash"></i>
+                    <button class="btn btn-sm btn-outline-success" onclick="downloadContractPDF(${contract.id})" title="Download PDF dengan QR Code">
+                        <i class="fas fa-file-pdf"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="viewContractQR(${contract.id})" title="Lihat QR Code Kontrak">
+                        <i class="fas fa-qrcode"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary" onclick="viewApprovalWorkflow(${contract.id})" title="Lihat Workflow Approval">
+                        <i class="fas fa-clipboard-check"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-info" onclick="runAILegalCheck(${contract.id})" title="AI Legal Check">
+                        <i class="fas fa-robot"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary" onclick="updateContractProgress(${contract.id})" title="Update Progress">
+                        <i class="fas fa-tasks"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="showRiskAnalysis(${contract.id})" title="Analisis Risiko">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="showTimelineVersionControl(${contract.id})" title="Timeline & Version Control">
+                        <i class="fas fa-history"></i>
+                    </button>
+                    ${contract.gpsTracking && contract.gpsTracking.enabled ? `
+                        <button class="btn btn-sm btn-outline-info" onclick="openGPSTracking(${contract.id})" title="Live Track">
+                            <i class="fas fa-map-marked-alt"></i>
+                        </button>
+                    ` : ''}
+                    <button class="btn btn-sm ${contract.status === 'active' ? 'btn-outline-warning' : 'btn-outline-success'}" 
+                            onclick="toggleContractStatus(${contract.id})" 
+                            title="${contract.status === 'active' ? 'Nonaktifkan' : 'Aktifkan'}">
+                        <i class="fas fa-${contract.status === 'active' ? 'pause' : 'play'}"></i>
                     </button>
                 </div>
             </td>
@@ -998,7 +1025,12 @@ function showCreateContractModal() {
 // Clear create contract form
 function clearCreateContractForm() {
     document.getElementById('createContractForm').reset();
-    document.getElementById('contractStatus').value = 'draft';
+    document.getElementById('createContractForm').classList.remove('was-validated');
+    document.getElementById('createContractForm').removeAttribute('data-edit-id');
+    
+    // Clear contract barang list
+    contractBarangList = [];
+    loadContractBarangData();
 }
 
 // Generate contract number
@@ -1022,8 +1054,12 @@ function createContract() {
         return;
     }
 
-    // Generate contract number
-    const nomorKontrak = generateContractNumber();
+    // Check if editing existing contract
+    const editId = form.getAttribute('data-edit-id');
+    const isEditing = editId !== null;
+    
+    // Generate contract number (only for new contracts)
+    const nomorKontrak = isEditing ? contracts.find(c => c.id === parseInt(editId)).nomorKontrak : generateContractNumber();
     
     // Get form values
     const newContract = {
@@ -1056,15 +1092,144 @@ function createContract() {
         updatedAt: new Date().toISOString().split('T')[0]
     };
 
-    contracts.unshift(newContract);
+    if (isEditing) {
+        // Update existing contract
+        const index = contracts.findIndex(c => c.id === parseInt(editId));
+        if (index !== -1) {
+            contracts[index] = { ...contracts[index], ...newContract };
+            showSuccess('Kontrak berhasil diperbarui!');
+        }
+    } else {
+        // Add new contract
+        contracts.unshift(newContract);
+        
+        // Save barang data for new contract
+        if (contractBarangList.length > 0) {
+            barangData.set(newContract.id, [...contractBarangList]);
+        }
+        
+        showSuccess(`Kontrak berhasil dibuat dengan nomor: ${nomorKontrak}`);
+    }
+    
     applyFilters();
     updateContractStats();
 
-    // Close modal
+    // Close modal and clear form
     const modal = bootstrap.Modal.getInstance(document.getElementById('createContractModal'));
     modal.hide();
+    clearCreateContractForm();
+}
 
-    showSuccess(`Kontrak berhasil dibuat dengan nomor: ${nomorKontrak}`);
+// Edit contract
+function editContract(contractId) {
+    const contract = contracts.find(c => c.id === contractId);
+    if (!contract) {
+        showError('Kontrak tidak ditemukan!');
+        return;
+    }
+    
+    // Check if contract can be edited (only draft status)
+    if (contract.status !== 'draft') {
+        showError('Kontrak hanya dapat diedit jika status masih DRAFT!');
+        return;
+    }
+    
+    // Fill edit form with existing data
+    document.getElementById('editNamaProyek').value = contract.namaProyek || '';
+    document.getElementById('editJenisKontrak').value = contract.jenisKontrak || '';
+    document.getElementById('editTglMulai').value = contract.tglMulai || '';
+    document.getElementById('editTglSelesai').value = contract.tglSelesai || '';
+    document.getElementById('editNilaiKontrak').value = contract.nilaiKontrak || '';
+    document.getElementById('editMataUang').value = contract.mataUang || '';
+    document.getElementById('editAlamat').value = contract.alamat || '';
+    document.getElementById('editCountryCode').value = contract.kontakResmi ? contract.kontakResmi.substring(0, 3) : '+62';
+    document.getElementById('editKontakResmi').value = contract.kontakResmi ? contract.kontakResmi.substring(3) : '';
+    document.getElementById('editNamaPic').value = contract.namaPic || '';
+    document.getElementById('editNpwp').value = contract.npwp || '';
+    document.getElementById('editAsuransi').value = contract.asuransi ? '1' : '0';
+    document.getElementById('editTerminPembayaran').value = contract.terminPembayaran || '';
+    document.getElementById('editMetodePembayaran').value = contract.metodePembayaran || '';
+    document.getElementById('editPpn').value = contract.ppn || '';
+    document.getElementById('editPajakLainnya').value = contract.pajakLainnya || '';
+    document.getElementById('editPenaltiTerlambat').value = contract.penaltiTerlambat || '';
+    document.getElementById('editHariPenalti').value = contract.hariPenalti || '';
+    document.getElementById('editDokumenLampiran').value = contract.dokumenLampiran || '';
+    
+    // Update currency symbols for edit form
+    initializeEditCurrencySymbols();
+    
+    // Store contract ID for update
+    document.getElementById('editContractForm').setAttribute('data-edit-id', contractId);
+    
+    // Show edit contract modal
+    const modal = new bootstrap.Modal(document.getElementById('editContractModal'));
+    modal.show();
+}
+
+// Update contract
+function updateContract() {
+    const form = document.getElementById('editContractForm');
+    
+    // Validate form
+    if (!form.checkValidity()) {
+        form.classList.add('was-validated');
+        return;
+    }
+    
+    // Get edit ID
+    const editId = form.getAttribute('data-edit-id');
+    if (!editId) {
+        showError('ID kontrak tidak ditemukan!');
+        return;
+    }
+    
+    // Find contract to update
+    const contractIndex = contracts.findIndex(c => c.id === parseInt(editId));
+    if (contractIndex === -1) {
+        showError('Kontrak tidak ditemukan!');
+        return;
+    }
+    
+    // Get form values
+    const updatedContract = {
+        namaProyek: document.getElementById('editNamaProyek').value,
+        jenisKontrak: document.getElementById('editJenisKontrak').value,
+        tglMulai: document.getElementById('editTglMulai').value,
+        tglSelesai: document.getElementById('editTglSelesai').value,
+        nilaiKontrak: parseFloat(document.getElementById('editNilaiKontrak').value),
+        mataUang: document.getElementById('editMataUang').value,
+        alamat: document.getElementById('editAlamat').value,
+        kontakResmi: document.getElementById('editCountryCode').value + document.getElementById('editKontakResmi').value,
+        namaPic: document.getElementById('editNamaPic').value,
+        npwp: document.getElementById('editNpwp').value,
+        asuransi: document.getElementById('editAsuransi').value === '1' ? 1 : 0,
+        terminPembayaran: document.getElementById('editTerminPembayaran').value,
+        metodePembayaran: document.getElementById('editMetodePembayaran').value,
+        ppn: parseFloat(document.getElementById('editPpn').value),
+        pajakLainnya: parseFloat(document.getElementById('editPajakLainnya').value) || 0,
+        penaltiTerlambat: parseFloat(document.getElementById('editPenaltiTerlambat').value) || 0,
+        hariPenalti: parseInt(document.getElementById('editHariPenalti').value) || 0,
+        dokumenLampiran: document.getElementById('editDokumenLampiran').value,
+        updatedAt: new Date().toISOString().split('T')[0]
+    };
+    
+    // Update contract
+    contracts[contractIndex] = { ...contracts[contractIndex], ...updatedContract };
+    
+    // Update UI
+    applyFilters();
+    updateContractStats();
+    
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('editContractModal'));
+    modal.hide();
+    
+    // Clear form
+    form.reset();
+    form.classList.remove('was-validated');
+    form.removeAttribute('data-edit-id');
+    
+    showSuccess('Kontrak berhasil diperbarui!');
 }
 
 // View contract details
@@ -1074,188 +1239,159 @@ function viewContract(contractId) {
 
     const content = document.getElementById('contractDetailsContent');
     content.innerHTML = `
-        <!-- Informasi Dasar Kontrak -->
-        <div class="contract-section">
-            <div class="section-header mb-3">
-                <h6><i class="fas fa-info-circle me-2"></i>Informasi Dasar Kontrak</h6>
+        <form class="needs-validation" novalidate>
+            <!-- Informasi Dasar Kontrak -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h5 class="mb-3"><i class="fas fa-info-circle me-2"></i>Informasi Dasar Kontrak</h5>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="viewNomorKontrak" class="form-label">Nomor Kontrak</label>
+                    <input type="text" class="form-control" id="viewNomorKontrak" value="${contract.nomorKontrak || 'N/A'}" readonly>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="viewNamaProyek" class="form-label">Nama Proyek</label>
+                    <input type="text" class="form-control" id="viewNamaProyek" value="${contract.namaProyek || contract.name || 'N/A'}" readonly>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="viewJenisKontrak" class="form-label">Jenis Kontrak</label>
+                    <input type="text" class="form-control" id="viewJenisKontrak" value="${contract.jenisKontrak || contract.type || 'N/A'}" readonly>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="viewStatus" class="form-label">Status</label>
+                    <input type="text" class="form-control" id="viewStatus" value="${getStatusLabel(contract.status)}" readonly>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="viewTglMulai" class="form-label">Tanggal Mulai</label>
+                    <input type="text" class="form-control" id="viewTglMulai" value="${formatDate(contract.tglMulai || contract.startDate)}" readonly>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="viewTglSelesai" class="form-label">Tanggal Selesai</label>
+                    <input type="text" class="form-control" id="viewTglSelesai" value="${formatDate(contract.tglSelesai || contract.endDate)}" readonly>
+                </div>
             </div>
-            <div class="contract-details-grid">
-                <div class="contract-detail-card">
-                    <h6><i class="fas fa-file-contract me-2"></i>Nomor Kontrak</h6>
-                    <p>${contract.nomorKontrak || 'N/A'}</p>
-                </div>
-                <div class="contract-detail-card">
-                    <h6><i class="fas fa-project-diagram me-2"></i>Nama Proyek</h6>
-                    <p>${contract.namaProyek || contract.name || 'N/A'}</p>
-                </div>
-                <div class="contract-detail-card">
-                    <h6><i class="fas fa-tags me-2"></i>Jenis Kontrak</h6>
-                    <p>${contract.jenisKontrak || contract.type || 'N/A'}</p>
-                </div>
-                <div class="contract-detail-card">
-                    <h6><i class="fas fa-info-circle me-2"></i>Status</h6>
-                    <p><span class="status-badge status-${contract.status}">${getStatusLabel(contract.status)}</span></p>
-                </div>
-                <div class="contract-detail-card">
-                    <h6><i class="fas fa-calendar-alt me-2"></i>Tanggal Mulai</h6>
-                    <p>${formatDate(contract.tglMulai || contract.startDate)}</p>
-                </div>
-                <div class="contract-detail-card">
-                    <h6><i class="fas fa-calendar-check me-2"></i>Tanggal Selesai</h6>
-                    <p>${formatDate(contract.tglSelesai || contract.endDate)}</p>
-                </div>
-            </div>
-        </div>
 
-        <!-- Nilai Kontrak -->
-        <div class="contract-section">
-            <div class="section-header mb-3">
-                <h6><i class="fas fa-money-bill-wave me-2"></i>Nilai Kontrak</h6>
-            </div>
-            <div class="contract-details-grid">
-                <div class="contract-detail-card">
-                    <h6><i class="fas fa-money-bill me-2"></i>Nilai Kontrak</h6>
-                    <p class="contract-value">${contract.mataUang || 'Rp'} ${formatCurrency(contract.nilaiKontrak || contract.value)}</p>
+            <!-- Nilai Kontrak -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h5 class="mb-3"><i class="fas fa-money-bill-wave me-2"></i>Nilai Kontrak</h5>
                 </div>
-                <div class="contract-detail-card">
-                    <h6><i class="fas fa-coins me-2"></i>Mata Uang</h6>
-                    <p><span class="badge bg-secondary">${contract.mataUang || 'IDR'}</span></p>
+                <div class="col-md-6 mb-3">
+                    <label for="viewNilaiKontrak" class="form-label">Nilai Kontrak</label>
+                    <input type="text" class="form-control" id="viewNilaiKontrak" value="${contract.mataUang || 'Rp'} ${formatCurrency(contract.nilaiKontrak || contract.value)}" readonly>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="viewMataUang" class="form-label">Mata Uang</label>
+                    <input type="text" class="form-control" id="viewMataUang" value="${contract.mataUang || 'IDR'}" readonly>
                 </div>
             </div>
-        </div>
 
-        <!-- Informasi Perusahaan -->
-        <div class="contract-section">
-            <div class="section-header mb-3">
-                <h6><i class="fas fa-building me-2"></i>Informasi Perusahaan</h6>
+            <!-- Informasi Perusahaan -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h5 class="mb-3"><i class="fas fa-building me-2"></i>Informasi Perusahaan</h5>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="viewNamaPic" class="form-label">Nama PIC</label>
+                    <input type="text" class="form-control" id="viewNamaPic" value="${contract.namaPic || contract.client || contract.manager || 'N/A'}" readonly>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="viewKontakResmi" class="form-label">Kontak Resmi</label>
+                    <input type="text" class="form-control" id="viewKontakResmi" value="${contract.kontakResmi || 'N/A'}" readonly>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="viewNpwp" class="form-label">NPWP</label>
+                    <input type="text" class="form-control" id="viewNpwp" value="${contract.npwp || 'N/A'}" readonly>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="viewAlamat" class="form-label">Alamat</label>
+                    <input type="text" class="form-control" id="viewAlamat" value="${contract.alamat || 'N/A'}" readonly>
+                </div>
             </div>
-            <div class="contract-details-grid">
-                <div class="contract-detail-card">
-                    <h6><i class="fas fa-user-tie me-2"></i>Nama PIC</h6>
-                    <p>${contract.namaPic || contract.client || contract.manager || 'N/A'}</p>
-                </div>
-                <div class="contract-detail-card">
-                    <h6><i class="fas fa-phone me-2"></i>Kontak Resmi</h6>
-                    <p>${contract.kontakResmi || 'N/A'}</p>
-                </div>
-                <div class="contract-detail-card">
-                    <h6><i class="fas fa-id-card me-2"></i>NPWP</h6>
-                    <p>${contract.npwp || 'N/A'}</p>
-                </div>
-                <div class="contract-detail-card">
-                    <h6><i class="fas fa-map-marker-alt me-2"></i>Alamat</h6>
-                    <p>${contract.alamat || 'N/A'}</p>
-                </div>
-            </div>
-        </div>
 
-        <!-- Asuransi -->
-        <div class="contract-section">
-            <div class="section-header mb-3">
-                <h6><i class="fas fa-shield-alt me-2"></i>Asuransi</h6>
-            </div>
-            <div class="contract-details-grid">
-                <div class="contract-detail-card">
-                    <h6><i class="fas fa-shield-alt me-2"></i>Asuransi</h6>
-                    <p>${contract.asuransi ? 'Ya' : 'Tidak'}</p>
+            <!-- Asuransi -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h5 class="mb-3"><i class="fas fa-shield-alt me-2"></i>Asuransi</h5>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="viewAsuransi" class="form-label">Asuransi</label>
+                    <input type="text" class="form-control" id="viewAsuransi" value="${contract.asuransi ? 'Ya' : 'Tidak'}" readonly>
                 </div>
             </div>
-        </div>
 
-        <!-- Informasi Pembayaran -->
-        <div class="contract-section">
-            <div class="section-header mb-3">
-                <h6><i class="fas fa-credit-card me-2"></i>Informasi Pembayaran</h6>
-            </div>
-            <div class="contract-details-grid">
-                <div class="contract-detail-card">
-                    <h6><i class="fas fa-calendar-week me-2"></i>Termin Pembayaran</h6>
-                    <p>${contract.terminPembayaran || 'N/A'}</p>
+            <!-- Informasi Pembayaran -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h5 class="mb-3"><i class="fas fa-credit-card me-2"></i>Informasi Pembayaran</h5>
                 </div>
-                <div class="contract-detail-card">
-                    <h6><i class="fas fa-money-check me-2"></i>Metode Pembayaran</h6>
-                    <p>${contract.metodePembayaran || 'N/A'}</p>
+                <div class="col-md-6 mb-3">
+                    <label for="viewTerminPembayaran" class="form-label">Termin Pembayaran</label>
+                    <input type="text" class="form-control" id="viewTerminPembayaran" value="${contract.terminPembayaran || 'N/A'}" readonly>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="viewMetodePembayaran" class="form-label">Metode Pembayaran</label>
+                    <input type="text" class="form-control" id="viewMetodePembayaran" value="${contract.metodePembayaran || 'N/A'}" readonly>
                 </div>
             </div>
-        </div>
 
-        <!-- Pajak dan Penalti -->
-        <div class="contract-section">
-            <div class="section-header mb-3">
-                <h6><i class="fas fa-calculator me-2"></i>Pajak dan Penalti</h6>
+            <!-- Pajak dan Penalti -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h5 class="mb-3"><i class="fas fa-calculator me-2"></i>Pajak dan Penalti</h5>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="viewPpn" class="form-label">PPN</label>
+                    <input type="text" class="form-control" id="viewPpn" value="${contract.ppn || 0}%" readonly>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="viewPajakLainnya" class="form-label">Pajak Lainnya</label>
+                    <input type="text" class="form-control" id="viewPajakLainnya" value="${contract.mataUang || 'Rp'} ${formatCurrency(contract.pajakLainnya || 0)}" readonly>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="viewPenaltiTerlambat" class="form-label">Penalti Terlambat</label>
+                    <input type="text" class="form-control" id="viewPenaltiTerlambat" value="${contract.mataUang || 'Rp'} ${formatCurrency(contract.penaltiTerlambat || 0)}" readonly>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="viewHariPenalti" class="form-label">Hari Penalti</label>
+                    <input type="text" class="form-control" id="viewHariPenalti" value="${contract.hariPenalti || 0} hari" readonly>
+                </div>
             </div>
-            <div class="contract-details-grid">
-                <div class="contract-detail-card">
-                    <h6><i class="fas fa-percentage me-2"></i>PPN</h6>
-                    <p>${contract.ppn || 0}%</p>
-                </div>
-                <div class="contract-detail-card">
-                    <h6><i class="fas fa-receipt me-2"></i>Pajak Lainnya</h6>
-                    <p>${contract.mataUang || 'Rp'} ${formatCurrency(contract.pajakLainnya || 0)}</p>
-                </div>
-                <div class="contract-detail-card">
-                    <h6><i class="fas fa-exclamation-triangle me-2"></i>Penalti Terlambat</h6>
-                    <p>${contract.mataUang || 'Rp'} ${formatCurrency(contract.penaltiTerlambat || 0)}</p>
-                </div>
-                <div class="contract-detail-card">
-                    <h6><i class="fas fa-calendar-times me-2"></i>Hari Penalti</h6>
-                    <p>${contract.hariPenalti || 0} hari</p>
-                </div>
-            </div>
-        </div>
 
-        <!-- Dokumen Lampiran -->
-        <div class="contract-section">
-            <div class="section-header mb-3">
-                <h6><i class="fas fa-paperclip me-2"></i>Dokumen Lampiran</h6>
-            </div>
-            <div class="contract-details-grid">
-                <div class="contract-detail-card">
-                    <h6><i class="fas fa-paperclip me-2"></i>Dokumen Lampiran</h6>
-                    <p>${contract.dokumenLampiran || 'Tidak ada'}</p>
+            <!-- Dokumen Lampiran -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h5 class="mb-3"><i class="fas fa-paperclip me-2"></i>Dokumen Lampiran</h5>
+                </div>
+                <div class="col-12 mb-3">
+                    <label for="viewDokumenLampiran" class="form-label">Dokumen Lampiran</label>
+                    <input type="text" class="form-control" id="viewDokumenLampiran" value="${contract.dokumenLampiran || 'Tidak ada'}" readonly>
                 </div>
             </div>
-        </div>
-        
-        <div class="contract-timeline">
-            <h5><i class="fas fa-history me-2"></i>Timeline Kontrak</h5>
-            <div class="timeline-item">
-                <div class="timeline-icon">
-                    <i class="fas fa-plus"></i>
+            
+            <!-- Timeline Kontrak -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h5 class="mb-3"><i class="fas fa-history me-2"></i>Timeline Kontrak</h5>
                 </div>
-                <div class="timeline-content">
-                    <h6>Kontrak Dibuat</h6>
-                    <p>${formatDate(contract.createdAt)}</p>
+                <div class="col-md-6 mb-3">
+                    <label for="viewCreatedAt" class="form-label">Kontrak Dibuat</label>
+                    <input type="text" class="form-control" id="viewCreatedAt" value="${formatDate(contract.createdAt)}" readonly>
                 </div>
-            </div>
-            <div class="timeline-item">
-                <div class="timeline-icon">
-                    <i class="fas fa-calendar-plus"></i>
+                <div class="col-md-6 mb-3">
+                    <label for="viewTglPengajuan" class="form-label">Tanggal Pengajuan</label>
+                    <input type="text" class="form-control" id="viewTglPengajuan" value="${formatDate(contract.tglPengajuan)}" readonly>
                 </div>
-                <div class="timeline-content">
-                    <h6>Tanggal Pengajuan</h6>
-                    <p>${formatDate(contract.tglPengajuan)}</p>
+                <div class="col-md-6 mb-3">
+                    <label for="viewTglMulaiTimeline" class="form-label">Kontrak Dimulai</label>
+                    <input type="text" class="form-control" id="viewTglMulaiTimeline" value="${formatDate(contract.tglMulai || contract.startDate)}" readonly>
                 </div>
-            </div>
-            <div class="timeline-item">
-                <div class="timeline-icon">
-                    <i class="fas fa-play"></i>
-                </div>
-                <div class="timeline-content">
-                    <h6>Kontrak Dimulai</h6>
-                    <p>${formatDate(contract.tglMulai || contract.startDate)}</p>
+                <div class="col-md-6 mb-3">
+                    <label for="viewTglSelesaiTimeline" class="form-label">Kontrak Berakhir</label>
+                    <input type="text" class="form-control" id="viewTglSelesaiTimeline" value="${formatDate(contract.tglSelesai || contract.endDate)}" readonly>
                 </div>
             </div>
-            <div class="timeline-item">
-                <div class="timeline-icon">
-                    <i class="fas fa-flag"></i>
-                </div>
-                <div class="timeline-content">
-                    <h6>Kontrak Berakhir</h6>
-                    <p>${formatDate(contract.tglSelesai || contract.endDate)}</p>
-                </div>
-            </div>
-        </div>
+        </form>
     `;
 
     // Store current contract ID for edit/delete operations
@@ -1268,31 +1404,135 @@ function viewContract(contractId) {
 // Edit contract
 function editContract(contractId) {
     const contract = contracts.find(c => c.id === contractId);
-    if (!contract) return;
-
-    // Populate form with contract data
-    document.getElementById('contractName').value = contract.name;
-    document.getElementById('clientName').value = contract.client;
-    document.getElementById('contractType').value = contract.type;
-    document.getElementById('contractStatus').value = contract.status;
-    document.getElementById('contractValue').value = contract.value;
-    document.getElementById('startDate').value = contract.startDate;
-    document.getElementById('endDate').value = contract.endDate;
-    document.getElementById('contractDescription').value = contract.description;
-    document.getElementById('contractManager').value = contract.manager;
-
-    // Close details modal and open create modal for editing
-    const detailsModal = bootstrap.Modal.getInstance(document.getElementById('contractDetailsModal'));
-    if (detailsModal) detailsModal.hide();
-
-    // Update modal title and button
-    document.querySelector('#createContractModal .modal-title').innerHTML = '<i class="fas fa-edit me-2"></i>Edit Kontrak';
-    document.querySelector('#createContractModal .btn-primary').innerHTML = '<i class="fas fa-save me-2"></i>Update Kontrak';
+    if (!contract) {
+        showError('Kontrak tidak ditemukan!');
+        return;
+    }
     
-    window.currentContractId = contractId;
-
-    const modal = new bootstrap.Modal(document.getElementById('createContractModal'));
+    // Check if contract can be edited (only draft status)
+    if (contract.status !== 'draft') {
+        showError('Kontrak hanya dapat diedit jika status masih DRAFT!');
+        return;
+    }
+    
+    // Fill edit form with existing data
+    document.getElementById('editNamaProyek').value = contract.namaProyek || '';
+    document.getElementById('editJenisKontrak').value = contract.jenisKontrak || '';
+    document.getElementById('editTglMulai').value = contract.tglMulai || '';
+    document.getElementById('editTglSelesai').value = contract.tglSelesai || '';
+    document.getElementById('editNilaiKontrak').value = contract.nilaiKontrak || '';
+    document.getElementById('editMataUang').value = contract.mataUang || '';
+    document.getElementById('editAlamat').value = contract.alamat || '';
+    
+    // Parse phone number to extract country code and number
+    if (contract.kontakResmi) {
+        const phoneNumber = contract.kontakResmi;
+        if (phoneNumber.startsWith('+')) {
+            // Find where the country code ends (usually 2-4 digits)
+            const match = phoneNumber.match(/^(\+\d{1,4})(.*)$/);
+            if (match) {
+                document.getElementById('editCountryCode').value = match[1];
+                document.getElementById('editKontakResmi').value = match[2];
+            } else {
+                document.getElementById('editCountryCode').value = '+62';
+                document.getElementById('editKontakResmi').value = phoneNumber;
+            }
+        } else {
+            document.getElementById('editCountryCode').value = '+62';
+            document.getElementById('editKontakResmi').value = phoneNumber;
+        }
+    } else {
+        document.getElementById('editCountryCode').value = '+62';
+        document.getElementById('editKontakResmi').value = '';
+    }
+    
+    document.getElementById('editNamaPic').value = contract.namaPic || '';
+    document.getElementById('editNpwp').value = contract.npwp || '';
+    document.getElementById('editAsuransi').value = contract.asuransi ? '1' : '0';
+    document.getElementById('editTerminPembayaran').value = contract.terminPembayaran || '';
+    document.getElementById('editMetodePembayaran').value = contract.metodePembayaran || '';
+    document.getElementById('editPpn').value = contract.ppn || '';
+    document.getElementById('editPajakLainnya').value = contract.pajakLainnya || '';
+    document.getElementById('editPenaltiTerlambat').value = contract.penaltiTerlambat || '';
+    document.getElementById('editHariPenalti').value = contract.hariPenalti || '';
+    // Note: File inputs cannot have their value set programmatically for security reasons
+    // The dokumenLampiran field will show existing file names in a separate display area if needed
+    
+    // Update currency symbols for edit form
+    initializeEditCurrencySymbols();
+    
+    // Store contract ID for update
+    document.getElementById('editContractForm').setAttribute('data-edit-id', contractId);
+    
+    // Show edit contract modal
+    const modal = new bootstrap.Modal(document.getElementById('editContractModal'));
     modal.show();
+}
+
+// Update contract
+function updateContract() {
+    const form = document.getElementById('editContractForm');
+    
+    // Validate form
+    if (!form.checkValidity()) {
+        form.classList.add('was-validated');
+        return;
+    }
+    
+    // Get edit ID
+    const editId = form.getAttribute('data-edit-id');
+    if (!editId) {
+        showError('ID kontrak tidak ditemukan!');
+        return;
+    }
+    
+    // Find contract to update
+    const contractIndex = contracts.findIndex(c => c.id === parseInt(editId));
+    if (contractIndex === -1) {
+        showError('Kontrak tidak ditemukan!');
+        return;
+    }
+    
+    // Get form values
+    const updatedContract = {
+        namaProyek: document.getElementById('editNamaProyek').value,
+        jenisKontrak: document.getElementById('editJenisKontrak').value,
+        tglMulai: document.getElementById('editTglMulai').value,
+        tglSelesai: document.getElementById('editTglSelesai').value,
+        nilaiKontrak: parseFloat(document.getElementById('editNilaiKontrak').value),
+        mataUang: document.getElementById('editMataUang').value,
+        alamat: document.getElementById('editAlamat').value,
+        kontakResmi: document.getElementById('editCountryCode').value + document.getElementById('editKontakResmi').value,
+        namaPic: document.getElementById('editNamaPic').value,
+        npwp: document.getElementById('editNpwp').value,
+        asuransi: document.getElementById('editAsuransi').value === '1' ? 1 : 0,
+        terminPembayaran: document.getElementById('editTerminPembayaran').value,
+        metodePembayaran: document.getElementById('editMetodePembayaran').value,
+        ppn: parseFloat(document.getElementById('editPpn').value),
+        pajakLainnya: parseFloat(document.getElementById('editPajakLainnya').value) || 0,
+        penaltiTerlambat: parseFloat(document.getElementById('editPenaltiTerlambat').value) || 0,
+        hariPenalti: parseInt(document.getElementById('editHariPenalti').value) || 0,
+        dokumenLampiran: document.getElementById('editDokumenLampiran').value,
+        updatedAt: new Date().toISOString().split('T')[0]
+    };
+    
+    // Update contract
+    contracts[contractIndex] = { ...contracts[contractIndex], ...updatedContract };
+    
+    // Update UI
+    applyFilters();
+    updateContractStats();
+    
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('editContractModal'));
+    modal.hide();
+    
+    // Clear form
+    form.reset();
+    form.classList.remove('was-validated');
+    form.removeAttribute('data-edit-id');
+    
+    showSuccess('Kontrak berhasil diperbarui!');
 }
 
 // Delete contract
@@ -1381,12 +1621,97 @@ function updateBulkActions() {
 
 // Bulk export
 function bulkExport() {
-    if (selectedContracts.size === 0) return;
+    if (selectedContracts.size === 0) {
+        showError('Pilih kontrak yang akan diexport terlebih dahulu!');
+        return;
+    }
     
     const selectedContractsList = Array.from(selectedContracts);
     const contractsToExport = contracts.filter(c => selectedContractsList.includes(c.id));
     
-    showSuccess(`Exporting ${contractsToExport.length} kontrak...`);
+    if (contractsToExport.length === 0) {
+        showError('Tidak ada kontrak yang dipilih!');
+        return;
+    }
+
+    // Show loading message
+    showSuccess(`Memproses export ${contractsToExport.length} kontrak...`);
+    
+    // If only one contract selected, export as single PDF
+    if (contractsToExport.length === 1) {
+        try {
+            const contract = contractsToExport[0];
+            const pdf = generateContractPDF(contract);
+            
+            // Create download link for single PDF
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(pdf.output('blob'));
+            link.download = `Kontrak_${contract.nomorKontrak || contract.id}.pdf`;
+            
+            // Trigger download
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Clean up
+            URL.revokeObjectURL(link.href);
+            
+            showSuccess('Export berhasil! Kontrak telah diexport ke file PDF.');
+            
+            // Clear selection
+            selectedContracts.clear();
+            updateBulkActions();
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            showError('Gagal membuat file PDF. Silakan coba lagi.');
+        }
+        return;
+    }
+    
+    // Multiple contracts - create ZIP file
+    const zip = new JSZip();
+    let processedCount = 0;
+    
+    // Process each selected contract
+    contractsToExport.forEach((contract, index) => {
+        try {
+            // Generate PDF for each contract
+            const pdf = generateContractPDF(contract);
+            
+            // Add PDF to ZIP with contract number as filename
+            const fileName = `Kontrak_${contract.nomorKontrak || contract.id}.pdf`;
+            zip.file(fileName, pdf.output('blob'));
+            
+            processedCount++;
+        } catch (error) {
+            console.error(`Error generating PDF for contract ${contract.id}:`, error);
+        }
+    });
+    
+    // Generate ZIP file
+    zip.generateAsync({type: 'blob'}).then(function(content) {
+        // Create download link
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(content);
+        link.download = `Kontrak_Selected_Export_${new Date().toISOString().split('T')[0]}.zip`;
+        
+        // Trigger download
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Clean up
+        URL.revokeObjectURL(link.href);
+        
+        showSuccess(`Export berhasil! ${processedCount} kontrak terpilih telah diexport ke file ZIP.`);
+        
+        // Clear selection
+        selectedContracts.clear();
+        updateBulkActions();
+    }).catch(function(error) {
+        console.error('Error creating ZIP file:', error);
+        showError('Gagal membuat file ZIP. Silakan coba lagi.');
+    });
 }
 
 // Bulk archive
@@ -1426,12 +1751,187 @@ function bulkDelete() {
 
 // Export contracts
 function exportContracts() {
-    showSuccess('Exporting semua kontrak...');
+    if (contracts.length === 0) {
+        showError('Tidak ada kontrak untuk diexport!');
+        return;
+    }
+
+    // Show loading message
+    showSuccess('Memproses export kontrak...');
+    
+    // If only one contract, export as single PDF
+    if (contracts.length === 1) {
+        try {
+            const contract = contracts[0];
+            const pdf = generateContractPDF(contract);
+            
+            // Create download link for single PDF
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(pdf.output('blob'));
+            link.download = `Kontrak_${contract.nomorKontrak || contract.id}.pdf`;
+            
+            // Trigger download
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Clean up
+            URL.revokeObjectURL(link.href);
+            
+            showSuccess('Export berhasil! Kontrak telah diexport ke file PDF.');
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            showError('Gagal membuat file PDF. Silakan coba lagi.');
+        }
+        return;
+    }
+    
+    // Multiple contracts - create ZIP file
+    const zip = new JSZip();
+    let processedCount = 0;
+    
+    // Process each contract
+    contracts.forEach((contract, index) => {
+        try {
+            // Generate PDF for each contract
+            const pdf = generateContractPDF(contract);
+            
+            // Add PDF to ZIP with contract number as filename
+            const fileName = `Kontrak_${contract.nomorKontrak || contract.id}.pdf`;
+            zip.file(fileName, pdf.output('blob'));
+            
+            processedCount++;
+        } catch (error) {
+            console.error(`Error generating PDF for contract ${contract.id}:`, error);
+        }
+    });
+    
+    // Generate ZIP file
+    zip.generateAsync({type: 'blob'}).then(function(content) {
+        // Create download link
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(content);
+        link.download = `Kontrak_Export_${new Date().toISOString().split('T')[0]}.zip`;
+        
+        // Trigger download
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Clean up
+        URL.revokeObjectURL(link.href);
+        
+        showSuccess(`Export berhasil! ${processedCount} kontrak telah diexport ke file ZIP.`);
+    }).catch(function(error) {
+        console.error('Error creating ZIP file:', error);
+        showError('Gagal membuat file ZIP. Silakan coba lagi.');
+    });
+}
+
+function generateContractPDF(contract) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // Set font
+    doc.setFont('helvetica');
+    
+    // Title
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text('DETAIL KONTRAK', 105, 20, { align: 'center' });
+    
+    // Contract number
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Nomor Kontrak: ${contract.nomorKontrak || 'N/A'}`, 20, 35);
+    
+    // Line separator
+    doc.setLineWidth(0.5);
+    doc.line(20, 40, 190, 40);
+    
+    let yPosition = 50;
+    
+    // Contract details
+    const details = [
+        { label: 'Nama Proyek', value: contract.namaProyek || contract.name || 'N/A' },
+        { label: 'Jenis Kontrak', value: contract.jenisKontrak || contract.type || 'N/A' },
+        { label: 'Status', value: getStatusLabel(contract.status) },
+        { label: 'Nama PIC', value: contract.namaPic || contract.client || contract.manager || 'N/A' },
+        { label: 'Kontak Resmi', value: contract.kontakResmi || 'N/A' },
+        { label: 'NPWP', value: contract.npwp || 'N/A' },
+        { label: 'Alamat', value: contract.alamat || 'N/A' },
+        { label: 'Nilai Kontrak', value: `${contract.mataUang || 'Rp'} ${formatCurrency(contract.nilaiKontrak || contract.value)}` },
+        { label: 'Mata Uang', value: contract.mataUang || 'IDR' },
+        { label: 'Tanggal Mulai', value: formatDate(contract.tglMulai || contract.startDate) },
+        { label: 'Tanggal Selesai', value: formatDate(contract.tglSelesai || contract.endDate) },
+        { label: 'Asuransi', value: contract.asuransi ? 'Ya' : 'Tidak' },
+        { label: 'Termin Pembayaran', value: contract.terminPembayaran || 'N/A' },
+        { label: 'Metode Pembayaran', value: contract.metodePembayaran || 'N/A' },
+        { label: 'PPN', value: `${contract.ppn || 0}%` },
+        { label: 'Pajak Lainnya', value: `${contract.mataUang || 'Rp'} ${formatCurrency(contract.pajakLainnya || 0)}` },
+        { label: 'Penalti Terlambat', value: `${contract.mataUang || 'Rp'} ${formatCurrency(contract.penaltiTerlambat || 0)}` },
+        { label: 'Hari Penalti', value: `${contract.hariPenalti || 0} hari` },
+        { label: 'Dokumen Lampiran', value: contract.dokumenLampiran || 'Tidak ada' }
+    ];
+    
+    // Add details to PDF
+    details.forEach(detail => {
+        if (yPosition > 270) {
+            doc.addPage();
+            yPosition = 20;
+        }
+        
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`${detail.label}:`, 20, yPosition);
+        
+        doc.setFont('helvetica', 'normal');
+        const text = doc.splitTextToSize(detail.value, 120);
+        doc.text(text, 80, yPosition);
+        
+        yPosition += text.length * 5 + 5;
+    });
+    
+    // Add footer
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'italic');
+    doc.text(`Dibuat pada: ${new Date().toLocaleString('id-ID')}`, 20, 285);
+    doc.text('Sistem Manajemen Kontrak', 150, 285);
+    
+    return doc;
+}
+
+// Helper functions for PDF generation
+function getStatusLabel(status) {
+    const statusLabels = {
+        'draft': 'Draft',
+        'active': 'Aktif',
+        'completed': 'Selesai',
+        'cancelled': 'Dibatalkan',
+        'expired': 'Kedaluwarsa'
+    };
+    return statusLabels[status] || status || 'N/A';
+}
+
+function formatCurrency(amount) {
+    if (!amount || isNaN(amount)) return '0';
+    return new Intl.NumberFormat('id-ID').format(amount);
+}
+
+function formatDate(dateString) {
+    if (!dateString) return 'N/A';
+    try {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('id-ID');
+    } catch (error) {
+        return dateString;
+    }
 }
 
 // Barang Management Functions
 let currentContractId = null;
 let editingBarangId = null;
+let contractBarangList = []; // For managing barang during contract creation
 
 // View barang for a contract
 function viewBarang(contractId) {
@@ -1459,6 +1959,8 @@ function loadBarangData(contractId) {
     const barangList = barangData.get(contractId) || [];
     const tbody = document.getElementById('barangTableBody');
     const totalCount = document.getElementById('barangTotalCount');
+    const contract = contracts.find(c => c.id === contractId);
+    const canEdit = contract && contract.status === 'draft';
     
     // Update total count
     totalCount.textContent = barangList.length;
@@ -1491,10 +1993,16 @@ function loadBarangData(contractId) {
             <td><code>${barang.nomorKontainer}</code></td>
             <td>
                 <div class="btn-group btn-group-sm">
-                    <button class="btn btn-outline-primary" onclick="editBarang(${barang.id})" title="Edit">
+                    <button class="btn btn-outline-primary ${!canEdit ? 'disabled' : ''}" 
+                            onclick="${canEdit ? 'editBarang(' + barang.id + ')' : 'void(0)'}" 
+                            title="${!canEdit ? 'Edit hanya tersedia untuk status DRAFT' : 'Edit'}"
+                            ${!canEdit ? 'disabled' : ''}>
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="btn btn-outline-danger" onclick="deleteBarang(${barang.id})" title="Hapus">
+                    <button class="btn btn-outline-danger ${!canEdit ? 'disabled' : ''}" 
+                            onclick="${canEdit ? 'deleteBarang(' + barang.id + ')' : 'void(0)'}" 
+                            title="${!canEdit ? 'Hapus hanya tersedia untuk status DRAFT' : 'Hapus'}"
+                            ${!canEdit ? 'disabled' : ''}>
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
@@ -1506,6 +2014,14 @@ function loadBarangData(contractId) {
 
 // Show add barang modal
 function showAddBarangModal() {
+    const contract = contracts.find(c => c.id === currentContractId);
+    
+    // Check if contract can be edited (only draft status)
+    if (!contract || contract.status !== 'draft') {
+        showError('Barang hanya dapat ditambahkan jika status kontrak masih DRAFT!');
+        return;
+    }
+    
     editingBarangId = null;
     document.getElementById('addBarangModalTitle').textContent = 'Tambah Barang Baru';
     clearBarangForm();
@@ -1516,6 +2032,14 @@ function showAddBarangModal() {
 
 // Edit barang
 function editBarang(barangId) {
+    const contract = contracts.find(c => c.id === currentContractId);
+    
+    // Check if contract can be edited (only draft status)
+    if (!contract || contract.status !== 'draft') {
+        showError('Barang hanya dapat diedit jika status kontrak masih DRAFT!');
+        return;
+    }
+    
     const barangList = barangData.get(currentContractId) || [];
     const barang = barangList.find(b => b.id === barangId);
     
@@ -1559,6 +2083,14 @@ function saveBarang() {
         updatedAt: new Date().toISOString()
     };
     
+    // Check if we're in contract creation mode or contract editing mode
+    if (currentContractId === null) {
+        // Contract creation mode
+        saveContractBarang();
+        return;
+    }
+    
+    // Contract editing mode
     if (editingBarangId) {
         // Edit existing barang
         const barangList = barangData.get(currentContractId) || [];
@@ -1593,6 +2125,14 @@ function saveBarang() {
 
 // Delete barang
 function deleteBarang(barangId) {
+    const contract = contracts.find(c => c.id === currentContractId);
+    
+    // Check if contract can be edited (only draft status)
+    if (!contract || contract.status !== 'draft') {
+        showError('Barang hanya dapat dihapus jika status kontrak masih DRAFT!');
+        return;
+    }
+    
     if (confirm('Apakah Anda yakin ingin menghapus barang ini?')) {
         const barangList = barangData.get(currentContractId) || [];
         const filteredList = barangList.filter(b => b.id !== barangId);
@@ -1607,6 +2147,142 @@ function deleteBarang(barangId) {
 function clearBarangForm() {
     document.getElementById('addBarangForm').reset();
     document.getElementById('addBarangForm').classList.remove('was-validated');
+}
+
+// Contract Creation Barang Management
+function addBarangToContract() {
+    // Show add barang modal for contract creation
+    editingBarangId = null;
+    document.getElementById('addBarangModalTitle').textContent = 'Tambah Barang ke Kontrak';
+    clearBarangForm();
+    
+    const modal = new bootstrap.Modal(document.getElementById('addBarangModal'));
+    modal.show();
+}
+
+function saveContractBarang() {
+    const form = document.getElementById('addBarangForm');
+    
+    // Validate form
+    if (!form.checkValidity()) {
+        form.classList.add('was-validated');
+        return;
+    }
+    
+    const barangData = {
+        jenisBarang: document.getElementById('jenisBarang').value,
+        volume: parseFloat(document.getElementById('volume').value),
+        berat: parseFloat(document.getElementById('berat').value),
+        jumlahKontainer: parseInt(document.getElementById('jumlahKontainer').value),
+        ukuranKontainer: parseInt(document.getElementById('ukuranKontainer').value),
+        nomorKontainer: document.getElementById('nomorKontainer').value,
+        updatedAt: new Date().toISOString()
+    };
+    
+    if (editingBarangId) {
+        // Edit existing barang
+        const index = contractBarangList.findIndex(b => b.id === editingBarangId);
+        if (index !== -1) {
+            contractBarangList[index] = { ...contractBarangList[index], ...barangData };
+            showSuccess('Barang berhasil diperbarui!');
+        }
+    } else {
+        // Add new barang
+        const newId = Date.now();
+        const newBarang = {
+            id: newId,
+            ...barangData,
+            createdAt: new Date().toISOString()
+        };
+        
+        contractBarangList.push(newBarang);
+        showSuccess('Barang berhasil ditambahkan!');
+    }
+    
+    // Close modal and refresh data
+    const modal = bootstrap.Modal.getInstance(document.getElementById('addBarangModal'));
+    modal.hide();
+    
+    loadContractBarangData();
+}
+
+function editContractBarang(barangId) {
+    const barang = contractBarangList.find(b => b.id === barangId);
+    
+    if (!barang) {
+        showError('Barang tidak ditemukan!');
+        return;
+    }
+    
+    editingBarangId = barangId;
+    document.getElementById('addBarangModalTitle').textContent = 'Edit Barang Kontrak';
+    
+    // Fill form with existing data
+    document.getElementById('jenisBarang').value = barang.jenisBarang;
+    document.getElementById('volume').value = barang.volume;
+    document.getElementById('berat').value = barang.berat;
+    document.getElementById('jumlahKontainer').value = barang.jumlahKontainer;
+    document.getElementById('ukuranKontainer').value = barang.ukuranKontainer;
+    document.getElementById('nomorKontainer').value = barang.nomorKontainer;
+    
+    const modal = new bootstrap.Modal(document.getElementById('addBarangModal'));
+    modal.show();
+}
+
+function deleteContractBarang(barangId) {
+    if (confirm('Apakah Anda yakin ingin menghapus barang ini?')) {
+        contractBarangList = contractBarangList.filter(b => b.id !== barangId);
+        loadContractBarangData();
+        showSuccess('Barang berhasil dihapus!');
+    }
+}
+
+function loadContractBarangData() {
+    const tbody = document.getElementById('contractBarangTableBody');
+    const totalCount = document.getElementById('contractBarangCount');
+    
+    // Update total count
+    totalCount.textContent = contractBarangList.length;
+    
+    // Clear existing data
+    tbody.innerHTML = '';
+    
+    if (contractBarangList.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="text-center py-3">
+                    <i class="fas fa-box-open me-2"></i>
+                    Belum ada barang untuk kontrak ini
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    // Render barang data
+    contractBarangList.forEach((barang, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${index + 1}</td>
+            <td><strong>${barang.jenisBarang}</strong></td>
+            <td>${barang.volume.toLocaleString('id-ID', { minimumFractionDigits: 2 })}</td>
+            <td>${barang.berat.toLocaleString('id-ID', { minimumFractionDigits: 2 })}</td>
+            <td>${barang.jumlahKontainer}</td>
+            <td>${barang.ukuranKontainer} ft</td>
+            <td><code>${barang.nomorKontainer}</code></td>
+            <td>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-primary" onclick="editContractBarang(${barang.id})" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-outline-danger" onclick="deleteContractBarang(${barang.id})" title="Hapus">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
 }
 
 // Refresh contracts
@@ -1654,7 +2330,7 @@ function showSuccess(message) {
     // Create a simple success notification
     const alert = document.createElement('div');
     alert.className = 'alert alert-success alert-dismissible fade show position-fixed';
-    alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; background-color: #d1e7dd !important; border-color: #badbcc !important; color: #0f5132 !important;';
     alert.innerHTML = `
         <i class="fas fa-check-circle me-2"></i>${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -1670,10 +2346,29 @@ function showSuccess(message) {
     }, 3000);
 }
 
+function showError(message) {
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-danger alert-dismissible fade show position-fixed';
+    alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; background-color: #f8d7da !important; border-color: #f5c2c7 !important; color: #842029 !important;';
+    alert.innerHTML = `
+        <i class="fas fa-exclamation-circle me-2"></i>${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(alert);
+    
+    setTimeout(() => {
+        if (alert.parentNode) {
+            alert.parentNode.removeChild(alert);
+        }
+    }, 5000);
+}
+
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', function() {
     if (document.getElementById('contractsPage')) {
         initializeContracts();
+        initializeTableEnhancements();
     }
     
     // Initialize floating labels for form inputs
@@ -1681,7 +2376,81 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize currency symbol updates
     initializeCurrencySymbols();
+    
+    // Initialize edit form phone validation
+    initializeEditPhoneValidation();
+    
+    // Initialize sticky topbar
+    initializeStickyTopbar();
 });
+
+// Sticky Topbar functionality
+let lastScrollTop = 0;
+let isTopbarHidden = false;
+
+function initializeStickyTopbar() {
+    const topbar = document.querySelector('.top-navbar');
+    const mainContent = document.querySelector('.main-content');
+    
+    if (!topbar || !mainContent) return;
+    
+    window.addEventListener('scroll', function() {
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const scrollThreshold = 50; // Minimum scroll distance to trigger hide/show
+        
+        // Only trigger if scrolled more than threshold
+        if (Math.abs(scrollTop - lastScrollTop) < scrollThreshold) return;
+        
+        if (scrollTop > lastScrollTop && scrollTop > 200) {
+            // Scrolling down and past 200px - hide topbar
+            if (!isTopbarHidden) {
+                topbar.classList.add('hidden');
+                mainContent.classList.add('topbar-hidden');
+                isTopbarHidden = true;
+            }
+        } else {
+            // Scrolling up - show topbar
+            if (isTopbarHidden) {
+                topbar.classList.remove('hidden');
+                mainContent.classList.remove('topbar-hidden');
+                isTopbarHidden = false;
+            }
+        }
+        
+        lastScrollTop = scrollTop;
+    });
+}
+
+// Initialize phone validation for edit form
+function initializeEditPhoneValidation() {
+    const phoneInput = document.getElementById('editKontakResmi');
+    
+    if (phoneInput) {
+        // Prevent non-numeric input except allowed characters
+        phoneInput.addEventListener('keypress', function(e) {
+            const allowedChars = /[0-9\s\-\(\)]/;
+            if (!allowedChars.test(e.key)) {
+                e.preventDefault();
+            }
+        });
+        
+        // Clean input on paste
+        phoneInput.addEventListener('paste', function(e) {
+            setTimeout(() => {
+                let value = e.target.value;
+                value = value.replace(/[^0-9\s\-\(\)]/g, '');
+                e.target.value = value;
+            }, 0);
+        });
+        
+        // Clean input on input event
+        phoneInput.addEventListener('input', function(e) {
+            let value = e.target.value;
+            value = value.replace(/[^0-9\s\-\(\)]/g, '');
+            e.target.value = value;
+        });
+    }
+}
 
 // Function to initialize floating labels
 function initializeFloatingLabels() {
@@ -1744,5 +2513,1331 @@ function initializeCurrencySymbols() {
         
         // Set initial currency symbol
         updateCurrencySymbols();
+    }
+}
+// Initialize currency symbols for edit form
+function initializeEditCurrencySymbols() {
+    const mataUangSelect = document.getElementById('editMataUang');
+    const currencySymbol = document.getElementById('editCurrencySymbol');
+    const pajakCurrencySymbol = document.getElementById('editPajakCurrencySymbol');
+    const penaltiCurrencySymbol = document.getElementById('editPenaltiCurrencySymbol');
+    
+    // Currency symbol mapping
+    const currencyMap = {
+        'IDR': 'Rp',
+        'USD': '$',
+        'EUR': '€',
+        'SGD': 'S$'
+    };
+    
+    // Function to update currency symbols
+    function updateEditCurrencySymbols() {
+        const selectedCurrency = mataUangSelect.value;
+        const symbol = currencyMap[selectedCurrency] || 'Rp';
+        
+        if (currencySymbol) currencySymbol.textContent = symbol;
+        if (pajakCurrencySymbol) pajakCurrencySymbol.textContent = symbol;
+        if (penaltiCurrencySymbol) penaltiCurrencySymbol.textContent = symbol;
+    }
+    
+    // Add event listener for currency change
+    if (mataUangSelect) {
+        mataUangSelect.addEventListener('change', updateEditCurrencySymbols);
+        
+        // Set initial currency symbol
+        updateEditCurrencySymbols();
+    }
+}
+
+// Download PDF with QR Code
+function downloadContractPDF(contractId) {
+    const contract = contracts.find(c => c.id === contractId);
+    if (!contract) {
+        showError('Kontrak tidak ditemukan!');
+        return;
+    }
+
+    try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        // Set font
+        doc.setFont('helvetica');
+        
+        // Title
+        doc.setFontSize(20);
+        doc.text('DETAIL KONTRAK', 105, 20, { align: 'center' });
+        
+        // Contract number
+        doc.setFontSize(14);
+        doc.text(`Nomor Kontrak: ${contract.nomorKontrak || contract.id}`, 20, 35);
+        
+        // Basic info
+        doc.setFontSize(12);
+        doc.text(`Nama Proyek: ${contract.namaProyek || 'N/A'}`, 20, 50);
+        doc.text(`Jenis Kontrak: ${contract.jenisKontrak || 'N/A'}`, 20, 60);
+        doc.text(`Nama PIC: ${contract.namaPic || 'N/A'}`, 20, 70);
+        doc.text(`Nilai Kontrak: ${contract.mataUang || 'IDR'} ${formatCurrency(contract.nilaiKontrak || 0)}`, 20, 80);
+        doc.text(`Tanggal Mulai: ${contract.tglMulai || 'N/A'}`, 20, 90);
+        doc.text(`Tanggal Selesai: ${contract.tglSelesai || 'N/A'}`, 20, 100);
+        doc.text(`Status: ${getStatusLabel(contract.status)}`, 20, 110);
+        
+        // Generate QR Code
+        const qrData = contract.nomorKontrak || contract.id;
+        
+        // Add QR Code to PDF
+        const qrSize = 50;
+        const qrX = 150;
+        const qrY = 50;
+        
+        // Create QR Code using API
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${qrSize}x${qrSize}&data=${encodeURIComponent(qrData)}`;
+        
+        // Add QR Code image to PDF
+        doc.addImage(qrUrl, 'PNG', qrX, qrY, qrSize/4, qrSize/4);
+        
+        // Add QR Code label
+        doc.setFontSize(10);
+        doc.text('QR Code Kontrak', qrX + 5, qrY + qrSize/4 + 10);
+        
+        // Add footer
+        doc.setFontSize(8);
+        doc.text(`Dibuat pada: ${new Date().toLocaleString('id-ID')}`, 20, 280);
+        doc.text('Minerva - Sistem Manajemen Proyek', 105, 280, { align: 'center' });
+        
+        // Save PDF
+        const fileName = `Kontrak_${contract.nomorKontrak || contract.id}_${new Date().toISOString().split('T')[0]}.pdf`;
+        doc.save(fileName);
+        
+        showSuccess('PDF berhasil didownload dengan QR Code!');
+        
+    } catch (error) {
+        console.error('Error generating PDF:', error);
+        showError('Gagal membuat PDF. Pastikan library jsPDF tersedia.');
+    }
+}
+
+// View Contract QR Code
+function viewContractQR(contractId) {
+    const contract = contracts.find(c => c.id === contractId);
+    if (!contract) {
+        showError('Kontrak tidak ditemukan!');
+        return;
+    }
+
+    // Generate QR Code data
+    const qrData = contract.nomorKontrak || contract.id;
+
+    // Create modal for QR Code display
+    const modalHtml = `
+        <div class="modal fade" id="qrCodeModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-qrcode me-2"></i>QR Code Kontrak
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <div class="mb-3">
+                            <h6>${contract.nomorKontrak || contract.id}</h6>
+                            <p class="text-muted">${contract.namaProyek || 'N/A'}</p>
+                        </div>
+                        <div class="qr-code-container mb-3">
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrData)}" 
+                                 alt="QR Code" class="img-fluid border rounded">
+                        </div>
+                        <div class="qr-info">
+                            <small class="text-muted">
+                                Scan QR code ini untuk melihat detail kontrak
+                            </small>
+                        </div>
+                        <div class="mt-3">
+                            <button class="btn btn-primary" onclick="downloadQRCode('${contractId}')">
+                                <i class="fas fa-download me-2"></i>Download QR Code
+                            </button>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Remove existing modal if any
+    const existingModal = document.getElementById('qrCodeModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('qrCodeModal'));
+    modal.show();
+
+    // Clean up modal when hidden
+    document.getElementById('qrCodeModal').addEventListener('hidden.bs.modal', function() {
+        this.remove();
+    });
+}
+
+// Download QR Code as image
+function downloadQRCode(contractId) {
+    const contract = contracts.find(c => c.id === contractId);
+    if (!contract) {
+        showError('Kontrak tidak ditemukan!');
+        return;
+    }
+
+    const qrData = contract.nomorKontrak || contract.id;
+
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrData)}`;
+    
+    // Create download link
+    const link = document.createElement('a');
+    link.href = qrUrl;
+    link.download = `QR_Code_${contract.nomorKontrak || contract.id}.png`;
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    showSuccess('QR Code berhasil didownload!');
+}
+
+// AI Legal Check Function
+function runAILegalCheck(contractId) {
+    const contract = contracts.find(c => c.id === contractId);
+    if (!contract) {
+        showError('Kontrak tidak ditemukan!');
+        return;
+    }
+
+    // Simulate AI processing
+    showSuccess('Memulai AI Legal Check...');
+    
+    // Simulate AI analysis delay
+    setTimeout(() => {
+        const legalIssues = performAILegalAnalysis(contract);
+        showAILegalCheckResults(contract, legalIssues);
+    }, 2000);
+}
+
+function performAILegalAnalysis(contract) {
+    const issues = [];
+    
+    // Check for missing insurance on high-value contracts
+    if (contract.nilaiKontrak > 20000000 && !contract.asuransi) {
+        issues.push({
+            type: 'error',
+            description: 'Kontrak bernilai tinggi tidak memiliki asuransi',
+            severity: 'high',
+            recommendation: 'Tambahkan klausul asuransi untuk melindungi risiko finansial'
+        });
+    }
+    
+    // Check for missing force majeure clause
+    if (!contract.dokumenLampiran || contract.dokumenLampiran === '') {
+        issues.push({
+            type: 'warning',
+            description: 'Kontrak tidak memiliki klausul force majeure yang jelas',
+            severity: 'medium',
+            recommendation: 'Tambahkan klausul force majeure untuk situasi darurat'
+        });
+    }
+    
+    // Check payment terms
+    if (contract.terminPembayaran === 'Pelunasan' && contract.nilaiKontrak > 50000000) {
+        issues.push({
+            type: 'warning',
+            description: 'Kontrak bernilai tinggi menggunakan termin pelunasan penuh',
+            severity: 'medium',
+            recommendation: 'Pertimbangkan termin cicilan untuk mengurangi risiko'
+        });
+    }
+    
+    return issues;
+}
+
+function showAILegalCheckResults(contract, issues) {
+    let issuesHtml = '';
+    
+    if (issues.length === 0) {
+        issuesHtml = '<div class="alert alert-success"><i class="fas fa-check-circle me-2"></i>Tidak ada masalah legal yang ditemukan!</div>';
+    } else {
+        issues.forEach((issue, index) => {
+            const alertClass = issue.type === 'error' ? 'alert-danger' : 'alert-warning';
+            const iconClass = issue.type === 'error' ? 'fa-exclamation-circle' : 'fa-exclamation-triangle';
+            
+            issuesHtml += `
+                <div class="alert ${alertClass}">
+                    <h6><i class="fas ${iconClass} me-2"></i>${issue.description}</h6>
+                    <p class="mb-1"><strong>Severity:</strong> ${issue.severity}</p>
+                    <p class="mb-0"><strong>Rekomendasi:</strong> ${issue.recommendation}</p>
+                </div>
+            `;
+        });
+    }
+    
+    Swal.fire({
+        title: 'AI Legal Check Results',
+        html: `
+            <div class="text-start">
+                <h6>Kontrak: ${contract.nomorKontrak || contract.id}</h6>
+                <p class="text-muted">${contract.namaProyek || 'N/A'}</p>
+                ${issuesHtml}
+            </div>
+        `,
+        width: '600px',
+        confirmButtonText: 'OK'
+    });
+}
+
+// Get current user and their approval level
+function getCurrentUser() {
+    const user = localStorage.getItem('user') || 'amar';
+    const role = localStorage.getItem('role') || 'user';
+    return { name: user, role: role };
+}
+
+function getUserApprovalLevel() {
+    const user = getCurrentUser();
+    const roleLevels = {
+        'admin': 4,
+        'manager': 3,
+        'supervisor': 2,
+        'user': 1
+    };
+    return roleLevels[user.role] || 1;
+}
+
+// Approval Workflow Functions
+function viewApprovalWorkflow(contractId) {
+    const contract = contracts.find(c => c.id === contractId);
+    if (!contract) {
+        showError('Kontrak tidak ditemukan!');
+        return;
+    }
+
+    const currentUser = getCurrentUser();
+    const userApprovalLevel = getUserApprovalLevel();
+    const contractApprovalLevel = contract.approvalLevel || 0;
+    const canApprove = userApprovalLevel >= contractApprovalLevel + 1;
+
+    const modalHtml = `
+        <div class="modal fade" id="approvalWorkflowModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-clipboard-check me-2"></i>Approval Workflow
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <h6>Kontrak: ${contract.nomorKontrak || contract.id}</h6>
+                            <p class="text-muted">${contract.namaProyek || 'N/A'}</p>
+                            <p class="text-muted"><strong>User:</strong> ${currentUser.name} (${currentUser.role})</p>
+                        </div>
+                        <div class="approval-status">
+                            <h6>Status Approval:</h6>
+                            <div class="progress mb-3">
+                                <div class="progress-bar" style="width: ${(contractApprovalLevel) * 25}%"></div>
+                            </div>
+                            <p>Level ${contractApprovalLevel} dari 4</p>
+                            <div class="approval-levels">
+                                <div class="level-item ${contractApprovalLevel >= 1 ? 'completed' : ''}">
+                                    <i class="fas fa-${contractApprovalLevel >= 1 ? 'check-circle' : 'circle'}"></i>
+                                    Level 1 - User Approval
+                                </div>
+                                <div class="level-item ${contractApprovalLevel >= 2 ? 'completed' : ''}">
+                                    <i class="fas fa-${contractApprovalLevel >= 2 ? 'check-circle' : 'circle'}"></i>
+                                    Level 2 - Supervisor Approval
+                                </div>
+                                <div class="level-item ${contractApprovalLevel >= 3 ? 'completed' : ''}">
+                                    <i class="fas fa-${contractApprovalLevel >= 3 ? 'check-circle' : 'circle'}"></i>
+                                    Level 3 - Manager Approval
+                                </div>
+                                <div class="level-item ${contractApprovalLevel >= 4 ? 'completed' : ''}">
+                                    <i class="fas fa-${contractApprovalLevel >= 4 ? 'check-circle' : 'circle'}"></i>
+                                    Level 4 - Admin Approval
+                                </div>
+                            </div>
+                        </div>
+                        ${canApprove ? `
+                            <div class="approval-actions">
+                                <button class="btn btn-success me-2" onclick="approveContract('${contractId}')">
+                                    <i class="fas fa-check me-2"></i>Approve
+                                </button>
+                                <button class="btn btn-danger" onclick="rejectContract('${contractId}')">
+                                    <i class="fas fa-times me-2"></i>Reject
+                                </button>
+                            </div>
+                        ` : `
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Anda tidak memiliki otoritas untuk approve kontrak ini. 
+                                Diperlukan level ${contractApprovalLevel + 1} atau lebih tinggi.
+                            </div>
+                        `}
+                        <div class="approval-history mt-3">
+                            <h6>Riwayat Approval:</h6>
+                            <div id="approvalHistoryList"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Remove existing modal if any
+    const existingModal = document.getElementById('approvalWorkflowModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('approvalWorkflowModal'));
+    modal.show();
+
+    // Load approval history
+    loadApprovalHistory(contractId);
+
+    // Clean up modal when hidden
+    document.getElementById('approvalWorkflowModal').addEventListener('hidden.bs.modal', function() {
+        this.remove();
+    });
+}
+
+function loadApprovalHistory(contractId) {
+    const contract = contracts.find(c => c.id === contractId);
+    if (!contract) return;
+
+    const historyContainer = document.getElementById('approvalHistoryList');
+    const history = contract.approvalHistory || [];
+
+    if (history.length === 0) {
+        historyContainer.innerHTML = '<p class="text-muted">Belum ada riwayat approval</p>';
+        return;
+    }
+
+    let historyHTML = '<div class="timeline-approval">';
+    
+    history.forEach((approval, index) => {
+        const statusClass = approval.status === 'approved' ? 'success' : 'danger';
+        const statusIcon = approval.status === 'approved' ? 'fa-check' : 'fa-times';
+        
+        historyHTML += `
+            <div class="approval-item ${statusClass}">
+                <div class="approval-marker">
+                    <i class="fas ${statusIcon}"></i>
+                </div>
+                <div class="approval-content">
+                    <h6>Level ${approval.level} - ${approval.status.toUpperCase()}</h6>
+                    <p class="text-muted">${approval.comments || 'No comments'}</p>
+                    <small class="text-muted">by ${approval.approver} on ${approval.date}</small>
+                </div>
+            </div>
+        `;
+    });
+    
+    historyHTML += '</div>';
+    historyContainer.innerHTML = historyHTML;
+}
+
+function approveContract(contractId) {
+    const contract = contracts.find(c => c.id === contractId);
+    if (!contract) return;
+
+    const currentUser = getCurrentUser();
+    const userApprovalLevel = getUserApprovalLevel();
+    const contractApprovalLevel = contract.approvalLevel || 0;
+
+    // Check if user can approve
+    if (userApprovalLevel < contractApprovalLevel + 1) {
+        showError('Anda tidak memiliki otoritas untuk approve kontrak ini!');
+        return;
+    }
+
+    Swal.fire({
+        title: 'Konfirmasi Approval',
+        text: `Apakah Anda yakin ingin approve kontrak ini?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Approve',
+        cancelButtonText: 'Batal',
+        input: 'textarea',
+        inputPlaceholder: 'Masukkan komentar approval (opsional)...',
+        inputValidator: (value) => {
+            return Promise.resolve();
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            if (!contract.approvalHistory) contract.approvalHistory = [];
+            contract.approvalHistory.push({
+                level: userApprovalLevel,
+                approver: currentUser.name,
+                role: currentUser.role,
+                status: 'approved',
+                date: new Date().toISOString().split('T')[0],
+                comments: result.value || 'Approved by ' + currentUser.name
+            });
+            
+            contract.approvalLevel = userApprovalLevel;
+            contract.updatedAt = new Date().toISOString().split('T')[0];
+            
+            // If fully approved (level 4), mark as active
+            if (userApprovalLevel >= 4) {
+                contract.status = 'active';
+            }
+            
+            applyFilters();
+            updateContractStats();
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: `Kontrak berhasil diapprove oleh ${currentUser.name} (Level ${userApprovalLevel})!`,
+                timer: 2000,
+                showConfirmButton: false
+            });
+            
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('approvalWorkflowModal'));
+            if (modal) modal.hide();
+        }
+    });
+}
+
+function rejectContract(contractId) {
+    const contract = contracts.find(c => c.id === contractId);
+    if (!contract) return;
+
+    const currentUser = getCurrentUser();
+    const userApprovalLevel = getUserApprovalLevel();
+    const contractApprovalLevel = contract.approvalLevel || 0;
+
+    // Check if user can reject
+    if (userApprovalLevel < contractApprovalLevel + 1) {
+        showError('Anda tidak memiliki otoritas untuk reject kontrak ini!');
+        return;
+    }
+
+    Swal.fire({
+        title: 'Alasan Penolakan',
+        text: 'Masukkan alasan penolakan kontrak ini:',
+        input: 'textarea',
+        inputPlaceholder: 'Masukkan alasan penolakan...',
+        showCancelButton: true,
+        confirmButtonText: 'Reject',
+        cancelButtonText: 'Batal',
+        inputValidator: (value) => {
+            if (!value || value.trim() === '') {
+                return 'Alasan penolakan harus diisi!';
+            }
+            return null;
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const reason = result.value.trim();
+            
+            if (!contract.approvalHistory) contract.approvalHistory = [];
+            contract.approvalHistory.push({
+                level: userApprovalLevel,
+                approver: currentUser.name,
+                role: currentUser.role,
+                status: 'rejected',
+                date: new Date().toISOString().split('T')[0],
+                comments: reason
+            });
+            
+            // Reset approval level when rejected
+            contract.approvalLevel = 0;
+            contract.status = 'draft';
+            contract.updatedAt = new Date().toISOString().split('T')[0];
+            
+            applyFilters();
+            updateContractStats();
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: `Kontrak ditolak oleh ${currentUser.name}. Status dikembalikan ke draft.`,
+                timer: 2000,
+                showConfirmButton: false
+            });
+            
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('approvalWorkflowModal'));
+            if (modal) modal.hide();
+        }
+    });
+}
+
+// Update Contract Progress
+function updateContractProgress(contractId) {
+    const contract = contracts.find(c => c.id === contractId);
+    if (!contract) {
+        showError('Kontrak tidak ditemukan!');
+        return;
+    }
+
+    // Get current progress (default to 0 if not set)
+    const currentProgress = contract.progress || 0;
+    const currentProgressText = contract.progressText || '';
+    
+    Swal.fire({
+        title: 'Update Progress Kontrak',
+        html: `
+            <div class="text-start">
+                <p><strong>Kontrak:</strong> ${contract.nomorKontrak}</p>
+                <p><strong>Proyek:</strong> ${contract.namaProyek}</p>
+                <p><strong>Progress Saat Ini:</strong> ${currentProgress}%</p>
+                <p><strong>Status Saat Ini:</strong> ${currentProgressText || 'Belum ada status'}</p>
+            </div>
+            <div class="mt-3">
+                <div class="mb-3">
+                    <label for="progressInput" class="form-label">Progress Baru (%)</label>
+                    <input type="number" id="progressInput" class="form-control" min="0" max="100" value="${currentProgress}">
+                </div>
+                <div class="mb-3">
+                    <label for="progressTextInput" class="form-label">Status Progress (Deskripsi)</label>
+                    <textarea id="progressTextInput" class="form-control" rows="3" placeholder="Masukkan deskripsi status progress...">${currentProgressText}</textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="progressCategory" class="form-label">Kategori Progress</label>
+                    <select id="progressCategory" class="form-select">
+                        <option value="planning">Perencanaan</option>
+                        <option value="execution">Pelaksanaan</option>
+                        <option value="monitoring">Pemantauan</option>
+                        <option value="review">Review</option>
+                        <option value="completion">Penyelesaian</option>
+                        <option value="delivery">Pengiriman</option>
+                        <option value="handover">Serah Terima</option>
+                    </select>
+                </div>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Update',
+        cancelButtonText: 'Batal',
+        preConfirm: () => {
+            const progressInput = document.getElementById('progressInput');
+            const progressTextInput = document.getElementById('progressTextInput');
+            const progressCategory = document.getElementById('progressCategory');
+            
+            const newProgress = parseInt(progressInput.value);
+            const newProgressText = progressTextInput.value.trim();
+            
+            if (isNaN(newProgress) || newProgress < 0 || newProgress > 100) {
+                Swal.showValidationMessage('Progress harus berupa angka antara 0-100');
+                return false;
+            }
+            
+            if (!newProgressText) {
+                Swal.showValidationMessage('Deskripsi status progress harus diisi');
+                return false;
+            }
+            
+            return {
+                progress: newProgress,
+                text: newProgressText,
+                category: progressCategory.value
+            };
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const { progress, text, category } = result.value;
+            
+            // Update contract progress
+            contract.progress = progress;
+            contract.progressText = text;
+            contract.progressCategory = category;
+            contract.updatedAt = new Date().toISOString().split('T')[0];
+            
+            // Add progress history
+            if (!contract.progressHistory) contract.progressHistory = [];
+            contract.progressHistory.push({
+                progress: progress,
+                text: text,
+                category: category,
+                date: new Date().toISOString().split('T')[0],
+                updatedBy: getCurrentUser()
+            });
+            
+            // Refresh display
+            applyFilters();
+            updateContractStats();
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: `Progress kontrak berhasil diupdate menjadi ${progress}% - ${text}`,
+                timer: 2000,
+                showConfirmButton: false
+            });
+        }
+    });
+}
+
+// Open GPS Tracking for specific contract
+function openGPSTracking(contractId) {
+    const contract = contracts.find(c => c.id === contractId);
+    if (!contract) {
+        showError('Kontrak tidak ditemukan!');
+        return;
+    }
+
+    if (!contract.gpsTracking || !contract.gpsTracking.enabled) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'GPS Tracking Tidak Tersedia',
+            text: 'Kontrak ini belum memiliki GPS tracking yang diaktifkan.',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+
+    // Open GPS tracking page
+    window.open(`gps-tracking.html?contract=${contractId}`, '_blank');
+}
+
+// Toggle contract status (active/inactive)
+function toggleContractStatus(contractId) {
+    const contract = contracts.find(c => c.id === contractId);
+    if (!contract) {
+        showError('Kontrak tidak ditemukan!');
+        return;
+    }
+
+    const newStatus = contract.status === 'active' ? 'inactive' : 'active';
+    const actionText = newStatus === 'active' ? 'mengaktifkan' : 'menonaktifkan';
+    
+    Swal.fire({
+        title: 'Konfirmasi',
+        text: `Apakah Anda yakin ingin ${actionText} kontrak ini?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Ya',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            contract.status = newStatus;
+            contract.updatedAt = new Date().toISOString().split('T')[0];
+            
+            // Add status change history
+            if (!contract.statusHistory) contract.statusHistory = [];
+            contract.statusHistory.push({
+                from: contract.status === 'active' ? 'inactive' : 'active',
+                to: newStatus,
+                date: new Date().toISOString().split('T')[0],
+                changedBy: 'Current User'
+            });
+            
+            // Refresh display
+            applyFilters();
+            updateContractStats();
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: `Kontrak berhasil ${actionText}!`,
+                timer: 2000,
+                showConfirmButton: false
+            });
+        }
+    });
+}
+
+// Risk Analysis Functions
+function showRiskAnalysis(contractId) {
+    const contract = contracts.find(c => c.id === contractId);
+    if (!contract) {
+        showError('Kontrak tidak ditemukan!');
+        return;
+    }
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('riskAnalysisModal'));
+    modal.show();
+    
+    // Generate comprehensive risk analysis
+    generateRiskHeatmap();
+    updateRiskSummary();
+    generateClauseAnalysis(contract);
+}
+
+function generateRiskHeatmap() {
+    const heatmapContainer = document.getElementById('riskHeatmap');
+    
+    // Create heatmap data
+    const heatmapData = contracts.map(contract => ({
+        id: contract.id,
+        name: contract.namaProyek || contract.name,
+        riskScore: contract.riskScore || 0,
+        status: contract.status,
+        approvalStatus: contract.approvalStatus || 'pending'
+    }));
+    
+    // Generate heatmap visualization
+    let heatmapHTML = '<div class="heatmap-grid">';
+    
+    heatmapData.forEach((contract, index) => {
+        const riskClass = contract.riskScore > 70 ? 'high-risk' : 
+                         contract.riskScore > 40 ? 'medium-risk' : 'low-risk';
+        
+        heatmapHTML += `
+            <div class="heatmap-item ${riskClass}" title="${contract.name} - Risk: ${contract.riskScore}%">
+                <div class="risk-score">${contract.riskScore}</div>
+                <div class="contract-name">${contract.name.substring(0, 10)}...</div>
+            </div>
+        `;
+    });
+    
+    heatmapHTML += '</div>';
+    
+    if (heatmapContainer) {
+        heatmapContainer.innerHTML = heatmapHTML;
+    }
+}
+
+function updateRiskSummary() {
+    const summaryContainer = document.getElementById('riskSummary');
+    
+    const totalContracts = contracts.length;
+    const highRisk = contracts.filter(c => (c.riskScore || 0) > 70).length;
+    const mediumRisk = contracts.filter(c => (c.riskScore || 0) > 40 && (c.riskScore || 0) <= 70).length;
+    const lowRisk = contracts.filter(c => (c.riskScore || 0) <= 40).length;
+    
+    const summaryHTML = `
+        <div class="row">
+            <div class="col-md-4">
+                <div class="risk-stat high-risk">
+                    <h3>${highRisk}</h3>
+                    <p>High Risk</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="risk-stat medium-risk">
+                    <h3>${mediumRisk}</h3>
+                    <p>Medium Risk</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="risk-stat low-risk">
+                    <h3>${lowRisk}</h3>
+                    <p>Low Risk</p>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    if (summaryContainer) {
+        summaryContainer.innerHTML = summaryHTML;
+    }
+}
+
+// Generate comprehensive clause analysis
+function generateClauseAnalysis(contract) {
+    const clauseContainer = document.getElementById('clauseAnalysis');
+    
+    const clauseChecks = [
+        {
+            name: 'Force Majeure Clause',
+            status: checkForceMajeureClause(contract),
+            description: 'Klausul yang melindungi dari kejadian di luar kendali',
+            required: true
+        },
+        {
+            name: 'Termination Clause',
+            status: checkTerminationClause(contract),
+            description: 'Klausul pengakhiran kontrak yang jelas',
+            required: true
+        },
+        {
+            name: 'Payment Terms',
+            status: checkPaymentTerms(contract),
+            description: 'Syarat pembayaran yang wajar dan jelas',
+            required: true
+        },
+        {
+            name: 'Insurance Clause',
+            status: checkInsuranceClause(contract),
+            description: 'Klausul asuransi untuk kontrak bernilai tinggi',
+            required: contract.nilaiKontrak > 20000000
+        },
+        {
+            name: 'Penalty Clause',
+            status: checkPenaltyClause(contract),
+            description: 'Klausul penalti untuk keterlambatan',
+            required: true
+        },
+        {
+            name: 'Dispute Resolution',
+            status: checkDisputeResolution(contract),
+            description: 'Mekanisme penyelesaian sengketa',
+            required: true
+        },
+        {
+            name: 'Confidentiality',
+            status: checkConfidentiality(contract),
+            description: 'Klausul kerahasiaan informasi',
+            required: false
+        },
+        {
+            name: 'Intellectual Property',
+            status: checkIntellectualProperty(contract),
+            description: 'Klausul hak kekayaan intelektual',
+            required: false
+        }
+    ];
+    
+    let clauseHTML = '<div class="clause-analysis">';
+    
+    clauseChecks.forEach((clause, index) => {
+        const statusClass = clause.status ? 'success' : (clause.required ? 'danger' : 'warning');
+        const statusIcon = clause.status ? 'fa-check-circle' : (clause.required ? 'fa-times-circle' : 'fa-exclamation-triangle');
+        const statusText = clause.status ? 'Ada' : (clause.required ? 'Tidak Ada' : 'Opsional');
+        
+        clauseHTML += `
+            <div class="clause-item ${statusClass}">
+                <div class="clause-header">
+                    <i class="fas ${statusIcon} me-2"></i>
+                    <strong>${clause.name}</strong>
+                    <span class="badge bg-${statusClass} ms-2">${statusText}</span>
+                </div>
+                <div class="clause-description">
+                    <small class="text-muted">${clause.description}</small>
+                </div>
+            </div>
+        `;
+    });
+    
+    clauseHTML += '</div>';
+    
+    if (clauseContainer) {
+        clauseContainer.innerHTML = clauseHTML;
+    }
+}
+
+// Clause checking functions
+function checkForceMajeureClause(contract) {
+    // Simulate checking for force majeure clause
+    return contract.dokumenLampiran && contract.dokumenLampiran.includes('force majeure');
+}
+
+function checkTerminationClause(contract) {
+    // Simulate checking for termination clause
+    return contract.terminPembayaran && contract.terminPembayaran !== '';
+}
+
+function checkPaymentTerms(contract) {
+    // Check if payment terms are reasonable
+    return contract.terminPembayaran && 
+           ['DP', 'Cicilan', 'Pelunasan'].includes(contract.terminPembayaran);
+}
+
+function checkInsuranceClause(contract) {
+    // Check if insurance is required and present
+    if (contract.nilaiKontrak > 20000000) {
+        return contract.asuransi === true || contract.asuransi === '1';
+    }
+    return true; // Not required for low-value contracts
+}
+
+function checkPenaltyClause(contract) {
+    // Check if penalty terms are defined
+    return contract.penaltiTerlambat && contract.penaltiTerlambat > 0;
+}
+
+function checkDisputeResolution(contract) {
+    // Simulate checking for dispute resolution clause
+    return contract.dokumenLampiran && contract.dokumenLampiran.includes('dispute');
+}
+
+function checkConfidentiality(contract) {
+    // Simulate checking for confidentiality clause
+    return contract.dokumenLampiran && contract.dokumenLampiran.includes('confidential');
+}
+
+function checkIntellectualProperty(contract) {
+    // Simulate checking for IP clause
+    return contract.dokumenLampiran && contract.dokumenLampiran.includes('intellectual');
+}
+
+// Initialize table enhancements
+function initializeTableEnhancements() {
+    // Add smooth scrolling to table
+    const tableContainer = document.querySelector('.table-responsive');
+    if (tableContainer) {
+        tableContainer.style.scrollBehavior = 'smooth';
+    }
+    
+    // Add keyboard navigation
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.key === 'ArrowLeft') {
+            e.preventDefault();
+            scrollTable('left');
+        } else if (e.ctrlKey && e.key === 'ArrowRight') {
+            e.preventDefault();
+            scrollTable('right');
+        }
+    });
+    
+    // Add scroll indicators
+    addScrollIndicators();
+}
+
+// Scroll table horizontally
+function scrollTable(direction) {
+    const tableContainer = document.querySelector('.table-responsive');
+    if (!tableContainer) return;
+    
+    const scrollAmount = 200;
+    const currentScroll = tableContainer.scrollLeft;
+    
+    if (direction === 'left') {
+        tableContainer.scrollLeft = Math.max(0, currentScroll - scrollAmount);
+    } else if (direction === 'right') {
+        tableContainer.scrollLeft = currentScroll + scrollAmount;
+    }
+}
+
+// Add scroll indicators
+function addScrollIndicators() {
+    const tableContainer = document.querySelector('.contracts-table-container');
+    if (!tableContainer) return;
+    
+    // Create scroll indicators
+    const leftIndicator = document.createElement('div');
+    leftIndicator.className = 'scroll-indicator scroll-indicator-left';
+    leftIndicator.innerHTML = '<i class="fas fa-chevron-left"></i>';
+    leftIndicator.onclick = () => scrollTable('left');
+    
+    const rightIndicator = document.createElement('div');
+    rightIndicator.className = 'scroll-indicator scroll-indicator-right';
+    rightIndicator.innerHTML = '<i class="fas fa-chevron-right"></i>';
+    rightIndicator.onclick = () => scrollTable('right');
+    
+    tableContainer.appendChild(leftIndicator);
+    tableContainer.appendChild(rightIndicator);
+    
+    // Update indicators on scroll
+    const tableResponsive = document.querySelector('.table-responsive');
+    if (tableResponsive) {
+        tableResponsive.addEventListener('scroll', updateScrollIndicators);
+    }
+}
+
+// Update scroll indicators visibility
+function updateScrollIndicators() {
+    const tableResponsive = document.querySelector('.table-responsive');
+    const leftIndicator = document.querySelector('.scroll-indicator-left');
+    const rightIndicator = document.querySelector('.scroll-indicator-right');
+    
+    if (!tableResponsive || !leftIndicator || !rightIndicator) return;
+    
+    const scrollLeft = tableResponsive.scrollLeft;
+    const maxScroll = tableResponsive.scrollWidth - tableResponsive.clientWidth;
+    
+    // Show/hide left indicator
+    if (scrollLeft > 0) {
+        leftIndicator.style.opacity = '1';
+        leftIndicator.style.pointerEvents = 'auto';
+    } else {
+        leftIndicator.style.opacity = '0.3';
+        leftIndicator.style.pointerEvents = 'none';
+    }
+    
+    // Show/hide right indicator
+    if (scrollLeft < maxScroll - 1) {
+        rightIndicator.style.opacity = '1';
+        rightIndicator.style.pointerEvents = 'auto';
+    } else {
+        rightIndicator.style.opacity = '0.3';
+        rightIndicator.style.pointerEvents = 'none';
+    }
+}
+
+// Activity Log Functions
+function showActivityLog() {
+    const modal = new bootstrap.Modal(document.getElementById('activityLogModal'));
+    modal.show();
+    loadActivityLog();
+}
+
+function loadActivityLog() {
+    const activityLogTable = document.getElementById('activityLogTable');
+    if (!activityLogTable) return;
+    
+    // Dummy activity log data
+    const activityLogs = [
+        {
+            timestamp: '2024-01-15 14:30:25',
+            user: 'Admin',
+            action: 'Login',
+            description: 'User berhasil login ke sistem',
+            ipAddress: '192.168.1.100'
+        },
+        {
+            timestamp: '2024-01-15 14:25:10',
+            user: 'Client',
+            action: 'Create',
+            description: 'Membuat kontrak baru: Proyek Pembangunan Jembatan',
+            ipAddress: '192.168.1.101'
+        },
+        {
+            timestamp: '2024-01-15 14:20:45',
+            user: 'Admin',
+            action: 'Update',
+            description: 'Memperbarui status kontrak #KTR-001 menjadi Aktif',
+            ipAddress: '192.168.1.100'
+        },
+        {
+            timestamp: '2024-01-15 14:15:30',
+            user: 'Client',
+            action: 'View',
+            description: 'Melihat detail kontrak #KTR-002',
+            ipAddress: '192.168.1.101'
+        },
+        {
+            timestamp: '2024-01-15 14:10:15',
+            user: 'Admin',
+            action: 'Delete',
+            description: 'Menghapus kontrak #KTR-003 yang sudah expired',
+            ipAddress: '192.168.1.100'
+        },
+        {
+            timestamp: '2024-01-15 14:05:00',
+            user: 'Client',
+            action: 'Export',
+            description: 'Export data kontrak ke PDF',
+            ipAddress: '192.168.1.101'
+        },
+        {
+            timestamp: '2024-01-15 14:00:30',
+            user: 'Admin',
+            action: 'Login',
+            description: 'User berhasil login ke sistem',
+            ipAddress: '192.168.1.100'
+        },
+        {
+            timestamp: '2024-01-15 13:55:20',
+            user: 'Client',
+            action: 'Update',
+            description: 'Memperbarui informasi proyek kontrak #KTR-004',
+            ipAddress: '192.168.1.101'
+        },
+        {
+            timestamp: '2024-01-15 13:50:10',
+            user: 'Admin',
+            action: 'Create',
+            description: 'Membuat user baru: client@example.com',
+            ipAddress: '192.168.1.100'
+        },
+        {
+            timestamp: '2024-01-15 13:45:55',
+            user: 'Client',
+            action: 'Logout',
+            description: 'User logout dari sistem',
+            ipAddress: '192.168.1.101'
+        }
+    ];
+    
+    let tableHTML = '';
+    activityLogs.forEach(log => {
+        const actionClass = getActionClass(log.action);
+        tableHTML += `
+            <tr>
+                <td>${log.timestamp}</td>
+                <td><span class="badge bg-${log.user === 'Admin' ? 'primary' : 'info'}">${log.user}</span></td>
+                <td><span class="badge ${actionClass}">${log.action}</span></td>
+                <td>${log.description}</td>
+                <td><code>${log.ipAddress}</code></td>
+            </tr>
+        `;
+    });
+    
+    activityLogTable.innerHTML = tableHTML;
+}
+
+function getActionClass(action) {
+    const classes = {
+        'Login': 'bg-success',
+        'Logout': 'bg-secondary',
+        'Create': 'bg-primary',
+        'Update': 'bg-warning',
+        'Delete': 'bg-danger',
+        'View': 'bg-info',
+        'Export': 'bg-dark'
+    };
+    return classes[action] || 'bg-secondary';
+}
+
+function filterActivityLog() {
+    const dateFilter = document.getElementById('logDateFilter').value;
+    const userFilter = document.getElementById('logUserFilter').value;
+    const actionFilter = document.getElementById('logActionFilter').value;
+    
+    // For now, just reload the data (in real implementation, you'd filter the data)
+    loadActivityLog();
+    
+    // Show filter applied message
+    showSuccess(`Filter diterapkan: ${dateFilter ? 'Tanggal: ' + dateFilter : ''} ${userFilter !== 'all' ? 'User: ' + userFilter : ''} ${actionFilter !== 'all' ? 'Aksi: ' + actionFilter : ''}`);
+}
+
+function exportActivityLog() {
+    // Simulate export functionality
+    showSuccess('Activity log berhasil diexport ke file CSV!');
+}
+
+// Timeline & Version Control Functions
+function showTimelineVersionControl(contractId) {
+    const contract = contracts.find(c => c.id === contractId);
+    if (!contract) return;
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('timelineModal'));
+    modal.show();
+    
+    // Generate timeline
+    generateContractTimeline(contract);
+    
+    // Generate version control
+    generateVersionControl(contract);
+    
+    // Generate approval workflow
+    generateApprovalWorkflow(contract);
+}
+
+function generateContractTimeline(contract) {
+    const timelineContainer = document.getElementById('contractTimeline');
+    
+    const timelineEvents = [
+        {
+            date: contract.tglPengajuan || contract.createdAt,
+            title: 'Kontrak Diajukan',
+            description: `Kontrak ${contract.nomorKontrak || contract.id} diajukan`,
+            status: 'completed'
+        },
+        {
+            date: contract.tglMulai || contract.startDate,
+            title: 'Kontrak Dimulai',
+            description: 'Kontrak mulai berjalan',
+            status: contract.status === 'active' ? 'completed' : 'pending'
+        },
+        {
+            date: contract.tglSelesai || contract.endDate,
+            title: 'Kontrak Selesai',
+            description: 'Kontrak selesai',
+            status: contract.status === 'completed' ? 'completed' : 'pending'
+        }
+    ];
+    
+    let timelineHTML = '<div class="timeline">';
+    
+    timelineEvents.forEach((event, index) => {
+        const statusClass = event.status === 'completed' ? 'completed' : 'pending';
+        const iconClass = event.status === 'completed' ? 'fa-check-circle' : 'fa-clock';
+        
+        timelineHTML += `
+            <div class="timeline-item ${statusClass}">
+                <div class="timeline-marker">
+                    <i class="fas ${iconClass}"></i>
+                </div>
+                <div class="timeline-content">
+                    <h6>${event.title}</h6>
+                    <p class="text-muted">${event.description}</p>
+                    <small class="text-muted">${event.date}</small>
+                </div>
+            </div>
+        `;
+    });
+    
+    timelineHTML += '</div>';
+    
+    if (timelineContainer) {
+        timelineContainer.innerHTML = timelineHTML;
+    }
+}
+
+function generateVersionControl(contract) {
+    const versionContainer = document.getElementById('versionControl');
+    
+    const versions = contract.versions || [
+        {
+            version: '1.0',
+            date: contract.createdAt,
+            changes: 'Initial version',
+            author: 'System'
+        }
+    ];
+    
+    let versionHTML = '<div class="version-list">';
+    
+    versions.forEach((version, index) => {
+        versionHTML += `
+            <div class="version-item">
+                <div class="version-header">
+                    <span class="version-number">v${version.version}</span>
+                    <span class="version-date">${version.date}</span>
+                </div>
+                <div class="version-details">
+                    <p class="version-changes">${version.changes}</p>
+                    <small class="version-author">by ${version.author}</small>
+                </div>
+            </div>
+        `;
+    });
+    
+    versionHTML += '</div>';
+    
+    if (versionContainer) {
+        versionContainer.innerHTML = versionHTML;
+    }
+}
+
+function generateApprovalWorkflow(contract) {
+    const workflowContainer = document.getElementById('approvalWorkflow');
+    
+    const workflow = contract.approvalHistory || [];
+    
+    let workflowHTML = '<div class="workflow-list">';
+    
+    if (workflow.length === 0) {
+        workflowHTML += '<p class="text-muted">Belum ada approval workflow</p>';
+    } else {
+        workflow.forEach((approval, index) => {
+            const statusClass = approval.status === 'approved' ? 'approved' : 'rejected';
+            const iconClass = approval.status === 'approved' ? 'fa-check' : 'fa-times';
+            
+            workflowHTML += `
+                <div class="workflow-item ${statusClass}">
+                    <div class="workflow-marker">
+                        <i class="fas ${iconClass}"></i>
+                    </div>
+                    <div class="workflow-content">
+                        <h6>Level ${approval.level} - ${approval.status}</h6>
+                        <p class="text-muted">${approval.comments || 'No comments'}</p>
+                        <small class="text-muted">by ${approval.approver} on ${approval.date}</small>
+                    </div>
+                </div>
+            `;
+        });
+    }
+    
+    workflowHTML += '</div>';
+    
+    if (workflowContainer) {
+        workflowContainer.innerHTML = workflowHTML;
     }
 }

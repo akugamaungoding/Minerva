@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Billing - Minerva</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+    <style>
+        .bill-card {
+            transition: transform 0.2s ease;
+        }
+        
+        .bill-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .status-badge {
+            font-size: 0.8rem;
+            padding: 0.5rem 1rem;
+        }
+        
+        .amount-display {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .due-date {
+            font-size: 0.9rem;
+        }
+        
+        .overdue {
+            color: #dc3545;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body data-theme="light" class="billing-page">
+    <div class="dashboard-container">
+        <!-- Mobile sidebar overlay -->
+        <div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+        
+        <div id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <h3>Minerva</h3>
+                <button id="sidebarToggle" class="sidebar-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <nav class="sidebar-nav">
+                <ul id="sidebarNav" class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="dashboard.html">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="contracts.html">
+                            <i class="fas fa-file-contract"></i>
+                            <span>Manajemen Kontrak</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="gps-tracking.html">
+                            <i class="fas fa-map-marked-alt"></i>
+                            <span>GPS Tracking</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="ai.html">
+                            <i class="fas fa-robot"></i>
+                            <span>AI Assistant</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="komunikasi.html">
+                            <i class="fas fa-comments"></i>
+                            <span>Komunikasi</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="billing.html">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                            <span>E-Billing</span>
+                        </a>
+                    </li>
+            </nav>
+        </div>
+
+        <div id="mainContent" class="main-content">
+            <nav class="top-navbar">
+                <div class="container-fluid">
+                    <div class="row align-items-center w-100">
+                        <div class="col">
+                            <h4 class="mb-0">E-Billing</h4>
+                            <small class="text-muted d-none d-sm-inline">Kelola tagihan dan pembayaran kontrak</small>
+                        </div>
+                        <div class="col-auto d-flex gap-2">
+                            <button class="btn btn-outline-primary btn-sm" onclick="toggleLanguage()" title="Toggle Language">
+                                <i class="fas fa-globe" id="languageIcon"></i>
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm" onclick="toggleTheme()" title="Toggle Theme">
+                                <i class="fas fa-moon" id="themeIconNavbar"></i>
+                            </button>
+                            <div class="dropdown">
+                                <button class="btn btn-outline-primary dropdown-toggle btn-sm" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-user me-1"></i><span id="currentUser">User</span>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="showActivityLog()">
+                                        <i class="fas fa-history me-2"></i>Log Aktivitas
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="showChangePasswordModal()">
+                                        <i class="fas fa-key me-2"></i>Ganti Password
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="index.html">
+                                        <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                    </a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="content-area">
+                <!-- Billing Dashboard -->
+                <div id="billingDashboard">
+                    <!-- Dashboard Stats -->
+                    <div id="billingStats">
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <div class="card bg-primary text-white">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h4 class="mb-0" id="totalBills">8</h4>
+                                                <small>Total Bills</small>
+                                            </div>
+                                            <i class="fas fa-file-invoice fa-2x opacity-75"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-warning text-white">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h4 class="mb-0" id="pendingBills">3</h4>
+                                                <small>Pending Bills</small>
+                                            </div>
+                                            <i class="fas fa-clock fa-2x opacity-75"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-danger text-white">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h4 class="mb-0" id="overdueBills">3</h4>
+                                                <small>Overdue Bills</small>
+                                            </div>
+                                            <i class="fas fa-exclamation-triangle fa-2x opacity-75"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-success text-white">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h4 class="mb-0" id="totalOutstanding">Rp 185,000,000</h4>
+                                                <small>Total Outstanding</small>
+                                            </div>
+                                            <i class="fas fa-dollar-sign fa-2x opacity-75"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Bills Table -->
+                    <div id="billsTable">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">Daftar Bills</h5>
+                                <button class="btn btn-primary btn-sm" onclick="showGenerateBillModal()">
+                                    <i class="fas fa-plus me-2"></i>Generate Bill
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Bill ID</th>
+                                                <th>Contract</th>
+                                                <th>Client</th>
+                                                <th>Amount</th>
+                                                <th>Due Date</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><strong>BILL-001</strong></td>
+                                                <td>
+                                                    <div>
+                                                        <strong>KONTRAK_15012024_001</strong><br>
+                                                        <small class="text-muted">Pengiriman Logistik Jakarta</small>
+                                                    </div>
+                                                </td>
+                                                <td>PT. Maju Jaya</td>
+                                                <td><strong>Rp 50,000,000</strong></td>
+                                                <td>2024-01-25</td>
+                                                <td><span class="badge bg-warning">Pending</span></td>
+                                                <td>
+                                                    <div class="btn-group btn-group-sm">
+                                                        <button class="btn btn-outline-primary" onclick="viewBillDetails('BILL-001')" title="View Details">
+                                                            <i class="fas fa-eye"></i>
+                                                        </button>
+                                                        <button class="btn btn-outline-success" onclick="showPaymentModal('BILL-001')" title="Make Payment">
+                                                            <i class="fas fa-credit-card"></i>
+                                                        </button>
+                                                        <button class="btn btn-outline-secondary" onclick="downloadBill('BILL-001')" title="Download PDF">
+                                                            <i class="fas fa-download"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>BILL-002</strong></td>
+                                                <td>
+                                                    <div>
+                                                        <strong>KONTRAK_01022024_002</strong><br>
+                                                        <small class="text-muted">Penyimpanan Barang Surabaya</small>
+                                                    </div>
+                                                </td>
+                                                <td>CV. Sukses Mandiri</td>
+                                                <td><strong>Rp 25,000,000</strong></td>
+                                                <td>2024-02-01</td>
+                                                <td><span class="badge bg-success">Paid</span></td>
+                                                <td>
+                                                    <div class="btn-group btn-group-sm">
+                                                        <button class="btn btn-outline-primary" onclick="viewBillDetails('BILL-002')" title="View Details">
+                                                            <i class="fas fa-eye"></i>
+                                                        </button>
+                                                        <button class="btn btn-outline-secondary" onclick="downloadBill('BILL-002')" title="Download PDF">
+                                                            <i class="fas fa-download"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr class="table-danger">
+                                                <td><strong>BILL-003</strong></td>
+                                                <td>
+                                                    <div>
+                                                        <strong>KONTRAK_01122023_003</strong><br>
+                                                        <small class="text-muted">Bongkar Muat Pelabuhan</small>
+                                                    </div>
+                                                </td>
+                                                <td>PT. Pelabuhan Indonesia</td>
+                                                <td><strong>Rp 75,000,000</strong></td>
+                                                <td>
+                                                    2024-01-15<br>
+                                                    <small class="text-danger">Overdue</small>
+                                                </td>
+                                                <td><span class="badge bg-danger">Overdue</span></td>
+                                                <td>
+                                                    <div class="btn-group btn-group-sm">
+                                                        <button class="btn btn-outline-primary" onclick="viewBillDetails('BILL-003')" title="View Details">
+                                                            <i class="fas fa-eye"></i>
+                                                        </button>
+                                                        <button class="btn btn-outline-success" onclick="showPaymentModal('BILL-003')" title="Make Payment">
+                                                            <i class="fas fa-credit-card"></i>
+                                                        </button>
+                                                        <button class="btn btn-outline-secondary" onclick="downloadBill('BILL-003')" title="Download PDF">
+                                                            <i class="fas fa-download"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>BILL-004</strong></td>
+                                                <td>
+                                                    <div>
+                                                        <strong>KONTRAK_20012024_004</strong><br>
+                                                        <small class="text-muted">Distribusi Ekspor Batam</small>
+                                                    </div>
+                                                </td>
+                                                <td>PT. Batam Logistics</td>
+                                                <td><strong>Rp 100,000,000</strong></td>
+                                                <td>2024-01-28</td>
+                                                <td><span class="badge bg-warning">Pending</span></td>
+                                                <td>
+                                                    <div class="btn-group btn-group-sm">
+                                                        <button class="btn btn-outline-primary" onclick="viewBillDetails('BILL-004')" title="View Details">
+                                                            <i class="fas fa-eye"></i>
+                                                        </button>
+                                                        <button class="btn btn-outline-success" onclick="showPaymentModal('BILL-004')" title="Make Payment">
+                                                            <i class="fas fa-credit-card"></i>
+                                                        </button>
+                                                        <button class="btn btn-outline-secondary" onclick="downloadBill('BILL-004')" title="Download PDF">
+                                                            <i class="fas fa-download"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Initialize billing page
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Billing page loaded');
+            
+            const currentUser = localStorage.getItem('currentUser') || 'User';
+            document.getElementById('currentUser').textContent = currentUser;
+        });
+        
+        // Functions
+        function showGenerateBillModal() {
+            Swal.fire({
+                title: 'Generate Bill',
+                text: 'Fitur generate bill akan segera tersedia!',
+                icon: 'info'
+            });
+        }
+        
+        function viewBillDetails(billId) {
+            Swal.fire({
+                title: 'Bill Details',
+                text: `Detail untuk bill ${billId} akan segera tersedia!`,
+                icon: 'info'
+            });
+        }
+        
+        function showPaymentModal(billId) {
+            Swal.fire({
+                title: 'Make Payment',
+                text: `Payment untuk bill ${billId} akan segera tersedia!`,
+                icon: 'info'
+            });
+        }
+        
+        function downloadBill(billId) {
+            Swal.fire({
+                title: 'Download Bill',
+                text: `Download PDF untuk bill ${billId} akan segera tersedia!`,
+                icon: 'info'
+            });
+        }
+        
+        function toggleLanguage() {
+            Swal.fire('Language Toggle', 'Fitur ganti bahasa akan segera tersedia!', 'info');
+        }
+        
+        function toggleTheme() {
+            Swal.fire('Theme Toggle', 'Fitur ganti tema akan segera tersedia!', 'info');
+        }
+        
+        function showActivityLog() {
+            Swal.fire('Activity Log', 'Fitur log aktivitas akan segera tersedia!', 'info');
+        }
+        
+        function showChangePasswordModal() {
+            Swal.fire('Change Password', 'Fitur ganti password akan segera tersedia!', 'info');
+        }
+    </script>
+</body>
+</html>
